@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 0
+    path: Assets/Scenes/SampleScene.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/GermanyHome.unity
+    guid: fa7200d8b5a1841ad9c0115c070310ac
+  - enabled: 1
+    path: Assets/Scenes/StageSelect.unity
+    guid: 2b13ed24b1851469ab87eae4682e5ce5
+  - enabled: 1
+    path: Assets/Scenes/CharacterSelect.unity
+    guid: 855f993633faf4614a1b3e63361d2ec0
+  - enabled: 1
+    path: Assets/Scenes/CharacterCollection.unity
+    guid: f46fd12f60fba4bf69a242abf224a08a
+  - enabled: 1
+    path: Assets/Scenes/CharacterDetail.unity
+    guid: ae56c32f8a85841028393410ee7b304c
+  - enabled: 1
+    path: Assets/Scenes/Battle.unity
+    guid: acb13db6e9a8d4ed9a71ad8b0348fe64
+  - enabled: 1
+    path: Assets/Scenes/Result.unity
+    guid: 6d30f4a21c893414c99c1d84c597a7bd
+  - enabled: 1
+    path: Assets/Scenes/Gacha.unity
+    guid: a80d5227586b04311ba404dd65c53797
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

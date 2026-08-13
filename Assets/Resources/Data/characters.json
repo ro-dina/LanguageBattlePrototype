@@ -1,0 +1,3634 @@
+{
+  "characters": [
+    {
+      "id": "jahr",
+      "characterName": "Jahr",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "jahr",
+      "hp": 18,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ],
+      "equippedAdjectiveId": "",
+      "equippedCaseMarkerId": ""
+    },
+    {
+      "id": "euro",
+      "characterName": "Euro",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "euro",
+      "hp": 19,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "prozent",
+      "characterName": "Prozent",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "prozent",
+      "hp": 20,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "mensch",
+      "characterName": "Mensch",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "mensch",
+      "hp": 21,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "uhr",
+      "characterName": "Uhr",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "uhr",
+      "hp": 22,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "tag",
+      "characterName": "Tag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "tag",
+      "hp": 23,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "zeit",
+      "characterName": "Zeit",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "zeit",
+      "hp": 24,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "polizei",
+      "characterName": "Polizei",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "polizei",
+      "hp": 25,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "mann",
+      "characterName": "Mann",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "mann",
+      "hp": 18,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "land",
+      "characterName": "Land",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "land",
+      "hp": 19,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "ende",
+      "characterName": "Ende",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "ende",
+      "hp": 20,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "kind",
+      "characterName": "Kind",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "kind",
+      "hp": 21,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "woche",
+      "characterName": "Woche",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "woche",
+      "hp": 22,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "frau",
+      "characterName": "Frau",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "frau",
+      "hp": 23,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "stadt",
+      "characterName": "Stadt",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "stadt",
+      "hp": 24,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "million",
+      "characterName": "Million",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "million",
+      "hp": 25,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "spiel",
+      "characterName": "Spiel",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "spiel",
+      "hp": 18,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "unternehmen",
+      "characterName": "Unternehmen",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "unternehmen",
+      "hp": 19,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "platz",
+      "characterName": "Platz",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "platz",
+      "hp": 20,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "monat",
+      "characterName": "Monat",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "monat",
+      "hp": 21,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "frage",
+      "characterName": "Frage",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "frage",
+      "hp": 22,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "fall",
+      "characterName": "Fall",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "fall",
+      "hp": 23,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "teil",
+      "characterName": "Teil",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "teil",
+      "hp": 24,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "haus",
+      "characterName": "Haus",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "haus",
+      "hp": 25,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "team",
+      "characterName": "Team",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "team",
+      "hp": 18,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "koennen"
+      ]
+    },
+    {
+      "id": "problem",
+      "characterName": "Problem",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "problem",
+      "hp": 19,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "strasse",
+      "characterName": "Straße",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "strasse",
+      "hp": 20,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "sollen"
+      ]
+    },
+    {
+      "id": "leben",
+      "characterName": "Leben",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "leben",
+      "hp": 21,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "thema",
+      "characterName": "Thema",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "thema",
+      "hp": 22,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "welt",
+      "characterName": "Welt",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "welt",
+      "hp": 23,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "ziel",
+      "characterName": "Ziel",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "ziel",
+      "hp": 24,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "auto",
+      "characterName": "Auto",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "auto",
+      "hp": 25,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "weg",
+      "characterName": "Weg",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "weg",
+      "hp": 18,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "ort",
+      "characterName": "Ort",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "ort",
+      "hp": 19,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "einsatz",
+      "characterName": "Einsatz",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "einsatz",
+      "hp": 20,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "kommen"
+      ]
+    },
+    {
+      "id": "person",
+      "characterName": "Person",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "person",
+      "hp": 21,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "grund",
+      "characterName": "Grund",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "grund",
+      "hp": 22,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "sonntag",
+      "characterName": "Sonntag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "sonntag",
+      "hp": 23,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "stunde",
+      "characterName": "Stunde",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "stunde",
+      "hp": 24,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "geld",
+      "characterName": "Geld",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "geld",
+      "hp": 25,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "minute",
+      "characterName": "Minute",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "minute",
+      "hp": 18,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "angabe",
+      "characterName": "Angabe",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "angabe",
+      "hp": 19,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "bereich",
+      "characterName": "Bereich",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "bereich",
+      "hp": 20,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "familie",
+      "characterName": "Familie",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "familie",
+      "hp": 21,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "freitag",
+      "characterName": "Freitag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "freitag",
+      "hp": 22,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "folge",
+      "characterName": "Folge",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "folge",
+      "hp": 23,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "montag",
+      "characterName": "Montag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "montag",
+      "hp": 24,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "samstag",
+      "characterName": "Samstag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "samstag",
+      "hp": 25,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "arbeit",
+      "characterName": "Arbeit",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "arbeit",
+      "hp": 18,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "dienstag",
+      "characterName": "Dienstag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "dienstag",
+      "hp": 19,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "projekt",
+      "characterName": "Projekt",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "projekt",
+      "hp": 20,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "mittwoch",
+      "characterName": "Mittwoch",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "mittwoch",
+      "hp": 21,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "preis",
+      "characterName": "Preis",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "preis",
+      "hp": 22,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "oktober",
+      "characterName": "Oktober",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "oktober",
+      "hp": 23,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "zahl",
+      "characterName": "Zahl",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "zahl",
+      "hp": 24,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "verein",
+      "characterName": "Verein",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "verein",
+      "hp": 25,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "partei",
+      "characterName": "Partei",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "partei",
+      "hp": 18,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "juni",
+      "characterName": "Juni",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "juni",
+      "hp": 19,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "mai",
+      "characterName": "Mai",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "mai",
+      "hp": 20,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "blick",
+      "characterName": "Blick",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "blick",
+      "hp": 21,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "praesident",
+      "characterName": "Präsident",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "praesident",
+      "hp": 22,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "zukunft",
+      "characterName": "Zukunft",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "zukunft",
+      "hp": 23,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "gast",
+      "characterName": "Gast",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "gast",
+      "hp": 24,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "sommer",
+      "characterName": "Sommer",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "sommer",
+      "hp": 25,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "donnerstag",
+      "characterName": "Donnerstag",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "donnerstag",
+      "hp": 18,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "meter",
+      "characterName": "Meter",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "meter",
+      "hp": 19,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "bild",
+      "characterName": "Bild",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "bild",
+      "hp": 20,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "mal",
+      "characterName": "Mal",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "mal",
+      "hp": 21,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "fan",
+      "characterName": "Fan",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "fan",
+      "hp": 22,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "russland",
+      "characterName": "Russland",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "russland",
+      "hp": 23,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "november",
+      "characterName": "November",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "november",
+      "hp": 24,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "saison",
+      "characterName": "Saison",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "saison",
+      "hp": 25,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "seite",
+      "characterName": "Seite",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "seite",
+      "hp": 18,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "punkt",
+      "characterName": "Punkt",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "punkt",
+      "hp": 19,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "anfang",
+      "characterName": "Anfang",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "anfang",
+      "hp": 20,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "gespraech",
+      "characterName": "Gespräch",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "gespraech",
+      "hp": 21,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "geschichte",
+      "characterName": "Geschichte",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "geschichte",
+      "hp": 22,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "feuerwehr",
+      "characterName": "Feuerwehr",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "feuerwehr",
+      "hp": 23,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "beispiel",
+      "characterName": "Beispiel",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "beispiel",
+      "hp": 24,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "milliarde",
+      "characterName": "Milliarde",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "milliarde",
+      "hp": 25,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "september",
+      "characterName": "September",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "september",
+      "hp": 18,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "gruppe",
+      "characterName": "Gruppe",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "gruppe",
+      "hp": 19,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "juli",
+      "characterName": "Juli",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "juli",
+      "hp": 20,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "april",
+      "characterName": "April",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "april",
+      "hp": 21,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "fahrzeug",
+      "characterName": "Fahrzeug",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "fahrzeug",
+      "hp": 22,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "gemeinde",
+      "characterName": "Gemeinde",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "gemeinde",
+      "hp": 23,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "richtung",
+      "characterName": "Richtung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "richtung",
+      "hp": 24,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "moeglichkeit",
+      "characterName": "Möglichkeit",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "moeglichkeit",
+      "hp": 25,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "schritt",
+      "characterName": "Schritt",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "schritt",
+      "hp": 18,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "rolle",
+      "characterName": "Rolle",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "rolle",
+      "hp": 19,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "spielen",
+        "haben",
+        "sein"
+      ]
+    },
+    {
+      "id": "entscheidung",
+      "characterName": "Entscheidung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "entscheidung",
+      "hp": 20,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "treffen"
+      ]
+    },
+    {
+      "id": "regierung",
+      "characterName": "Regierung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "regierung",
+      "hp": 21,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "sieg",
+      "characterName": "Sieg",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "sieg",
+      "hp": 22,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "koennen"
+      ]
+    },
+    {
+      "id": "nacht",
+      "characterName": "Nacht",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "nacht",
+      "hp": 23,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "mitarbeiter",
+      "characterName": "Mitarbeiter",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "mitarbeiter",
+      "hp": 24,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "angriff",
+      "characterName": "Angriff",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "angriff",
+      "hp": 25,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "gruene",
+      "characterName": "grüne",
+      "language": "de",
+      "grammaticalGender": "unknown",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "gruene",
+      "hp": 18,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "trainer",
+      "characterName": "Trainer",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "trainer",
+      "hp": 19,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "sagen"
+      ]
+    },
+    {
+      "id": "region",
+      "characterName": "Region",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "region",
+      "hp": 20,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "koennen"
+      ]
+    },
+    {
+      "id": "februar",
+      "characterName": "Februar",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "februar",
+      "hp": 21,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "januar",
+      "characterName": "Januar",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "januar",
+      "hp": 22,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "krieg",
+      "characterName": "Krieg",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "krieg",
+      "hp": 23,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "hand",
+      "characterName": "Hand",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "hand",
+      "hp": 24,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "ergebnis",
+      "characterName": "Ergebnis",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "ergebnis",
+      "hp": 25,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "art",
+      "characterName": "Art",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "art",
+      "hp": 18,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "wort",
+      "characterName": "Wort",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "wort",
+      "hp": 19,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "name",
+      "characterName": "Name",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "name",
+      "hp": 20,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "erfolg",
+      "characterName": "Erfolg",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "erfolg",
+      "hp": 21,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "koennen"
+      ]
+    },
+    {
+      "id": "buergermeister",
+      "characterName": "Bürgermeister",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "buergermeister",
+      "hp": 22,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "dezember",
+      "characterName": "Dezember",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "dezember",
+      "hp": 23,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "maerz",
+      "characterName": "März",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "maerz",
+      "hp": 24,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "opfer",
+      "characterName": "Opfer",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "opfer",
+      "hp": 25,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "angebot",
+      "characterName": "Angebot",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "angebot",
+      "hp": 18,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "abend",
+      "characterName": "Abend",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "abend",
+      "hp": 19,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "lage",
+      "characterName": "Lage",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "lage",
+      "hp": 20,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "staat",
+      "characterName": "Staat",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "staat",
+      "hp": 21,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "schule",
+      "characterName": "Schule",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "schule",
+      "hp": 22,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "tier",
+      "characterName": "Tier",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "tier",
+      "hp": 23,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "unfall",
+      "characterName": "Unfall",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "unfall",
+      "hp": 24,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "august",
+      "characterName": "August",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "august",
+      "hp": 25,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "chance",
+      "characterName": "Chance",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "chance",
+      "hp": 18,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "situation",
+      "characterName": "Situation",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "situation",
+      "hp": 19,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "wahl",
+      "characterName": "Wahl",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "wahl",
+      "hp": 20,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "unterstuetzung",
+      "characterName": "Unterstützung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "unterstuetzung",
+      "hp": 21,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "kosten",
+      "characterName": "Kosten",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "kosten",
+      "hp": 22,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "wert",
+      "characterName": "Wert",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "wert",
+      "hp": 23,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "sicherheit",
+      "characterName": "Sicherheit",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "sicherheit",
+      "hp": 24,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "hoehe",
+      "characterName": "Höhe",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "hoehe",
+      "hp": 25,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "spieler",
+      "characterName": "Spieler",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "spieler",
+      "hp": 18,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "mannschaft",
+      "characterName": "Mannschaft",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "mannschaft",
+      "hp": 19,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "programm",
+      "characterName": "Programm",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "programm",
+      "hp": 20,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "stehen"
+      ]
+    },
+    {
+      "id": "idee",
+      "characterName": "Idee",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "idee",
+      "hp": 21,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "besucher",
+      "characterName": "Besucher",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "besucher",
+      "hp": 22,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "werden",
+        "sein",
+        "koennen"
+      ]
+    },
+    {
+      "id": "krankenhaus",
+      "characterName": "Krankenhaus",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "krankenhaus",
+      "hp": 23,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "werden",
+        "bringen",
+        "sein"
+      ]
+    },
+    {
+      "id": "rahmen",
+      "characterName": "Rahmen",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "rahmen",
+      "hp": 24,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "entwicklung",
+      "characterName": "Entwicklung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "entwicklung",
+      "hp": 25,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "tor",
+      "characterName": "Tor",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "tor",
+      "hp": 18,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "wochenende",
+      "characterName": "Wochenende",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "wochenende",
+      "hp": 19,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "mitte",
+      "characterName": "Mitte",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "mitte",
+      "hp": 20,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "wohnung",
+      "characterName": "Wohnung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "wohnung",
+      "hp": 21,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "haben",
+        "werden",
+        "sein"
+      ]
+    },
+    {
+      "id": "betrieb",
+      "characterName": "Betrieb",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "betrieb",
+      "hp": 22,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "fc",
+      "characterName": "FC",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "fc",
+      "hp": 23,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "stehen"
+      ]
+    },
+    {
+      "id": "bericht",
+      "characterName": "Bericht",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "bericht",
+      "hp": 24,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "information",
+      "characterName": "Information",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "information",
+      "hp": 25,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "werden",
+        "sein",
+        "koennen"
+      ]
+    },
+    {
+      "id": "raum",
+      "characterName": "Raum",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "raum",
+      "hp": 18,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "stehen"
+      ]
+    },
+    {
+      "id": "mitglied",
+      "characterName": "Mitglied",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "mitglied",
+      "hp": 19,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "medium",
+      "characterName": "Medium",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "medium",
+      "hp": 20,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "sache",
+      "characterName": "Sache",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "sache",
+      "hp": 21,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "wasser",
+      "characterName": "Wasser",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "wasser",
+      "hp": 22,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "koennen",
+        "haben"
+      ]
+    },
+    {
+      "id": "markt",
+      "characterName": "Markt",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 3,
+      "illustration": "markt",
+      "hp": 23,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "kunde",
+      "characterName": "Kunde",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "kunde",
+      "hp": 24,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "politik",
+      "characterName": "Politik",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "politik",
+      "hp": 25,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "stelle",
+      "characterName": "Stelle",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "stelle",
+      "hp": 18,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "fahrer",
+      "characterName": "Fahrer",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "fahrer",
+      "hp": 19,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "jugendliche",
+      "characterName": "jugendliche",
+      "language": "de",
+      "grammaticalGender": "unknown",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "jugendliche",
+      "hp": 20,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "gericht",
+      "characterName": "Gericht",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "gericht",
+      "hp": 21,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "grad",
+      "characterName": "Grad",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "grad",
+      "hp": 22,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "liegen"
+      ]
+    },
+    {
+      "id": "film",
+      "characterName": "Film",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "film",
+      "hp": 23,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "recht",
+      "characterName": "Recht",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "recht",
+      "hp": 24,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "massnahme",
+      "characterName": "Maßnahme",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "massnahme",
+      "hp": 25,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "loesung",
+      "characterName": "Lösung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "loesung",
+      "hp": 18,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "finden"
+      ]
+    },
+    {
+      "id": "stimme",
+      "characterName": "Stimme",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "stimme",
+      "hp": 19,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "regel",
+      "characterName": "Regel",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "regel",
+      "hp": 20,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "sollen"
+      ]
+    },
+    {
+      "id": "kritik",
+      "characterName": "Kritik",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "kritik",
+      "hp": 21,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "ueben"
+      ]
+    },
+    {
+      "id": "start",
+      "characterName": "Start",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "start",
+      "hp": 22,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "gehen"
+      ]
+    },
+    {
+      "id": "buch",
+      "characterName": "Buch",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "buch",
+      "hp": 23,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "freund",
+      "characterName": "Freund",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "freund",
+      "hp": 24,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "koennen"
+      ]
+    },
+    {
+      "id": "vergleich",
+      "characterName": "Vergleich",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "vergleich",
+      "hp": 25,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "geben"
+      ]
+    },
+    {
+      "id": "dollar",
+      "characterName": "Dollar",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "dollar",
+      "hp": 18,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "haben",
+        "werden",
+        "sein"
+      ]
+    },
+    {
+      "id": "bank",
+      "characterName": "Bank",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "bank",
+      "hp": 19,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "produkt",
+      "characterName": "Produkt",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "produkt",
+      "hp": 20,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "leute",
+      "characterName": "Leute",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "leute",
+      "hp": 21,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben",
+        "sagen"
+      ]
+    },
+    {
+      "id": "veranstaltung",
+      "characterName": "Veranstaltung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "veranstaltung",
+      "hp": 22,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "mutter",
+      "characterName": "Mutter",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "mutter",
+      "hp": 23,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "verfuegung",
+      "characterName": "Verfügung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "verfuegung",
+      "hp": 24,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "stehen",
+        "stellen",
+        "werden"
+      ]
+    },
+    {
+      "id": "aufgabe",
+      "characterName": "Aufgabe",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "aufgabe",
+      "hp": 25,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "erfahrung",
+      "characterName": "Erfahrung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "erfahrung",
+      "hp": 18,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "haben",
+        "sein",
+        "koennen"
+      ]
+    },
+    {
+      "id": "eltern",
+      "characterName": "Eltern",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "eltern",
+      "hp": 19,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "gebaeude",
+      "characterName": "Gebäude",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "gebaeude",
+      "hp": 20,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "beginn",
+      "characterName": "Beginn",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "beginn",
+      "hp": 21,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "kreis",
+      "characterName": "Kreis",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "kreis",
+      "hp": 22,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "werden",
+        "kommen"
+      ]
+    },
+    {
+      "id": "datum",
+      "characterName": "Datum",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "datum",
+      "hp": 23,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "koennen"
+      ]
+    },
+    {
+      "id": "standort",
+      "characterName": "Standort",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "standort",
+      "hp": 24,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "energie",
+      "characterName": "Energie",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "energie",
+      "hp": 25,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "video",
+      "characterName": "Video",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "video",
+      "hp": 18,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "verletzung",
+      "characterName": "Verletzung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "verletzung",
+      "hp": 19,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "erleiden"
+      ]
+    },
+    {
+      "id": "interesse",
+      "characterName": "Interesse",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "interesse",
+      "hp": 20,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "druck",
+      "characterName": "Druck",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "druck",
+      "hp": 21,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "hilfe",
+      "characterName": "Hilfe",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "hilfe",
+      "hp": 22,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "zeuge",
+      "characterName": "Zeuge",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "zeuge",
+      "hp": 23,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "werden",
+        "suchen",
+        "bitten"
+      ]
+    },
+    {
+      "id": "zug",
+      "characterName": "Zug",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "zug",
+      "hp": 24,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "werden",
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "gefahr",
+      "characterName": "Gefahr",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "gefahr",
+      "hp": 25,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "bestehen"
+      ]
+    },
+    {
+      "id": "union",
+      "characterName": "Union",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "union",
+      "hp": 18,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "haben",
+        "sein",
+        "werden"
+      ]
+    },
+    {
+      "id": "grenze",
+      "characterName": "Grenze",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "grenze",
+      "hp": 19,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "buerger",
+      "characterName": "Bürger",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "buerger",
+      "hp": 20,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "zeitung",
+      "characterName": "Zeitung",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "zeitung",
+      "hp": 21,
+      "attack": 4,
+      "defense": 2,
+      "speed": 3,
+      "skillIds": [
+        "sein",
+        "haben",
+        "sagen"
+      ]
+    },
+    {
+      "id": "stueck",
+      "characterName": "Stück",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "stueck",
+      "hp": 22,
+      "attack": 5,
+      "defense": 3,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "kopf",
+      "characterName": "Kopf",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "kopf",
+      "hp": 23,
+      "attack": 6,
+      "defense": 4,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
+    },
+    {
+      "id": "firma",
+      "characterName": "Firma",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "firma",
+      "hp": 24,
+      "attack": 7,
+      "defense": 5,
+      "speed": 6,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "partie",
+      "characterName": "Partie",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 4,
+      "illustration": "partie",
+      "hp": 25,
+      "attack": 8,
+      "defense": 6,
+      "speed": 7,
+      "skillIds": [
+        "sein",
+        "werden",
+        "haben"
+      ]
+    },
+    {
+      "id": "hund",
+      "characterName": "Hund",
+      "language": "de",
+      "grammaticalGender": "masculine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "hund",
+      "hp": 20,
+      "attack": 5,
+      "defense": 2,
+      "speed": 5,
+      "skillIds": ["laufen", "beissen"]
+    },
+    {
+      "id": "feuer",
+      "characterName": "Feuer",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "feuer",
+      "hp": 18,
+      "attack": 6,
+      "defense": 1,
+      "speed": 4,
+      "skillIds": ["brennen", "laufen"]
+    }
+  ]
+}

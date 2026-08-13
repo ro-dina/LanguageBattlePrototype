@@ -1,0 +1,464 @@
+{
+  "skills": [
+    {
+      "id": "sein",
+      "skillName": "sein",
+      "language": "de",
+      "power": 3,
+      "accuracy": 90,
+      "cost": 0,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "bin",
+        "secondPersonSingular": "bist",
+        "thirdPersonSingular": "ist",
+        "firstPersonPlural": "sind",
+        "secondPersonPlural": "seid",
+        "thirdPersonPlural": "sind",
+        "formalSecondPerson": "sind"
+      }
+    },
+    {
+      "id": "werden",
+      "skillName": "werden",
+      "language": "de",
+      "power": 4,
+      "accuracy": 91,
+      "cost": 1,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "werde",
+        "secondPersonSingular": "wirst",
+        "thirdPersonSingular": "wird",
+        "firstPersonPlural": "werden",
+        "secondPersonPlural": "werdet",
+        "thirdPersonPlural": "werden",
+        "formalSecondPerson": "werden"
+      }
+    },
+    {
+      "id": "haben",
+      "skillName": "haben",
+      "language": "de",
+      "power": 5,
+      "accuracy": 92,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "habe",
+        "secondPersonSingular": "hast",
+        "thirdPersonSingular": "hat",
+        "firstPersonPlural": "haben",
+        "secondPersonPlural": "habt",
+        "thirdPersonPlural": "haben",
+        "formalSecondPerson": "haben"
+      }
+    },
+    {
+      "id": "koennen",
+      "skillName": "können",
+      "language": "de",
+      "power": 6,
+      "accuracy": 93,
+      "cost": 3,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "kann",
+        "secondPersonSingular": "kannst",
+        "thirdPersonSingular": "kann",
+        "firstPersonPlural": "können",
+        "secondPersonPlural": "könnt",
+        "thirdPersonPlural": "können",
+        "formalSecondPerson": "können"
+      }
+    },
+    {
+      "id": "sollen",
+      "skillName": "sollen",
+      "language": "de",
+      "power": 7,
+      "accuracy": 94,
+      "cost": 0,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "soll",
+        "secondPersonSingular": "sollst",
+        "thirdPersonSingular": "soll",
+        "firstPersonPlural": "sollen",
+        "secondPersonPlural": "sollt",
+        "thirdPersonPlural": "sollen",
+        "formalSecondPerson": "sollen"
+      }
+    },
+    {
+      "id": "kommen",
+      "skillName": "kommen",
+      "language": "de",
+      "power": 3,
+      "accuracy": 95,
+      "cost": 1,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "komme",
+        "secondPersonSingular": "kommst",
+        "thirdPersonSingular": "kommt",
+        "firstPersonPlural": "kommen",
+        "secondPersonPlural": "kommt",
+        "thirdPersonPlural": "kommen",
+        "formalSecondPerson": "kommen"
+      }
+    },
+    {
+      "id": "spielen",
+      "skillName": "spielen",
+      "language": "de",
+      "power": 4,
+      "accuracy": 96,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "spiele",
+        "secondPersonSingular": "spielst",
+        "thirdPersonSingular": "spielt",
+        "firstPersonPlural": "spielen",
+        "secondPersonPlural": "spielt",
+        "thirdPersonPlural": "spielen",
+        "formalSecondPerson": "spielen"
+      }
+    },
+    {
+      "id": "treffen",
+      "skillName": "treffen",
+      "language": "de",
+      "power": 5,
+      "accuracy": 97,
+      "cost": 3,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "treffe",
+        "secondPersonSingular": "triffst",
+        "thirdPersonSingular": "trifft",
+        "firstPersonPlural": "treffen",
+        "secondPersonPlural": "trefft",
+        "thirdPersonPlural": "treffen",
+        "formalSecondPerson": "treffen"
+      }
+    },
+    {
+      "id": "sagen",
+      "skillName": "sagen",
+      "language": "de",
+      "power": 6,
+      "accuracy": 98,
+      "cost": 0,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "sage",
+        "secondPersonSingular": "sagst",
+        "thirdPersonSingular": "sagt",
+        "firstPersonPlural": "sagen",
+        "secondPersonPlural": "sagt",
+        "thirdPersonPlural": "sagen",
+        "formalSecondPerson": "sagen"
+      }
+    },
+    {
+      "id": "stehen",
+      "skillName": "stehen",
+      "language": "de",
+      "power": 7,
+      "accuracy": 99,
+      "cost": 1,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "stehe",
+        "secondPersonSingular": "stehst",
+        "thirdPersonSingular": "steht",
+        "firstPersonPlural": "stehen",
+        "secondPersonPlural": "steht",
+        "thirdPersonPlural": "stehen",
+        "formalSecondPerson": "stehen"
+      }
+    },
+    {
+      "id": "bringen",
+      "skillName": "bringen",
+      "language": "de",
+      "power": 3,
+      "accuracy": 100,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "bringe",
+        "secondPersonSingular": "bringst",
+        "thirdPersonSingular": "bringt",
+        "firstPersonPlural": "bringen",
+        "secondPersonPlural": "bringt",
+        "thirdPersonPlural": "bringen",
+        "formalSecondPerson": "bringen"
+      }
+    },
+    {
+      "id": "liegen",
+      "skillName": "liegen",
+      "language": "de",
+      "power": 4,
+      "accuracy": 90,
+      "cost": 3,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "liege",
+        "secondPersonSingular": "liegst",
+        "thirdPersonSingular": "liegt",
+        "firstPersonPlural": "liegen",
+        "secondPersonPlural": "liegt",
+        "thirdPersonPlural": "liegen",
+        "formalSecondPerson": "liegen"
+      }
+    },
+    {
+      "id": "finden",
+      "skillName": "finden",
+      "language": "de",
+      "power": 5,
+      "accuracy": 91,
+      "cost": 0,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "finde",
+        "secondPersonSingular": "findest",
+        "thirdPersonSingular": "findet",
+        "firstPersonPlural": "finden",
+        "secondPersonPlural": "findet",
+        "thirdPersonPlural": "finden",
+        "formalSecondPerson": "finden"
+      }
+    },
+    {
+      "id": "ueben",
+      "skillName": "üben",
+      "language": "de",
+      "power": 6,
+      "accuracy": 92,
+      "cost": 1,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "übe",
+        "secondPersonSingular": "übst",
+        "thirdPersonSingular": "übt",
+        "firstPersonPlural": "üben",
+        "secondPersonPlural": "übt",
+        "thirdPersonPlural": "üben",
+        "formalSecondPerson": "üben"
+      }
+    },
+    {
+      "id": "gehen",
+      "skillName": "gehen",
+      "language": "de",
+      "power": 7,
+      "accuracy": 93,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "gehe",
+        "secondPersonSingular": "gehst",
+        "thirdPersonSingular": "geht",
+        "firstPersonPlural": "gehen",
+        "secondPersonPlural": "geht",
+        "thirdPersonPlural": "gehen",
+        "formalSecondPerson": "gehen"
+      }
+    },
+    {
+      "id": "geben",
+      "skillName": "geben",
+      "language": "de",
+      "power": 3,
+      "accuracy": 94,
+      "cost": 3,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "gebe",
+        "secondPersonSingular": "gibst",
+        "thirdPersonSingular": "gibt",
+        "firstPersonPlural": "geben",
+        "secondPersonPlural": "gebt",
+        "thirdPersonPlural": "geben",
+        "formalSecondPerson": "geben"
+      }
+    },
+    {
+      "id": "stellen",
+      "skillName": "stellen",
+      "language": "de",
+      "power": 4,
+      "accuracy": 95,
+      "cost": 0,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "stelle",
+        "secondPersonSingular": "stellst",
+        "thirdPersonSingular": "stellt",
+        "firstPersonPlural": "stellen",
+        "secondPersonPlural": "stellt",
+        "thirdPersonPlural": "stellen",
+        "formalSecondPerson": "stellen"
+      }
+    },
+    {
+      "id": "erleiden",
+      "skillName": "erleiden",
+      "language": "de",
+      "power": 5,
+      "accuracy": 96,
+      "cost": 1,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "erleide",
+        "secondPersonSingular": "erleidest",
+        "thirdPersonSingular": "erleidet",
+        "firstPersonPlural": "erleiden",
+        "secondPersonPlural": "erleidet",
+        "thirdPersonPlural": "erleiden",
+        "formalSecondPerson": "erleiden"
+      }
+    },
+    {
+      "id": "suchen",
+      "skillName": "suchen",
+      "language": "de",
+      "power": 6,
+      "accuracy": 97,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "suche",
+        "secondPersonSingular": "suchst",
+        "thirdPersonSingular": "sucht",
+        "firstPersonPlural": "suchen",
+        "secondPersonPlural": "sucht",
+        "thirdPersonPlural": "suchen",
+        "formalSecondPerson": "suchen"
+      }
+    },
+    {
+      "id": "bitten",
+      "skillName": "bitten",
+      "language": "de",
+      "power": 7,
+      "accuracy": 98,
+      "cost": 3,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "bitte",
+        "secondPersonSingular": "bittest",
+        "thirdPersonSingular": "bittet",
+        "firstPersonPlural": "bitten",
+        "secondPersonPlural": "bittet",
+        "thirdPersonPlural": "bitten",
+        "formalSecondPerson": "bitten"
+      }
+    },
+    {
+      "id": "bestehen",
+      "skillName": "bestehen",
+      "language": "de",
+      "power": 3,
+      "accuracy": 99,
+      "cost": 0,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "bestehe",
+        "secondPersonSingular": "bestehst",
+        "thirdPersonSingular": "besteht",
+        "firstPersonPlural": "bestehen",
+        "secondPersonPlural": "besteht",
+        "thirdPersonPlural": "bestehen",
+        "formalSecondPerson": "bestehen"
+      }
+    },
+    {
+      "id": "brennen",
+      "skillName": "brennen",
+      "language": "de",
+      "power": 4,
+      "accuracy": 100,
+      "cost": 1,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "brenne",
+        "secondPersonSingular": "brennst",
+        "thirdPersonSingular": "brennt",
+        "firstPersonPlural": "brennen",
+        "secondPersonPlural": "brennt",
+        "thirdPersonPlural": "brennen",
+        "formalSecondPerson": "brennen"
+      }
+    },
+    {
+      "id": "laufen",
+      "skillName": "laufen",
+      "language": "de",
+      "power": 5,
+      "accuracy": 90,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "laufe",
+        "secondPersonSingular": "läufst",
+        "thirdPersonSingular": "läuft",
+        "firstPersonPlural": "laufen",
+        "secondPersonPlural": "lauft",
+        "thirdPersonPlural": "laufen",
+        "formalSecondPerson": "laufen"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "letter_a",
+      "displayName": "a",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "chunk_sch",
+      "displayName": "sch",
+      "itemType": "chunk",
+      "rarity": "R",
+      "language": "de"
+    },
+    {
+      "id": "suffix_ung",
+      "displayName": "-ung",
+      "itemType": "suffix",
+      "rarity": "SR",
+      "language": "de"
+    },
+    {
+      "id": "word_nacht",
+      "displayName": "Nacht",
+      "itemType": "word",
+      "rarity": "SSR",
+      "language": "de"
+    }
+  ]
+}
