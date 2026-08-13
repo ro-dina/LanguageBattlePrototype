@@ -40,9 +40,21 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void Start()
     {
+        if (GameDatabase.Instance == null)
+        {
+            Debug.LogError("Character detail cannot be displayed because GameDatabase.Instance is null.");
+            return;
+        }
+
         character =
             GameDatabase.Instance.GetCharacter(
                 GameManager.SelectedCharacterId);
+
+        if (character == null)
+        {
+            Debug.LogError($"Character detail cannot be displayed because character id was not found: {GameManager.SelectedCharacterId}");
+            return;
+        }
 
         SetupTemporaryEquipmentState();
         LoadCharacter();

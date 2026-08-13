@@ -72,6 +72,7 @@ public class BattleManager : MonoBehaviour
     [SerializeField] private Button noAdverbButton;
 
     private EquipmentData selectedTurnAdverb;
+    private EquipmentData enemySelectedTurnAdverb;
     private List<EquipmentData> currentAdverbCards = new List<EquipmentData>();
 
     private CharacterData playerCharacter;
@@ -79,6 +80,7 @@ public class BattleManager : MonoBehaviour
     private EquipmentData playerCharacterEquipment;
 
     private EquipmentData[] playerSkillEquipments;
+    private EquipmentData[] enemySkillEquipments;
 
     private int playerHP;
     private int enemyHP;
@@ -89,12 +91,20 @@ public class BattleManager : MonoBehaviour
         playerCharacterId = GameManager.SelectedCharacterId;
         enemyCharacterId = GameManager.EnemyCharacterId;
 
+        if (GameDatabase.Instance == null)
+        {
+            Debug.LogError("Battle cannot start because GameDatabase is not available.");
+            enabled = false;
+            return;
+        }
+
         playerCharacter = GameDatabase.Instance.GetCharacter(playerCharacterId);
         enemyCharacter = GameDatabase.Instance.GetCharacter(enemyCharacterId);
 
         if (playerCharacter == null || enemyCharacter == null)
         {
             Debug.LogError("Battle cannot start because character data is missing.");
+            enabled = false;
             return;
         }
 
@@ -104,12 +114,22 @@ public class BattleManager : MonoBehaviour
         playerHP = playerCharacter.hp;
         enemyHP = enemyCharacter.hp;
 
-        enemyDamageText.text = "";
-        playerDamageText.text = "";
+        if (enemyDamageText != null)
+        {
+            enemyDamageText.text = "";
+        }
+
+        if (playerDamageText != null)
+        {
+            playerDamageText.text = "";
+        }
 
         SetupSkillButtons();
         LoadCharacterImages();
-        skillPanel.SetActive(false);
+        if (skillPanel != null)
+        {
+            skillPanel.SetActive(false);
+        }
         GenerateAdverbCards();
         UpdateHPText();
 
@@ -135,24 +155,40 @@ public class BattleManager : MonoBehaviour
             Debug.Log($"Player character equipment loaded: {playerCharacterEquipment.equipmentName}");
         }
 
-        playerSkillEquipments = new EquipmentData[playerCharacter.skillIds.Length];
+        playerSkillEquipments = LoadCharacterSkillEquipments(playerCharacter);
+        enemySkillEquipments = LoadCharacterSkillEquipments(enemyCharacter);
+    }
 
-        for (int i = 0; i < playerSkillEquipments.Length; i++)
+    private EquipmentData[] LoadCharacterSkillEquipments(CharacterData character)
+    {
+        int skillCount = character != null && character.skillIds != null
+            ? character.skillIds.Length
+            : 0;
+        EquipmentData[] result = new EquipmentData[skillCount];
+
+        if (character == null || character.skillSlots == null)
         {
-            string skillEquipmentId = "";
-
-            if (GameManager.SelectedSkillEquipmentIds != null && i < GameManager.SelectedSkillEquipmentIds.Length)
-            {
-                skillEquipmentId = GameManager.SelectedSkillEquipmentIds[i];
-            }
-
-            if (string.IsNullOrEmpty(skillEquipmentId) && playerCharacter.skillSlots != null && i < playerCharacter.skillSlots.Length)
-            {
-                skillEquipmentId = playerCharacter.skillSlots[i].equippedAdverbId;
-            }
-
-            playerSkillEquipments[i] = GameDatabase.Instance.GetEquipment(skillEquipmentId);
+            return result;
         }
+
+        for (int i = 0; i < skillCount; i++)
+        {
+            string skillId = character.skillIds[i];
+
+            for (int j = 0; j < character.skillSlots.Length; j++)
+            {
+                CharacterSkillSlotData slot = character.skillSlots[j];
+                if (slot == null || slot.skillId != skillId)
+                {
+                    continue;
+                }
+
+                result[i] = GameDatabase.Instance.GetEquipment(slot.equippedAdverbId);
+                break;
+            }
+        }
+
+        return result;
     }
 
     private void SetupSkillButtons()
@@ -203,13 +239,19 @@ public class BattleManager : MonoBehaviour
     public void OpenSkillPanel()
     {
         if (isProcessing) return;
-        skillPanel.SetActive(true);
+        if (skillPanel != null)
+        {
+            skillPanel.SetActive(true);
+        }
     }
 
     public void CloseSkillPanel()
     {
         if (isProcessing) return;
-        skillPanel.SetActive(false);
+        if (skillPanel != null)
+        {
+            skillPanel.SetActive(false);
+        }
     }
 
     public void UseSkill1()
@@ -232,10 +274,15 @@ public class BattleManager : MonoBehaviour
         UsePlayerSkill(3);
     }
 
-    private void UseSkill(SkillData skill,EquipmentData skillEquipment)
+    private void UseSkill(
+        SkillData skill,
+        EquipmentData skillEquipment,
+        EquipmentData enemySkillEquipment,
+        string adverbContestLog)
     {
         if (isProcessing) return;
         isProcessing = true;
+        SetAdverbCardInteraction(false);
 
         int damage =
             DamageCalculator.CalculateDamage(
@@ -246,12 +293,32 @@ public class BattleManager : MonoBehaviour
                 skillEquipment,
                 null);
 
-        skillPanel.SetActive(false);
-        StartCoroutine(PlayerTurnSequence(skill, skillEquipment, damage));
+        if (skillPanel != null)
+        {
+            skillPanel.SetActive(false);
+        }
+
+        StartCoroutine(PlayerTurnSequence(
+            skill,
+            skillEquipment,
+            enemySkillEquipment,
+            damage,
+            adverbContestLog));
     }
 
-    private IEnumerator PlayerTurnSequence(SkillData skill, EquipmentData skillEquipment, int damage)
+    private IEnumerator PlayerTurnSequence(
+        SkillData skill,
+        EquipmentData skillEquipment,
+        EquipmentData enemySkillEquipment,
+        int damage,
+        string adverbContestLog)
     {
+        if (!string.IsNullOrEmpty(adverbContestLog) && battleLogText != null)
+        {
+            battleLogText.text = adverbContestLog;
+            yield return new WaitForSeconds(0.8f);
+        }
+
         if (battleLogText != null)
         {
             yield return StartCoroutine(ShowPlayerAttackLog(skill, skillEquipment, damage));
@@ -279,7 +346,7 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
-        EnemyAttack();
+        EnemyAttack(enemySkillEquipment);
 
         yield return new WaitForSeconds(1f);
 
@@ -289,8 +356,8 @@ public class BattleManager : MonoBehaviour
             SceneManager.LoadScene("Result");
             yield break;
         }
-        GenerateAdverbCards();
         isProcessing = false;
+        GenerateAdverbCards();
     }
 
     private IEnumerator ShowPlayerAttackLog(SkillData skill, EquipmentData skillEquipment, int damage)
@@ -436,13 +503,21 @@ public class BattleManager : MonoBehaviour
                 + playerName;
         }
 
-        playerHPText.text =
-            $"{playerName} HP:\n{playerHP}";
-        enemyHPText.text = $"{enemyCharacter.characterName} HP:\n{enemyHP}";
+        if (playerHPText != null)
+        {
+            playerHPText.text = $"{playerName} HP:\n{playerHP}";
+        }
+
+        if (enemyHPText != null)
+        {
+            enemyHPText.text = $"{enemyCharacter.characterName} HP:\n{enemyHP}";
+        }
     }
 
     private IEnumerator ShowEnemyDamage(int damage)
     {
+        if (enemyDamageText == null) yield break;
+
         enemyDamageText.text = "-" + damage;
 
         yield return new WaitForSeconds(1f);
@@ -452,6 +527,8 @@ public class BattleManager : MonoBehaviour
 
     private IEnumerator ShowPlayerDamage(int damage)
     {
+        if (playerDamageText == null) yield break;
+
         playerDamageText.text = "-" + damage;
 
         yield return new WaitForSeconds(1f);
@@ -459,43 +536,119 @@ public class BattleManager : MonoBehaviour
         playerDamageText.text = "";
     }
 
-    private IEnumerator BattleSequence()
-    {
-        isProcessing = true;
-        // プレイヤーの攻撃ログを見る時間
-        yield return new WaitForSeconds(1f);
-
-        EnemyAttack();
-
-        // 敵攻撃ログを見る時間
-        yield return new WaitForSeconds(1f);
-
-        if(playerHP <= 0)
-        {
-            GameManager.IsWin = false;
-            SceneManager.LoadScene("Result");
-        }
-        isProcessing = false;
-    }
-
     private void UsePlayerSkill(int index)
     {
         if (isProcessing) return;
+        if (playerCharacter == null || playerCharacter.skillIds == null) return;
         if (index < 0 || index >= playerCharacter.skillIds.Length) return;
 
         string skillId = playerCharacter.skillIds[index];
         SkillData skill = GameDatabase.Instance.GetSkill(skillId);
         if (skill == null) return;
 
-        EquipmentData skillEquipment = selectedTurnAdverb;
-        UseSkill(skill, skillEquipment);
+        ResolveTurnAdverbContest(
+            out EquipmentData playerAdverb,
+            out EquipmentData enemyAdverb,
+            out string contestLog);
+
+        UseSkill(skill, playerAdverb, enemyAdverb, contestLog);
     }
 
-    private void EnemyAttack()
+    private void ResolveTurnAdverbContest(
+        out EquipmentData playerAdverb,
+        out EquipmentData enemyAdverb,
+        out string contestLog)
     {
-        string skillId = enemyCharacter.skillIds[Random.Range(0, enemyCharacter.skillIds.Length)];
-        SkillData skill = GameDatabase.Instance.GetSkill(skillId);
-        if (skill == null) return;
+        playerAdverb = selectedTurnAdverb;
+        enemyAdverb = enemySelectedTurnAdverb;
+        contestLog = "";
+
+        bool selectedSameAdverb =
+            playerAdverb != null &&
+            enemyAdverb != null &&
+            !string.IsNullOrEmpty(playerAdverb.id) &&
+            playerAdverb.id == enemyAdverb.id;
+
+        if (!selectedSameAdverb)
+        {
+            return;
+        }
+
+        int playerSpeed = playerCharacter.speed +
+            DamageCalculator.GetCharacterSpeedBonus(playerCharacterEquipment);
+        int enemySpeed = enemyCharacter.speed;
+        string adverbName = playerAdverb.equipmentName;
+
+        if (playerSpeed > enemySpeed)
+        {
+            enemyAdverb = null;
+            contestLog =
+                $"Both chose {adverbName}. " +
+                $"{playerCharacter.characterName} won it (SPD {playerSpeed} > {enemySpeed})!";
+        }
+        else if (enemySpeed > playerSpeed)
+        {
+            playerAdverb = null;
+            contestLog =
+                $"Both chose {adverbName}. " +
+                $"{enemyCharacter.characterName} won it (SPD {enemySpeed} > {playerSpeed})!";
+        }
+        else
+        {
+            bool playerWinsTie = Random.value < 0.5f;
+
+            if (playerWinsTie)
+            {
+                enemyAdverb = null;
+                contestLog =
+                    $"Both chose {adverbName} and tied at SPD {playerSpeed}. " +
+                    $"{playerCharacter.characterName} won the draw!";
+            }
+            else
+            {
+                playerAdverb = null;
+                contestLog =
+                    $"Both chose {adverbName} and tied at SPD {playerSpeed}. " +
+                    $"{enemyCharacter.characterName} won the draw!";
+            }
+        }
+    }
+
+    private void EnemyAttack(EquipmentData skillEquipment = null)
+    {
+        if (enemyCharacter == null ||
+            enemyCharacter.skillIds == null ||
+            enemyCharacter.skillIds.Length == 0)
+        {
+            Debug.LogError("Enemy cannot attack because it has no skills.");
+            if (battleLogText != null)
+            {
+                battleLogText.text = "Enemy has no usable skills.";
+            }
+            return;
+        }
+
+        List<SkillData> usableSkills = new List<SkillData>();
+        foreach (string skillId in enemyCharacter.skillIds)
+        {
+            SkillData candidate = GameDatabase.Instance.GetSkill(skillId);
+            if (candidate != null)
+            {
+                usableSkills.Add(candidate);
+            }
+        }
+
+        if (usableSkills.Count == 0)
+        {
+            Debug.LogError("Enemy cannot attack because none of its skill ids are valid.");
+            if (battleLogText != null)
+            {
+                battleLogText.text = "Enemy has no usable skills.";
+            }
+            return;
+        }
+
+        SkillData skill = usableSkills[Random.Range(0, usableSkills.Count)];
 
         int damage =
             DamageCalculator.CalculateDamage(
@@ -503,7 +656,7 @@ public class BattleManager : MonoBehaviour
                 playerCharacter,
                 skill,
                 null,
-                null,
+                skillEquipment,
                 playerCharacterEquipment);
 
         playerHP -= damage;
@@ -519,7 +672,15 @@ public class BattleManager : MonoBehaviour
         string effectivenessText = GetEffectivenessText(enemyCharacter, playerCharacter);
 
         string enemySkillName = GetConjugatedSkillName(skill, enemyCharacter);
-        battleLogText.text = $"Enemy used {enemySkillName}! {damage} damage! {effectivenessText}";
+        string equippedEnemySkillName = GetEquippedSkillName(enemySkillName, skillEquipment);
+        string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
+
+        if (battleLogText != null)
+        {
+            battleLogText.text =
+                $"Enemy used {equippedEnemySkillName}{skillEffect}! " +
+                $"{damage} damage! {effectivenessText}";
+        }
         StartCoroutine(ShowPlayerDamage(damage));
     }
 
@@ -763,6 +924,7 @@ public class BattleManager : MonoBehaviour
     private void GenerateAdverbCards()
     {
         selectedTurnAdverb = null;
+        enemySelectedTurnAdverb = null;
         currentAdverbCards.Clear();
 
         if (adverbCardButtons == null || adverbCardButtons.Length == 0)
@@ -770,15 +932,7 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        EquipmentData[] allEquipments = GameDatabase.Instance.GetAllEquipments();
-
-        List<EquipmentData> candidates = allEquipments
-            .Where(e => e != null &&
-                (e.partOfSpeech == "adverb" ||
-                 e.partOfSpeech == "adjective_adverb" ||
-                 e.targetRole == "skill" ||
-                 e.targetRole == "both"))
-            .ToList();
+        List<EquipmentData> candidates = GetBattleAdverbCandidates();
 
         for (int i = 0; i < adverbCardButtons.Length; i++)
         {
@@ -787,7 +941,9 @@ public class BattleManager : MonoBehaviour
                 continue;
             }
 
-            if (i >= adverbCardTexts.Length || adverbCardTexts[i] == null)
+            if (adverbCardTexts == null ||
+                i >= adverbCardTexts.Length ||
+                adverbCardTexts[i] == null)
             {
                 adverbCardButtons[i].gameObject.SetActive(false);
                 continue;
@@ -800,12 +956,13 @@ public class BattleManager : MonoBehaviour
             }
 
             EquipmentData picked = candidates[Random.Range(0, candidates.Count)];
+            candidates.Remove(picked);
             currentAdverbCards.Add(picked);
 
             adverbCardButtons[i].gameObject.SetActive(true);
             adverbCardTexts[i].text = picked.equipmentName;
 
-            int index = i;
+            int index = currentAdverbCards.Count - 1;
             adverbCardButtons[i].onClick.RemoveAllListeners();
             adverbCardButtons[i].onClick.AddListener(() => SelectAdverbCard(index));
         }
@@ -815,10 +972,159 @@ public class BattleManager : MonoBehaviour
             noAdverbButton.onClick.RemoveAllListeners();
             noAdverbButton.onClick.AddListener(SelectNoAdverb);
         }
+
+        ChooseEnemyAdverb();
+        SetAdverbCardInteraction(true);
+    }
+
+    private List<EquipmentData> GetBattleAdverbCandidates()
+    {
+        EquipmentData[] allEquipments = GameDatabase.Instance.GetAllEquipments();
+        Dictionary<string, EquipmentData> validAdverbsById = allEquipments
+            .Where(IsBattleAdverb)
+            .GroupBy(e => e.id)
+            .Where(group => !string.IsNullOrEmpty(group.Key))
+            .ToDictionary(group => group.Key, group => group.First());
+
+        List<EquipmentData> playerCollocations = GetCharacterCollocationAdverbs(
+            playerCharacter,
+            playerSkillEquipments,
+            validAdverbsById);
+        List<EquipmentData> enemyCollocations = GetCharacterCollocationAdverbs(
+            enemyCharacter,
+            enemySkillEquipments,
+            validAdverbsById);
+
+        // Keep one entry per character. If both characters collocate with the
+        // same adverb, two entries intentionally remain and may both be shown.
+        List<EquipmentData> result = new List<EquipmentData>();
+        result.AddRange(playerCollocations);
+        result.AddRange(enemyCollocations);
+        return result;
+    }
+
+    private List<EquipmentData> GetCharacterCollocationAdverbs(
+        CharacterData character,
+        EquipmentData[] equippedSkillAdverbs,
+        Dictionary<string, EquipmentData> validAdverbsById)
+    {
+        List<EquipmentData> result = new List<EquipmentData>();
+        HashSet<string> addedIds = new HashSet<string>();
+
+        if (character != null && character.collocationAdverbIds != null)
+        {
+            foreach (string adverbId in character.collocationAdverbIds)
+            {
+                AddCollocationAdverb(adverbId, validAdverbsById, addedIds, result);
+            }
+        }
+
+        if (result.Count > 0)
+        {
+            return result;
+        }
+
+        if (equippedSkillAdverbs != null)
+        {
+            foreach (EquipmentData adverb in equippedSkillAdverbs)
+            {
+                if (adverb != null)
+                {
+                    AddCollocationAdverb(adverb.id, validAdverbsById, addedIds, result);
+                }
+            }
+        }
+
+        if (result.Count > 0)
+        {
+            return result;
+        }
+
+        // Existing character data has no collocation field yet. Use compatible
+        // battle adverbs as a safe default so battles remain playable.
+        foreach (EquipmentData adverb in validAdverbsById.Values)
+        {
+            if (character == null ||
+                string.IsNullOrEmpty(character.language) ||
+                string.IsNullOrEmpty(adverb.language) ||
+                character.language == adverb.language)
+            {
+                AddCollocationAdverb(adverb.id, validAdverbsById, addedIds, result);
+            }
+        }
+
+        return result;
+    }
+
+    private void AddCollocationAdverb(
+        string adverbId,
+        Dictionary<string, EquipmentData> validAdverbsById,
+        HashSet<string> addedIds,
+        List<EquipmentData> result)
+    {
+        if (string.IsNullOrEmpty(adverbId) || !addedIds.Add(adverbId))
+        {
+            return;
+        }
+
+        if (validAdverbsById.TryGetValue(adverbId, out EquipmentData adverb))
+        {
+            result.Add(adverb);
+        }
+        else
+        {
+            Debug.LogWarning($"Collocation adverb id is invalid or unusable: {adverbId}");
+        }
+    }
+
+    private bool IsBattleAdverb(EquipmentData equipment)
+    {
+        if (equipment == null)
+        {
+            return false;
+        }
+
+        bool isAdverb =
+            equipment.partOfSpeech == "adverb" ||
+            equipment.partOfSpeech == "adjective_adverb";
+
+        return isAdverb && DamageCalculator.AppliesToSkill(equipment);
+    }
+
+    private void ChooseEnemyAdverb()
+    {
+        if (currentAdverbCards.Count == 0)
+        {
+            return;
+        }
+
+        int selectedIndex = Random.Range(0, currentAdverbCards.Count);
+        enemySelectedTurnAdverb = currentAdverbCards[selectedIndex];
+        Debug.Log("Enemy selected adverb: " + enemySelectedTurnAdverb.equipmentName);
+    }
+
+    private void SetAdverbCardInteraction(bool interactable)
+    {
+        if (adverbCardButtons != null)
+        {
+            foreach (Button button in adverbCardButtons)
+            {
+                if (button != null)
+                {
+                    button.interactable = interactable;
+                }
+            }
+        }
+
+        if (noAdverbButton != null)
+        {
+            noAdverbButton.interactable = interactable;
+        }
     }
 
     private void SelectAdverbCard(int index)
     {
+        if (isProcessing) return;
         if (index < 0 || index >= currentAdverbCards.Count) return;
 
         selectedTurnAdverb = currentAdverbCards[index];
@@ -833,6 +1139,8 @@ public class BattleManager : MonoBehaviour
 
     private void SelectNoAdverb()
     {
+        if (isProcessing) return;
+
         selectedTurnAdverb = null;
 
         if (battleLogText != null)

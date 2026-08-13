@@ -19,6 +19,11 @@ public class CharacterData
 
     public string[] skillIds;
 
+    // Optional explicit adverb collocations for battle card generation.
+    // When omitted, the battle uses the character's equipped skill adverbs,
+    // then falls back to compatible adverbs in the database.
+    public string[] collocationAdverbIds;
+
     public string equippedArticleId;
     public string equippedAdjectiveId;
     public string equippedCaseMarkerId;

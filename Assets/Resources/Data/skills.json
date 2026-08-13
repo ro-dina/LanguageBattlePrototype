@@ -459,6 +459,26 @@
         "thirdPersonPlural": "laufen",
         "formalSecondPerson": "laufen"
       }
+    },
+    {
+      "id": "beissen",
+      "skillName": "beißen",
+      "language": "de",
+      "power": 5,
+      "accuracy": 90,
+      "cost": 2,
+      "targetType": "enemySingle",
+      "effectType": "damage",
+      "effectValue": 0,
+      "conjugations": {
+        "firstPersonSingular": "beiße",
+        "secondPersonSingular": "beißt",
+        "thirdPersonSingular": "beißt",
+        "firstPersonPlural": "beißen",
+        "secondPersonPlural": "beißt",
+        "thirdPersonPlural": "beißen",
+        "formalSecondPerson": "beißen"
+      }
     }
   ]
 }
