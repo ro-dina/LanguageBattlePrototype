@@ -76,10 +76,27 @@ public class CharacterSelectManager : MonoBehaviour
                 Debug.LogError($"TMP_Text was not found in character button prefab: {character.id}");
             }
 
+            Transform iconTransform = buttonObj.transform.Find("CharacterIcon");
+            Image characterIcon = iconTransform != null
+                ? iconTransform.GetComponent<Image>()
+                : null;
+
+            if (characterIcon != null)
+            {
+                Sprite iconSprite = Resources.Load<Sprite>(
+                    $"Images/Characters/{character.illustration}");
+                characterIcon.sprite = iconSprite;
+                characterIcon.preserveAspect = true;
+                characterIcon.gameObject.SetActive(iconSprite != null);
+            }
+
             Button button = buttonObj.GetComponent<Button>();
             if (button != null)
             {
                 string id = character.id;
+                // List entries only update the selection preview. Replacing the
+                // event also prevents prefab callbacks from causing navigation.
+                button.onClick = new Button.ButtonClickedEvent();
                 button.onClick.AddListener(() => SelectCharacter(id));
             }
             else
@@ -98,15 +115,30 @@ public class CharacterSelectManager : MonoBehaviour
 
         if (character == null)
         {
-            selectedCharacterText.text = $"Selected: {characterId}";
+            if (selectedCharacterText != null)
+            {
+                selectedCharacterText.text = $"Selected: {characterId}";
+            }
             return;
         }
 
-        selectedCharacterText.text =
-            $"{character.characterName}\n" +
-            $"Gender:\n{character.grammaticalGender}\n" +
-            $"HP: {character.hp}\n" +
-            $"ATK: {character.attack} /\nDEF: {character.defense} /\nSPD: {character.speed}";
+        if (selectedCharacterText != null)
+        {
+            selectedCharacterText.text =
+                $"{character.characterName}\n" +
+                $"Gender:\n{character.grammaticalGender}\n" +
+                $"HP: {character.hp}\n" +
+                $"ATK: {character.attack} /\nDEF: {character.defense} /\nSPD: {character.speed}";
+        }
+
+        if (selectedCharacterImage == null)
+        {
+            Debug.LogError("Selected Character Image is not assigned.");
+            return;
+        }
+
+        selectedCharacterImage.sprite = null;
+        selectedCharacterImage.enabled = false;
 
         Sprite sprite = Resources.Load<Sprite>(
             $"Images/Characters/{character.illustration}"

@@ -603,7 +603,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectManager
   characterButtonParent: {fileID: 1655330403}
-  characterButtonPrefab: {fileID: 371040793}
+  characterButtonPrefab: {fileID: 1288521184596612846, guid: d9431514d4f0148fa97c30af21089122, type: 3}
   selectedCharacterText: {fileID: 1146106148}
   selectedCharacterImage: {fileID: 1537423739}
   selectedCharacterAspectFitter: {fileID: 1537423740}
