@@ -27,6 +27,90 @@
       "itemType": "word",
       "rarity": "SSR",
       "language": "de"
+    },
+    {
+      "id": "word_wasser",
+      "displayName": "Wasser",
+      "itemType": "word",
+      "rarity": "R",
+      "language": "de"
+    },
+    {
+      "id": "word_pistole",
+      "displayName": "Pistole",
+      "itemType": "word",
+      "rarity": "R",
+      "language": "de"
+    },
+    {
+      "id": "letter_w",
+      "displayName": "w",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "chunk_ss",
+      "displayName": "ss",
+      "itemType": "chunk",
+      "rarity": "R",
+      "language": "de"
+    },
+    {
+      "id": "chunk_er",
+      "displayName": "er",
+      "itemType": "chunk",
+      "rarity": "R",
+      "language": "de"
+    },
+    {
+      "id": "letter_p",
+      "displayName": "p",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_i",
+      "displayName": "i",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_s",
+      "displayName": "s",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_t",
+      "displayName": "t",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_o",
+      "displayName": "o",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_l",
+      "displayName": "l",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_e",
+      "displayName": "e",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
     }
   ]
 }

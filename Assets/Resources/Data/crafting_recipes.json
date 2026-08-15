@@ -15,6 +15,58 @@
       "resultType": "character",
       "resultId": "wasserpistole",
       "resultCount": 1
+    },
+    {
+      "id": "craft_wasserpistole_letters",
+      "inputs": [
+        {
+          "itemId": "letter_w",
+          "count": 1
+        },
+        {
+          "itemId": "letter_a",
+          "count": 1
+        },
+        {
+          "itemId": "chunk_ss",
+          "count": 1
+        },
+        {
+          "itemId": "chunk_er",
+          "count": 1
+        },
+        {
+          "itemId": "letter_p",
+          "count": 1
+        },
+        {
+          "itemId": "letter_i",
+          "count": 1
+        },
+        {
+          "itemId": "letter_s",
+          "count": 1
+        },
+        {
+          "itemId": "letter_t",
+          "count": 1
+        },
+        {
+          "itemId": "letter_o",
+          "count": 1
+        },
+        {
+          "itemId": "letter_l",
+          "count": 1
+        },
+        {
+          "itemId": "letter_e",
+          "count": 1
+        }
+      ],
+      "resultType": "character",
+      "resultId": "wasserpistole",
+      "resultCount": 1
     }
   ]
 }

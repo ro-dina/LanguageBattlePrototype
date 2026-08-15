@@ -18,6 +18,16 @@ public class GermanyHomeManager : MonoBehaviour
         SceneManager.LoadScene("Gacha");
     }
 
+    public void GoInventory()
+    {
+        SceneManager.LoadScene("Inventory");
+    }
+
+    public void GoCrafting()
+    {
+        SceneManager.LoadScene("Crafting");
+    }
+
     public void GoMissions()
     {
         Debug.Log("Missions are coming soon.");
