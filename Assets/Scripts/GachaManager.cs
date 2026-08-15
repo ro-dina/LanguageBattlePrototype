@@ -16,16 +16,42 @@ public class GachaManager : MonoBehaviour
             Debug.LogError("gacha_items.json not found. Put it in Assets/Resources/Data/gacha_items.json");
             return;
         }
-        GachaItemDatabase database =
-            JsonUtility.FromJson<GachaItemDatabase>(json.text);
 
-        items = database.items;
+        GachaItemDatabase database;
+        try
+        {
+            database = JsonUtility.FromJson<GachaItemDatabase>(json.text);
+        }
+        catch (System.ArgumentException exception)
+        {
+            Debug.LogError($"gacha_items.json could not be parsed: {exception.Message}");
+            return;
+        }
+
+        if (database == null || database.items == null)
+        {
+            Debug.LogError("gacha_items.json does not contain an items array.");
+            return;
+        }
+
+        items = System.Array.FindAll(database.items, IsValidItem);
+
+        if (items.Length == 0)
+        {
+            Debug.LogError("gacha_items.json does not contain any valid items.");
+        }
+        else if (items.Length != database.items.Length)
+        {
+            Debug.LogWarning("Skipped one or more gacha item entries with no id.");
+        }
     }
 
     public void PullOnce()
     {
         GachaItemData item = GetRandomItem();
         if (item == null) return;
+
+        AddItemToInventory(item);
 
         if (resultText != null)
         {
@@ -36,18 +62,21 @@ public class GachaManager : MonoBehaviour
 
     public void PullTen()
     {
-        if (resultText == null) return;
-
         string result = "10 Pull Result\n\n";
 
         for (int i = 0; i < 10; i++)
         {
             GachaItemData item = GetRandomItem();
             if (item == null) continue;
+
+            AddItemToInventory(item);
             result += $"{i + 1}. [{item.rarity}] {item.displayName} ({item.itemType})\n";
         }
 
-        resultText.text = result;
+        if (resultText != null)
+        {
+            resultText.text = result;
+        }
     }
 
     private GachaItemData GetRandomItem()
@@ -57,6 +86,16 @@ public class GachaManager : MonoBehaviour
             Debug.LogError("No gacha items loaded.");
             return null;
         }
+
+        GachaItemData[] validItems =
+            System.Array.FindAll(items, IsValidItem);
+
+        if (validItems.Length == 0)
+        {
+            Debug.LogError("No valid gacha items loaded.");
+            return null;
+        }
+
         int roll = Random.Range(0, 100);
 
         string rarity;
@@ -67,14 +106,30 @@ public class GachaManager : MonoBehaviour
         else rarity = "SSR";
 
         GachaItemData[] candidates =
-            System.Array.FindAll(items, item => item.rarity == rarity);
+            System.Array.FindAll(validItems, item => item.rarity == rarity);
 
         if (candidates.Length == 0)
         {
-            return items[Random.Range(0, items.Length)];
+            return validItems[Random.Range(0, validItems.Length)];
         }
 
         return candidates[Random.Range(0, candidates.Length)];
+    }
+
+    private static bool IsValidItem(GachaItemData item)
+    {
+        return item != null && !string.IsNullOrWhiteSpace(item.id);
+    }
+
+    private static void AddItemToInventory(GachaItemData item)
+    {
+        if (!InventoryManager.AddItem(item.id, 1))
+        {
+            Debug.LogError($"Failed to add {item.id} to Inventory.");
+            return;
+        }
+
+        Debug.Log($"Obtained {item.id}. Owned: {InventoryManager.GetItemCount(item.id)}");
     }
 
     public void BackHome()

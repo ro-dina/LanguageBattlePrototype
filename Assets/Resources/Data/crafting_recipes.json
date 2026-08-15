@@ -1,0 +1,20 @@
+{
+  "recipes": [
+    {
+      "id": "craft_wasserpistole",
+      "inputs": [
+        {
+          "itemId": "word_wasser",
+          "count": 1
+        },
+        {
+          "itemId": "word_pistole",
+          "count": 1
+        }
+      ],
+      "resultType": "character",
+      "resultId": "wasserpistole",
+      "resultCount": 1
+    }
+  ]
+}
