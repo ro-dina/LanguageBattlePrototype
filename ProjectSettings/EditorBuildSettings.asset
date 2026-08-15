@@ -32,5 +32,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Gacha.unity
     guid: a80d5227586b04311ba404dd65c53797
+  - enabled: 1
+    path: Assets/Scenes/Inventory.unity
+    guid: b9b4c7ddac15e49e89a9a27bff009890
+  - enabled: 1
+    path: Assets/Scenes/Crafting.unity
+    guid: 2fde144bbd7b34bb0bff66501fa07604
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

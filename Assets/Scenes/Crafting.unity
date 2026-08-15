@@ -293,7 +293,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1549820438}
   m_HandleRect: {fileID: 1549820437}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1356,7 +1356,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1080668201}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1865942566}
+        m_TargetAssemblyTypeName: CraftingUIManager, Assembly-CSharp
+        m_MethodName: ClearSelection
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1080668201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1809,7 +1821,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 515772623}
   m_HandleRect: {fileID: 515772622}
   m_Direction: 2
-  m_Value: 0.99999976
+  m_Value: 1
   m_Size: 0.61
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1935,7 +1947,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1590425395}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1865942566}
+        m_TargetAssemblyTypeName: CraftingUIManager, Assembly-CSharp
+        m_MethodName: BackHome
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1590425395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2193,7 +2217,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1800254915}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1865942566}
+        m_TargetAssemblyTypeName: CraftingUIManager, Assembly-CSharp
+        m_MethodName: CraftSelectedMaterials
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1800254915
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2232,6 +2268,56 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1800254912}
   m_CullTransparentMesh: 1
+--- !u!1 &1865942565
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1865942567}
+  - component: {fileID: 1865942566}
+  m_Layer: 0
+  m_Name: CraftingUIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1865942566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1865942565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9df343a36a5b49cdba524e972562bc4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingUIManager
+  inventoryContent: {fileID: 377512591}
+  craftingMaterialPrefab: {fileID: 8622216041156080149, guid: c8fad6cca10114a00ba12b29e23c9ae0, type: 3}
+  selectedMaterialText: {fileID: 413929849}
+  combinedWordText: {fileID: 1935482159}
+  resultText: {fileID: 1068748327}
+  craftButton: {fileID: 1800254914}
+--- !u!4 &1865942567
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1865942565}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 420.55136, y: 338.63022, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1867179690
 GameObject:
   m_ObjectHideFlags: 0
@@ -2513,3 +2599,4 @@ SceneRoots:
   - {fileID: 166790401}
   - {fileID: 1165039600}
   - {fileID: 297415168}
+  - {fileID: 1865942567}
