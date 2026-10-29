@@ -18,6 +18,12 @@ public class CharacterSelectManager : MonoBehaviour
 
     private void Start()
     {
+        if (GameDatabase.Instance == null)
+        {
+            Debug.LogError("Character selection requires a GameDatabase in the scene.", this);
+            return;
+        }
+
         CreateCharacterButtons();
 
         CharacterData[] characters = GameDatabase.Instance.GetAllCharacters();
@@ -55,6 +61,7 @@ public class CharacterSelectManager : MonoBehaviour
 
         foreach (Transform child in characterButtonParent)
         {
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
         }
 

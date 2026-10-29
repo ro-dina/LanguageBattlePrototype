@@ -26,24 +26,43 @@ public class CharacterCollectionManager : MonoBehaviour
             selectedCharacterText.text = "Select a character";
         }
 
+        if (GameDatabase.Instance == null)
+        {
+            Debug.LogError("Character collection requires a GameDatabase in the scene.", this);
+            return;
+        }
+
         allCharacters = GameDatabase.Instance.GetAllCharacters();
 
         if (searchInputField != null)
         {
-            searchInputField.onValueChanged.AddListener(_ => RefreshCharacterButtons());
+            searchInputField.onValueChanged.AddListener(OnSearchChanged);
         }
 
         if (genderDropdown != null)
         {
-            genderDropdown.onValueChanged.AddListener(_ => RefreshCharacterButtons());
+            genderDropdown.onValueChanged.AddListener(OnFilterChanged);
         }
 
         if (sortDropdown != null)
         {
-            sortDropdown.onValueChanged.AddListener(_ => RefreshCharacterButtons());
+            sortDropdown.onValueChanged.AddListener(OnFilterChanged);
         }
 
         RefreshCharacterButtons();
+    }
+
+    private void OnSearchChanged(string _) => RefreshCharacterButtons();
+    private void OnFilterChanged(int _) => RefreshCharacterButtons();
+
+    private void OnDestroy()
+    {
+        if (searchInputField != null)
+            searchInputField.onValueChanged.RemoveListener(OnSearchChanged);
+        if (genderDropdown != null)
+            genderDropdown.onValueChanged.RemoveListener(OnFilterChanged);
+        if (sortDropdown != null)
+            sortDropdown.onValueChanged.RemoveListener(OnFilterChanged);
     }
 
     private void RefreshCharacterButtons()
@@ -68,21 +87,24 @@ public class CharacterCollectionManager : MonoBehaviour
 
         foreach (Transform child in characterButtonParent)
         {
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
         }
 
-        List<CharacterData> result = new List<CharacterData>(allCharacters);
+        List<CharacterData> result = (allCharacters ?? new CharacterData[0])
+            .Where(character => character != null).ToList();
 
         string keyword = searchInputField != null ? searchInputField.text.ToLower() : "";
 
         if (!string.IsNullOrEmpty(keyword))
         {
             result = result
-                .Where(c => c.characterName.ToLower().Contains(keyword))
+                .Where(c => (c.characterName ?? "").ToLower().Contains(keyword))
                 .ToList();
         }
 
-        if (genderDropdown != null)
+        if (genderDropdown != null && genderDropdown.value >= 0 &&
+            genderDropdown.value < genderDropdown.options.Count)
         {
             string gender = genderDropdown.options[genderDropdown.value].text;
 
@@ -94,7 +116,8 @@ public class CharacterCollectionManager : MonoBehaviour
             }
         }
 
-        if (sortDropdown != null)
+        if (sortDropdown != null && sortDropdown.value >= 0 &&
+            sortDropdown.value < sortDropdown.options.Count)
         {
             string sort = sortDropdown.options[sortDropdown.value].text;
 

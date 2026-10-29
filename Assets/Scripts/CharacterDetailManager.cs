@@ -148,14 +148,16 @@ public class CharacterDetailManager : MonoBehaviour
     {
         if (character == null) return;
 
-        characterNameText.text =
-            character.characterName;
+        if (characterNameText != null)
+        {
+            characterNameText.text = character.characterName;
+        }
 
         Sprite sprite =
             Resources.Load<Sprite>(
                 $"Images/Characters/{character.illustration}");
 
-        if(sprite != null)
+        if (sprite != null && characterImage != null)
         {
             characterImage.sprite = sprite;
 
@@ -200,7 +202,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void UpdateCharacterInfoText()
     {
-        if (character == null) return;
+        if (character == null || characterInfoText == null) return;
 
         int attack = character.attack + DamageCalculator.GetCharacterAttackBonus(selectedCharacterEquipment);
         int defense = character.defense + DamageCalculator.GetCharacterDefenseBonus(selectedCharacterEquipment);
@@ -243,6 +245,8 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenAdjectiveEquipmentList()
     {
+        if (character == null || GameDatabase.Instance == null) return;
+
         currentCharacterEquipmentMode = "adjective";
 
         CloseSkillEquipmentList();
@@ -257,6 +261,8 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenArticleEquipmentList()
     {
+        if (character == null || GameDatabase.Instance == null) return;
+
         currentCharacterEquipmentMode = "article";
 
         CloseSkillEquipmentList();
@@ -299,6 +305,7 @@ public class CharacterDetailManager : MonoBehaviour
     {
         foreach (Transform child in characterEquipmentButtonParent)
         {
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
         }
 
@@ -566,6 +573,15 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenSkillEquipmentList(int skillIndex)
     {
+        if (character == null || character.skillIds == null ||
+            skillIndex < 0 || skillIndex >= character.skillIds.Length ||
+            tempSkillEquipmentIds == null || skillIndex >= tempSkillEquipmentIds.Length ||
+            GameDatabase.Instance == null || equipmentButtonPrefab == null ||
+            skillEquipmentButtonParent == null || skillEquipmentPanel == null)
+        {
+            return;
+        }
+
         selectedSkillIndex = skillIndex;
 
         CloseCharacterEquipmentList();
@@ -582,6 +598,7 @@ public class CharacterDetailManager : MonoBehaviour
 
         foreach (Transform child in skillEquipmentButtonParent)
         {
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
         }
 
@@ -712,7 +729,9 @@ public class CharacterDetailManager : MonoBehaviour
 
         if (button != null)
         {
-            button.onClick.RemoveAllListeners();
+            // This button has a scene-authored StartBattle callback. RemoveAllListeners
+            // only removes runtime listeners, so replace the event when choosing its mode.
+            button.onClick = new Button.ButtonClickedEvent();
         }
 
         if (GameManager.PreviousSceneName == "CharacterCollection")

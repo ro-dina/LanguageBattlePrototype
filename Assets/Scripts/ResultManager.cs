@@ -15,7 +15,10 @@ public class ResultManager : MonoBehaviour
     {
         if (GameManager.IsWin)
         {
-            resultText.text = "YOU WIN!";
+            if (resultText != null)
+            {
+                resultText.text = "YOU WIN!";
+            }
 
             if (backgroundImage != null && winBackground != null)
             {
@@ -24,7 +27,10 @@ public class ResultManager : MonoBehaviour
         }
         else
         {
-            resultText.text = "YOU LOSE...";
+            if (resultText != null)
+            {
+                resultText.text = "YOU LOSE...";
+            }
 
             if (backgroundImage != null && loseBackground != null)
             {

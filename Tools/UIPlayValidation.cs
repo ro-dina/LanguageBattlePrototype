@@ -1,0 +1,281 @@
+// Copy to Assets in a disposable validation project; this harness changes test state only.
+#if UNITY_EDITOR
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using TMPro;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
+
+public sealed class UIPlayValidation : MonoBehaviour
+{
+    private readonly List<string> failures = new List<string>();
+    private readonly HashSet<string> warnings = new HashSet<string>();
+    private readonly HashSet<string> editorDiagnostics = new HashSet<string>();
+    private readonly List<string> passes = new List<string>();
+    private readonly string output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../results"));
+    private static readonly BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
+
+    private void Awake()
+    {
+        Application.runInBackground = true;
+        DontDestroyOnLoad(gameObject);
+        Directory.CreateDirectory(output);
+        Application.logMessageReceived += OnLog;
+    }
+
+    private void Start()
+    {
+        Debug.Log("UI_VALIDATE_START");
+        StartCoroutine(SafeRun());
+    }
+
+    private void OnLog(string message, string stack, LogType type)
+    {
+        if (stack.Contains("UnityEditor.Search.SearchDatabase"))
+        {
+            editorDiagnostics.Add(message + "\n" + stack);
+            return;
+        }
+        if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
+            failures.Add(message + "\n" + stack);
+        else if (type == LogType.Warning) warnings.Add(message);
+    }
+
+    private IEnumerator SafeRun()
+    {
+        var stack = new Stack<IEnumerator>();
+        stack.Push(Validate());
+        while (stack.Count > 0)
+        {
+            object current = null;
+            bool more = false;
+            try { more = stack.Peek().MoveNext(); if (more) current = stack.Peek().Current; }
+            catch (Exception exception) { failures.Add(exception.ToString()); break; }
+            if (!more) { stack.Pop(); continue; }
+            if (current is IEnumerator nested) stack.Push(nested);
+            else yield return current;
+        }
+        File.WriteAllText(Path.Combine(output, "validation.txt"),
+            "PASSES\n" + string.Join("\n", passes) + "\nFAILURES\n" + string.Join("\n", failures) +
+            "\nWARNINGS\n" + string.Join("\n", warnings) + "\nEDITOR_DIAGNOSTICS\n" + string.Join("\n", editorDiagnostics));
+        Debug.Log($"UI_VALIDATION_COMPLETE: {passes.Count} passes, {failures.Count} failures, {warnings.Count} warning types.");
+        EditorApplication.Exit(failures.Count == 0 ? 0 : 1);
+    }
+
+    private void Check(bool condition, string description)
+    {
+        if (condition) passes.Add(description);
+        else failures.Add(description);
+    }
+
+    private static T Find<T>() where T : Object => Object.FindAnyObjectByType<T>();
+    private static T Field<T>(object target, string field) => (T)target.GetType().GetField(field, Private).GetValue(target);
+    private static void Call(object target, string method, params object[] args) => target.GetType().GetMethod(method, Private).Invoke(target, args);
+    private static Button ButtonNamed(string name) => Object.FindObjectsByType<Button>().First(b => b.name == name);
+    private void Click(string name)
+    {
+        Canvas.ForceUpdateCanvases();
+        var button = ButtonNamed(name);
+        var canvas = button.GetComponentInParent<Canvas>().rootCanvas;
+        var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        var rect = (RectTransform)button.transform;
+        var pointer = new PointerEventData(EventSystem.current) {
+            position = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center))
+        };
+        var hits = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointer, hits);
+        Check(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button,
+            SceneManager.GetActiveScene().name + " raycast reaches " + name);
+        ExecuteEvents.Execute(button.gameObject, pointer, ExecuteEvents.pointerClickHandler);
+    }
+    private static int ActiveChildren(Transform parent) => parent.Cast<Transform>().Count(t => t.gameObject.activeSelf);
+
+    private IEnumerator Load(string scene)
+    {
+        Debug.Log("UI_VALIDATE_LOAD " + scene);
+        SceneManager.LoadScene(scene);
+        yield return null; yield return null;
+        Canvas.ForceUpdateCanvases();
+    }
+
+    private IEnumerator Validate()
+    {
+        foreach (var item in JsonUtility.FromJson<GachaItemDatabase>(Resources.Load<TextAsset>("Data/gacha_items").text).items)
+            InventoryManager.AddItem(item.id, 5);
+
+        foreach (string scene in new[] { "GermanyHome", "StageSelect", "CharacterSelect", "CharacterCollection", "CharacterDetail", "Gacha", "Inventory", "Crafting", "Battle", "Result" })
+        {
+            GameManager.PreviousSceneName = "CharacterSelect";
+            GameManager.SelectedCharacterId = "nacht";
+            GameManager.EnemyCharacterId = "feuer";
+            yield return Load(scene);
+            if (scene == "Gacha") Click("PullTenButton");
+            if (scene == "Crafting")
+            {
+                var crafting = Find<CraftingUIManager>();
+                Call(crafting, "SelectMaterial", "word_wasser");
+                Call(crafting, "SelectMaterial", "word_pistole");
+            }
+            yield return RenderSizes(scene);
+        }
+
+        yield return Load("Inventory");
+        var inventory = Find<InventoryUIManager>();
+        var content = Field<Transform>(inventory, "content");
+        inventory.RefreshInventory(); inventory.RefreshInventory();
+        yield return null;
+        Check(content != null && content.parent.name == "Viewport", "Inventory content survives repeated refresh and remains below Viewport");
+        Check(ActiveChildren(content) == InventoryManager.GetAllItems().Count, "Inventory repeated refresh has one row per item");
+        Click("BackButton"); yield return null;
+        Check(SceneManager.GetActiveScene().name == "GermanyHome", "Inventory Back returns home");
+
+        yield return Load("Crafting");
+        var craft = Find<CraftingUIManager>();
+        var materials = Field<Transform>(craft, "inventoryContent");
+        craft.RefreshInventory(); craft.RefreshInventory(); yield return null;
+        Check(materials.parent.name == "Viewport" && ActiveChildren(materials) == InventoryManager.GetAllItems().Count, "Crafting refresh preserves viewport and avoids duplicate rows");
+        int waterBefore = InventoryManager.GetItemCount("word_wasser");
+        int pistolBefore = InventoryManager.GetItemCount("word_pistole");
+        Call(craft, "SelectMaterial", "word_wasser"); Call(craft, "SelectMaterial", "word_pistole");
+        Click("ClearButton");
+        Check(Field<TMP_Text>(craft, "selectedMaterialText").text == "", "Clear empties selected crafting materials");
+        Call(craft, "SelectMaterial", "word_wasser"); Call(craft, "SelectMaterial", "word_pistole");
+        Click("CraftButton"); yield return null;
+        Check(InventoryManager.GetItemCount("word_wasser") == waterBefore - 1 && InventoryManager.GetItemCount("word_pistole") == pistolBefore - 1 && OwnedCharacters.IsCharacterOwned("wasserpistole"), "Craft consumes the original recipe and unlocks its character");
+
+        yield return Load("CharacterCollection");
+        var collection = Find<CharacterCollectionManager>();
+        var search = Field<TMP_InputField>(collection, "searchInputField");
+        search.text = "nacht"; yield return null;
+        Check(ActiveChildren(Field<Transform>(collection, "characterButtonParent")) == 1, "Character search filters without duplicate rows");
+        Field<Transform>(collection, "characterButtonParent").GetComponentsInChildren<Button>().Single().onClick.Invoke();
+        Click("DetailButton"); yield return null; yield return null;
+        Check(SceneManager.GetActiveScene().name == "CharacterDetail", "Collection selection opens detail");
+        var detail = Find<CharacterDetailManager>();
+        Check(ButtonNamed("BattleButton").GetComponentInChildren<TMP_Text>().text == "Confirm", "Collection detail shows Confirm");
+        Check(ButtonNamed("BattleButton").onClick.GetPersistentEventCount() == 0, "Mode-specific Confirm clears the persistent StartBattle callback");
+        detail.OpenAdjectiveEquipmentList(); detail.OpenAdjectiveEquipmentList(); yield return null;
+        var equipmentParent = Field<Transform>(detail, "characterEquipmentButtonParent");
+        Check(equipmentParent.GetComponentsInChildren<Button>().Select(b => b.GetComponentInChildren<TMP_Text>().text).Distinct().Count() == ActiveChildren(equipmentParent), "Reopened equipment list has no duplicate active entries");
+        yield return RenderSizes("CharacterDetail-equipment");
+        equipmentParent.GetComponentsInChildren<Button>()[0].onClick.Invoke();
+        Check(!Field<GameObject>(detail, "characterEquipmentPanel").activeSelf, "Choosing equipment closes its panel");
+        detail.Back();
+        Check(Field<GameObject>(detail, "unsavedConfirmPanel").activeSelf, "Back with changes opens the save dialog");
+        yield return RenderSizes("CharacterDetail-unsaved");
+        Click("CancelButton");
+        Check(!Field<GameObject>(detail, "unsavedConfirmPanel").activeSelf, "Cancel closes the save dialog");
+        detail.OpenSkillEquipmentList(0); detail.OpenSkillEquipmentList(0); yield return null;
+        Check(Field<Transform>(detail, "skillEquipmentButtonParent").GetComponent<VerticalLayoutGroup>() != null, "Skill equipment uses a vertical layout");
+        yield return RenderSizes("CharacterDetail-skills");
+        Field<Transform>(detail, "skillEquipmentButtonParent").GetComponentsInChildren<Button>()[0].onClick.Invoke();
+        Check(!Field<GameObject>(detail, "skillEquipmentPanel").activeSelf, "Choosing skill equipment closes its panel");
+        Click("BattleButton"); yield return null; yield return null;
+        Check(SceneManager.GetActiveScene().name == "CharacterCollection", "Confirm from collection returns to collection without starting battle");
+
+        yield return Load("CharacterSelect");
+        Click("CharacterListButton"); yield return null; yield return null;
+        Check(ButtonNamed("BattleButton").GetComponentInChildren<TMP_Text>().text == "Battle", "Selection detail retains Battle mode");
+        Click("BattleButton"); yield return null; yield return null;
+        Check(SceneManager.GetActiveScene().name == "Battle", "Battle button still starts battle");
+        Click("Fight");
+        Check(Field<GameObject>(Find<BattleManager>(), "skillPanel").activeSelf, "Fight opens skill commands");
+        yield return RenderSizes("Battle-commands");
+        Click("back");
+        Check(!Field<GameObject>(Find<BattleManager>(), "skillPanel").activeSelf, "Back closes skill commands");
+        Click("NoAdverbButton"); Click("Fight"); Click("SkillButton1");
+        Check(Field<bool>(Find<BattleManager>(), "isProcessing"), "Skill command starts the existing battle turn");
+        float deadline = Time.realtimeSinceStartup + 25;
+        while (Find<BattleManager>() != null && Field<bool>(Find<BattleManager>(), "isProcessing") && Time.realtimeSinceStartup < deadline) yield return null;
+        Check(Find<BattleManager>() == null || !Field<bool>(Find<BattleManager>(), "isProcessing"), "Battle turn completes without getting stuck");
+        // Test direct entry after destroying the persistent database.
+        if (GameDatabase.Instance != null) Destroy(GameDatabase.Instance.gameObject);
+        yield return null;
+        yield return Load("CharacterDetail");
+        Check(GameDatabase.Instance != null && Field<CharacterData>(Find<CharacterDetailManager>(), "character") != null, "CharacterDetail can start directly with its scene database");
+    }
+
+    private IEnumerator RenderSizes(string label)
+    {
+        foreach (Vector2Int size in new[] { new Vector2Int(1920,1080), new Vector2Int(1280,720), new Vector2Int(1600,1200), new Vector2Int(2560,1080) })
+        {
+            Camera camera = Camera.main;
+            var texture = new RenderTexture(size.x,size.y,24); texture.Create();
+            camera.targetTexture = texture;
+            var canvases = Object.FindObjectsByType<Canvas>().Where(c => c.isRootCanvas).ToArray();
+            foreach (var canvas in canvases)
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = camera;
+                canvas.planeDistance = 1;
+            }
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            foreach (var canvas in canvases) LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)canvas.transform);
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            foreach (var text in Object.FindObjectsByType<TMP_Text>()) text.ForceMeshUpdate();
+            InspectGeometry(label, size, camera);
+            RenderPipeline.SubmitRenderRequest(camera, new UniversalRenderPipeline.SingleCameraRequest { destination = texture });
+            var old = RenderTexture.active; RenderTexture.active = texture;
+            var png = new Texture2D(size.x,size.y,TextureFormat.RGB24,false);
+            png.ReadPixels(new Rect(0,0,size.x,size.y),0,0); png.Apply();
+            File.WriteAllBytes(Path.Combine(output, $"{label}-{size.x}x{size.y}.png"), png.EncodeToPNG());
+            RenderTexture.active = old; Destroy(png);
+            camera.targetTexture = null;
+            foreach (var canvas in canvases) { canvas.renderMode = RenderMode.ScreenSpaceOverlay; canvas.worldCamera = null; }
+            texture.Release(); Destroy(texture);
+            yield return null;
+        }
+    }
+
+    private void InspectGeometry(string label, Vector2Int size, Camera camera)
+    {
+        string context = $"{label} {size.x}x{size.y}";
+        foreach (var button in Object.FindObjectsByType<Button>())
+        {
+            if (button.name == "Image") continue; // intentionally full-screen dismiss target
+            var rect = (RectTransform)button.transform;
+            var scroll = button.GetComponentInParent<ScrollRect>();
+            if (scroll != null) continue; // content is intentionally clipped; inspect the list separately
+            Vector3[] corners = new Vector3[4]; rect.GetWorldCorners(corners);
+            var points = corners.Select(camera.WorldToViewportPoint).ToArray();
+            Check(points.All(p => p.x >= -.002 && p.x <= 1.002 && p.y >= -.002 && p.y <= 1.002), context + " button inside screen: " + button.name);
+            Check(rect.rect.height >= 64, context + " button hit height >=64: " + button.name);
+        }
+        foreach (var scroll in Object.FindObjectsByType<ScrollRect>())
+        {
+            if (scroll.content == null || scroll.viewport == null) { failures.Add(context + " missing scroll content/viewport"); continue; }
+            Check(scroll.content.IsChildOf(scroll.viewport), context + " scroll content is inside its viewport");
+            var children = scroll.content.Cast<Transform>().Where(t => t.gameObject.activeSelf).OfType<RectTransform>().ToArray();
+            for (int i=0;i<children.Length;i++)
+            {
+                var child=children[i];
+                Check(child.rect.width > 0 && child.rect.height >= 64, context + " positive sized list row " + i);
+                if (i>0)
+                {
+                    Bounds a=RectTransformUtility.CalculateRelativeRectTransformBounds(scroll.content, children[i-1]);
+                    Bounds b=RectTransformUtility.CalculateRelativeRectTransformBounds(scroll.content,child);
+                    bool overlaps = Mathf.Min(a.max.x,b.max.x)-Mathf.Max(a.min.x,b.min.x)>1 && Mathf.Min(a.max.y,b.max.y)-Mathf.Max(a.min.y,b.min.y)>1;
+                    Check(!overlaps,context+" list rows do not overlap " + i);
+                }
+            }
+        }
+        foreach (var text in Object.FindObjectsByType<TMP_Text>())
+        {
+            if (text.isTextOverflowing) warnings.Add(context + " text truncated: " + text.name + " = " + text.text);
+        }
+        passes.Add(context + " rendered");
+    }
+}
+#endif
