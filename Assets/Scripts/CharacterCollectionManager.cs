@@ -145,7 +145,7 @@ public class CharacterCollectionManager : MonoBehaviour
             TMP_Text text = buttonObj.GetComponentInChildren<TMP_Text>();
             if (text != null)
             {
-                text.text = character.characterName;
+                text.text = character.characterName + (OwnedCharacters.IsCharacterOwned(character.id) ? "" : " [Not owned]");
             }
 
             Image icon = null;
@@ -188,7 +188,7 @@ public class CharacterCollectionManager : MonoBehaviour
 
         if (selectedCharacterText != null)
         {
-            selectedCharacterText.text = characterName;
+            selectedCharacterText.text = characterName + (OwnedCharacters.IsCharacterOwned(characterId) ? "" : " [Not owned]");
         }
     }
 

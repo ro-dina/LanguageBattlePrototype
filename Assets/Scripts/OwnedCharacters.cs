@@ -30,10 +30,11 @@ public static class OwnedCharacters
             return false;
         }
 
-        lock (SyncRoot)
-        {
-            return CharacterIds.Add(characterId);
-        }
+        if (GameDatabase.Instance == null || !GameDatabase.Instance.ContainsCharacter(characterId)) return false;
+        bool added;
+        lock (SyncRoot) { added = CharacterIds.Add(characterId); }
+        if (added) PlayerStateChanges.Notify();
+        return added;
     }
 
     public static bool IsCharacterOwned(string characterId)
@@ -82,7 +83,7 @@ public static class OwnedCharacters
 
         foreach (string characterId in state.characterIds)
         {
-            if (!IsValidId(characterId))
+            if (!IsValidId(characterId) || GameDatabase.Instance == null || !GameDatabase.Instance.ContainsCharacter(characterId))
             {
                 return false;
             }
@@ -96,6 +97,7 @@ public static class OwnedCharacters
             CharacterIds.UnionWith(restoredCharacterIds);
         }
 
+        PlayerStateChanges.Notify();
         return true;
     }
 

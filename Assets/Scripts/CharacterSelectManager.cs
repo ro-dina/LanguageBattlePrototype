@@ -1,3 +1,4 @@
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -26,16 +27,21 @@ public class CharacterSelectManager : MonoBehaviour
 
         CreateCharacterButtons();
 
-        CharacterData[] characters = GameDatabase.Instance.GetAllCharacters();
+        CharacterData[] characters = GetSelectableCharacters();
         if (characters.Length > 0)
         {
-            SelectCharacter(characters[0].id);
+            string initial = characters.Any(c => c.id == GameManager.SelectedCharacterId)
+                ? GameManager.SelectedCharacterId : characters[0].id;
+            SelectCharacter(initial);
         }
     }
 
+    private CharacterData[] GetSelectableCharacters() => GameDatabase.Instance.GetAllCharacters()
+        .Where(c => c != null && OwnedCharacters.IsCharacterOwned(c.id)).ToArray();
+
     private void CreateCharacterButtons()
     {
-        CharacterData[] characters = GameDatabase.Instance.GetAllCharacters();
+        CharacterData[] characters = GetSelectableCharacters();
 
         if (characterButtonParent != null && characterButtonParent.name == "Scroll View")
         {
@@ -115,10 +121,11 @@ public class CharacterSelectManager : MonoBehaviour
 
     private void SelectCharacter(string characterId)
     {
+        if (!OwnedCharacters.IsCharacterOwned(characterId)) return;
         selectedId = characterId;
         GameManager.SelectedCharacterId = characterId;
 
-        CharacterData character = GameDatabase.Instance.GetCharacter(characterId);
+        CharacterData character = CharacterLoadoutStore.GetCharacterForBattle(characterId);
 
         if (character == null)
         {
@@ -129,13 +136,17 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        EquipmentData equipment = GameDatabase.Instance.GetEquipment(character.equippedAdjectiveId);
+        int attack = character.attack + DamageCalculator.GetCharacterAttackBonus(equipment);
+        int defense = character.defense + DamageCalculator.GetCharacterDefenseBonus(equipment);
+        int speed = character.speed + DamageCalculator.GetCharacterSpeedBonus(equipment);
         if (selectedCharacterText != null)
         {
             selectedCharacterText.text =
                 $"{character.characterName}\n" +
                 $"Gender:\n{character.grammaticalGender}\n" +
                 $"HP: {character.hp}\n" +
-                $"ATK: {character.attack} /\nDEF: {character.defense} /\nSPD: {character.speed}";
+                $"ATK: {attack} /\nDEF: {defense} /\nSPD: {speed}";
         }
 
         if (selectedCharacterImage == null)
@@ -170,7 +181,7 @@ public class CharacterSelectManager : MonoBehaviour
 
     public void StartBattle()
     {
-        if (string.IsNullOrEmpty(selectedId))
+        if (string.IsNullOrEmpty(selectedId) || !OwnedCharacters.IsCharacterOwned(selectedId))
         {
             return;
         }
@@ -181,7 +192,7 @@ public class CharacterSelectManager : MonoBehaviour
 
     public void CharacterDetail()
     {
-        if (string.IsNullOrEmpty(selectedId))
+        if (string.IsNullOrEmpty(selectedId) || !OwnedCharacters.IsCharacterOwned(selectedId))
         {
             return;
         }

@@ -64,6 +64,7 @@ public class GachaManager : MonoBehaviour
     {
         string result = "10 Pull Result\n\n";
 
+        using (PlayerStateChanges.BeginBatch())
         for (int i = 0; i < 10; i++)
         {
             GachaItemData item = GetRandomItem();

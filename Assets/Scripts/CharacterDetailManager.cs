@@ -47,7 +47,7 @@ public class CharacterDetailManager : MonoBehaviour
         }
 
         character =
-            GameDatabase.Instance.GetCharacter(
+            CharacterLoadoutStore.GetCharacterForBattle(
                 GameManager.SelectedCharacterId);
 
         if (character == null)
@@ -82,66 +82,12 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void SetupTemporaryEquipmentState()
     {
-        tempCharacterEquipmentId = GameManager.SelectedCharacterEquipmentId;
-
-        if (string.IsNullOrEmpty(tempCharacterEquipmentId) && character != null)
-        {
-            tempCharacterEquipmentId = character.equippedAdjectiveId;
-        }
-
-        tempArticleEquipmentId = "";
-        if (character != null)
-        {
-            tempArticleEquipmentId = character.equippedArticleId;
-            if (string.IsNullOrEmpty(tempArticleEquipmentId))
-            {
-                tempArticleEquipmentId = character.equippedCaseMarkerId;
-            }
-        }
-
+        CharacterLoadout loadout = CharacterLoadoutStore.GetLoadout(character.id);
+        tempCharacterEquipmentId = loadout.adjectiveId;
+        tempArticleEquipmentId = loadout.articleId;
         tempSkillEquipmentIds = new string[4] { "", "", "", "" };
-
-        if (GameManager.PreviousSceneName == "CharacterCollection")
-        {
-            LoadSkillEquipmentsFromCharacter();
-        }
-        else if (GameManager.SelectedSkillEquipmentIds != null)
-        {
-            int count = Mathf.Min(tempSkillEquipmentIds.Length, GameManager.SelectedSkillEquipmentIds.Length);
-            for (int i = 0; i < count; i++)
-            {
-                tempSkillEquipmentIds[i] = GameManager.SelectedSkillEquipmentIds[i];
-            }
-        }
-        else
-        {
-            LoadSkillEquipmentsFromCharacter();
-        }
-    }
-
-    private void LoadSkillEquipmentsFromCharacter()
-    {
-        if (character == null || character.skillIds == null || character.skillSlots == null)
-        {
-            return;
-        }
-
-        int count = Mathf.Min(tempSkillEquipmentIds.Length, character.skillIds.Length);
-
-        for (int i = 0; i < count; i++)
-        {
-            string skillId = character.skillIds[i];
-
-            for (int j = 0; j < character.skillSlots.Length; j++)
-            {
-                CharacterSkillSlotData slot = character.skillSlots[j];
-                if (slot != null && slot.skillId == skillId)
-                {
-                    tempSkillEquipmentIds[i] = slot.equippedAdverbId;
-                    break;
-                }
-            }
-        }
+        for (int i = 0; i < loadout.skillSlots.Length && i < tempSkillEquipmentIds.Length; i++)
+            tempSkillEquipmentIds[i] = loadout.skillSlots[i].equippedAdverbId;
     }
 
     private void LoadCharacter()
@@ -177,25 +123,8 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void SetupCharacterEquipment()
     {
-        string equipmentId = GameManager.SelectedCharacterEquipmentId;
-
-        if (string.IsNullOrEmpty(equipmentId))
-        {
-            equipmentId = character.equippedAdjectiveId;
-        }
-
-        tempCharacterEquipmentId = equipmentId;
         selectedCharacterEquipment = GameDatabase.Instance.GetEquipment(tempCharacterEquipmentId);
-
-        string articleId = character.equippedArticleId;
-        if (string.IsNullOrEmpty(articleId))
-        {
-            articleId = character.equippedCaseMarkerId;
-        }
-
-        tempArticleEquipmentId = articleId;
         selectedArticleEquipment = GameDatabase.Instance.GetEquipment(tempArticleEquipmentId);
-
         UpdateCharacterInfoText();
         UpdateCharacterEquipmentText();
     }
@@ -421,51 +350,27 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void ConfirmEquipment()
     {
-        ApplyEquipmentChanges();
+        if (!ApplyEquipmentChanges()) return;
         hasUnsavedChanges = false;
         ReturnToPreviousScene();
     }
 
-    private void ApplyEquipmentChanges()
+    private bool ApplyEquipmentChanges()
     {
-        GameManager.SelectedCharacterEquipmentId = tempCharacterEquipmentId;
-
-        if (character != null)
-        {
-            character.equippedArticleId = tempArticleEquipmentId;
-            character.equippedCaseMarkerId = tempArticleEquipmentId;
-            character.equippedAdjectiveId = tempCharacterEquipmentId;
-        }
-
-        if (tempSkillEquipmentIds != null)
-        {
-            for (int i = 0; i < tempSkillEquipmentIds.Length; i++)
-            {
-                GameManager.SetSkillEquipment(i, tempSkillEquipmentIds[i]);
-            }
-        }
-
-        SaveSkillEquipmentsToCharacter();
-    }
-
-    private void SaveSkillEquipmentsToCharacter()
-    {
-        if (character == null || character.skillIds == null || tempSkillEquipmentIds == null)
-        {
-            return;
-        }
-
-        int count = Mathf.Min(character.skillIds.Length, tempSkillEquipmentIds.Length);
-        character.skillSlots = new CharacterSkillSlotData[count];
-
-        for (int i = 0; i < count; i++)
-        {
-            character.skillSlots[i] = new CharacterSkillSlotData
-            {
+        var slots = new CharacterSkillSlotData[character.skillIds.Length];
+        for (int i = 0; i < slots.Length; i++)
+            slots[i] = new CharacterSkillSlotData {
                 skillId = character.skillIds[i],
                 equippedAdverbId = tempSkillEquipmentIds[i]
             };
-        }
+        bool committed = CharacterLoadoutStore.Commit(new CharacterLoadout {
+            characterId = character.id,
+            adjectiveId = tempCharacterEquipmentId,
+            articleId = tempArticleEquipmentId,
+            skillSlots = slots
+        });
+        if (!committed) Debug.LogError("Equipment changes could not be committed.", this);
+        return committed;
     }
 
     public void DiscardChangesAndBack()
@@ -502,7 +407,12 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void StartBattle()
     {
-        ApplyEquipmentChanges();
+        if (character == null || !OwnedCharacters.IsCharacterOwned(character.id))
+        {
+            Debug.LogWarning("Only owned characters can enter battle.", this);
+            return;
+        }
+        if (!ApplyEquipmentChanges()) return;
         hasUnsavedChanges = false;
         SceneManager.LoadScene("Battle");
     }
@@ -754,11 +664,12 @@ public class CharacterDetailManager : MonoBehaviour
 
             if (buttonText != null)
             {
-                buttonText.text = "Battle";
+                buttonText.text = OwnedCharacters.IsCharacterOwned(character.id) ? "Battle" : "Not owned";
             }
 
             if (button != null)
             {
+                button.interactable = OwnedCharacters.IsCharacterOwned(character.id);
                 button.onClick.AddListener(StartBattle);
             }
         }

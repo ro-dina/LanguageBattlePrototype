@@ -130,36 +130,39 @@ public static class CraftingManager
             return false;
         }
 
-        List<InventoryEntry> consumedItems = ToInventoryEntries(requirements);
-        if (!InventoryManager.TryConsumeItems(consumedItems))
+        using (PlayerStateChanges.BeginBatch())
         {
-            Debug.Log($"Cannot craft {registeredRecipe.resultId}: missing materials");
-            return false;
-        }
+            List<InventoryEntry> consumedItems = ToInventoryEntries(requirements);
+            if (!InventoryManager.TryConsumeItems(consumedItems))
+            {
+                Debug.Log($"Cannot craft {registeredRecipe.resultId}: missing materials");
+                return false;
+            }
 
-        bool resultGranted;
-        if (resultKind == CraftingResultKind.Character)
-        {
-            OwnedCharacters.UnlockCharacter(registeredRecipe.resultId);
-            resultGranted = OwnedCharacters.IsCharacterOwned(registeredRecipe.resultId);
-        }
-        else
-        {
-            resultGranted = InventoryManager.AddItem(
-                registeredRecipe.resultId,
-                registeredRecipe.resultCount);
-        }
+            bool resultGranted;
+            if (resultKind == CraftingResultKind.Character)
+            {
+                OwnedCharacters.UnlockCharacter(registeredRecipe.resultId);
+                resultGranted = OwnedCharacters.IsCharacterOwned(registeredRecipe.resultId);
+            }
+            else
+            {
+                resultGranted = InventoryManager.AddItem(
+                    registeredRecipe.resultId,
+                    registeredRecipe.resultCount);
+            }
 
-        if (!resultGranted)
-        {
-            RestoreConsumedItems(consumedItems);
-            Debug.LogError(
-                $"Cannot craft {registeredRecipe.resultId}: result could not be granted. Materials were restored.");
-            return false;
-        }
+            if (!resultGranted)
+            {
+                RestoreConsumedItems(consumedItems);
+                Debug.LogError(
+                    $"Cannot craft {registeredRecipe.resultId}: result could not be granted. Materials were restored.");
+                return false;
+            }
 
-        Debug.Log($"Crafted {registeredRecipe.resultId}");
-        return true;
+            Debug.Log($"Crafted {registeredRecipe.resultId}");
+            return true;
+        }
     }
 
     private static void EnsureRecipesLoaded()

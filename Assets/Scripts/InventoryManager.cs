@@ -57,8 +57,9 @@ public static class InventoryManager
             }
 
             ItemCounts[itemId] = currentCount + count;
-            return true;
         }
+        PlayerStateChanges.Notify();
+        return true;
     }
 
     public static bool RemoveItem(string itemId, int count)
@@ -85,9 +86,9 @@ public static class InventoryManager
             {
                 ItemCounts[itemId] = remainingCount;
             }
-
-            return true;
         }
+        PlayerStateChanges.Notify();
+        return true;
     }
 
     public static int GetItemCount(string itemId)
@@ -166,9 +167,9 @@ public static class InventoryManager
                     ItemCounts[requiredItem.Key] = remainingCount;
                 }
             }
-
-            return true;
         }
+        PlayerStateChanges.Notify();
+        return true;
     }
 
     public static InventoryState CaptureState()
@@ -196,6 +197,7 @@ public static class InventoryManager
             }
         }
 
+        PlayerStateChanges.Notify();
         return true;
     }
 
@@ -239,6 +241,6 @@ public static class InventoryManager
 
     private static bool IsValidId(string itemId)
     {
-        return !string.IsNullOrWhiteSpace(itemId);
+        return GameContentIds.IsItem(itemId);
     }
 }

@@ -12,8 +12,21 @@ public static class GameManager
     public static string PlayerCharacterId = "nacht";
     public static string EnemyCharacterId = "feuer";
     public static string SelectedCharacterId = "nacht";
-    public static string SelectedCharacterEquipmentId = "";
-    public static string[] SelectedSkillEquipmentIds = new string[4] { "", "", "", "" };
+    // Compatibility accessors route old callers to the selected character's committed loadout.
+    public static string SelectedCharacterEquipmentId
+    {
+        get => CharacterLoadoutStore.GetLoadout(SelectedCharacterId)?.adjectiveId ?? "";
+        set
+        {
+            var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterId);
+            if (draft == null) return;
+            draft.adjectiveId = value;
+            CharacterLoadoutStore.Commit(draft);
+        }
+    }
+    public static string[] SelectedSkillEquipmentIds => System.Array.ConvertAll(
+        CharacterLoadoutStore.GetLoadout(SelectedCharacterId)?.skillSlots ?? System.Array.Empty<CharacterSkillSlotData>(),
+        slot => slot.equippedAdverbId);
     public static string PreviousSceneName = "";
 
     public static void SetBattleCharacters(string playerCharacterId, string enemyCharacterId)
@@ -29,18 +42,12 @@ public static class GameManager
 
     public static void SetSkillEquipment(int skillIndex, string equipmentId)
     {
-        if (SelectedSkillEquipmentIds == null)
-        {
-            SelectedSkillEquipmentIds = new string[4] { "", "", "", "" };
-        }
-
-        if (skillIndex < 0 || skillIndex >= SelectedSkillEquipmentIds.Length)
-        {
-            return;
-        }
-
-        SelectedSkillEquipmentIds[skillIndex] = equipmentId;
+        var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterId);
+        if (draft == null || skillIndex < 0 || skillIndex >= draft.skillSlots.Length) return;
+        draft.skillSlots[skillIndex].equippedAdverbId = equipmentId;
+        CharacterLoadoutStore.Commit(draft);
     }
+
 }
 
 public class BattleManager : MonoBehaviour
@@ -82,8 +89,10 @@ public class BattleManager : MonoBehaviour
     private EquipmentData[] playerSkillEquipments;
     private EquipmentData[] enemySkillEquipments;
 
-    private int playerHP;
-    private int enemyHP;
+    private BattleContext battleContext;
+    public BattleContext Context => battleContext;
+    private int playerHP => battleContext?.Player.HP ?? 0;
+    private int enemyHP => battleContext?.Enemy.HP ?? 0;
     private bool isProcessing = false;
 
     private void Start()
@@ -98,7 +107,17 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        playerCharacter = GameDatabase.Instance.GetCharacter(playerCharacterId);
+        if (!OwnedCharacters.IsCharacterOwned(playerCharacterId))
+        {
+            Debug.LogWarning("Battle rejected an unowned player character.", this);
+            if (battleLogText != null) battleLogText.text = "Character is not owned.";
+            isProcessing = true;
+            if (skillPanel != null) skillPanel.SetActive(false);
+            SetAdverbCardInteraction(false);
+            enabled = false;
+            return;
+        }
+        playerCharacter = CharacterLoadoutStore.GetCharacterForBattle(playerCharacterId);
         enemyCharacter = GameDatabase.Instance.GetCharacter(enemyCharacterId);
 
         if (playerCharacter == null || enemyCharacter == null)
@@ -111,8 +130,7 @@ public class BattleManager : MonoBehaviour
 
         SetupCharacterEquipment();
 
-        playerHP = playerCharacter.hp;
-        enemyHP = enemyCharacter.hp;
+        battleContext = new BattleContext(playerCharacter, enemyCharacter, playerCharacterEquipment);
 
         if (enemyDamageText != null)
         {
@@ -141,20 +159,7 @@ public class BattleManager : MonoBehaviour
 
     private void SetupCharacterEquipment()
     {
-        string equipmentId = GameManager.SelectedCharacterEquipmentId;
-
-        if (string.IsNullOrEmpty(equipmentId))
-        {
-            equipmentId = playerCharacter.equippedAdjectiveId;
-        }
-
-        playerCharacterEquipment = GameDatabase.Instance.GetEquipment(equipmentId);
-
-        if (playerCharacterEquipment != null)
-        {
-            Debug.Log($"Player character equipment loaded: {playerCharacterEquipment.equipmentName}");
-        }
-
+        playerCharacterEquipment = GameDatabase.Instance.GetEquipment(playerCharacter.equippedAdjectiveId);
         playerSkillEquipments = LoadCharacterSkillEquipments(playerCharacter);
         enemySkillEquipments = LoadCharacterSkillEquipments(enemyCharacter);
     }
@@ -274,83 +279,52 @@ public class BattleManager : MonoBehaviour
         UsePlayerSkill(3);
     }
 
-    private void UseSkill(
-        SkillData skill,
-        EquipmentData skillEquipment,
-        EquipmentData enemySkillEquipment,
-        string adverbContestLog)
+    private void UseSkill(SkillData skill, EquipmentData skillEquipment,
+        EquipmentData enemySkillEquipment, string adverbContestLog)
     {
         if (isProcessing) return;
+        BattleActionResult result = battleContext.Resolve(new BattleAction(BattleSide.Player, skill, skillEquipment));
+        if (!result.CanUse)
+        {
+            if (battleLogText != null) battleLogText.text = result.FailureReason;
+            return;
+        }
         isProcessing = true;
         SetAdverbCardInteraction(false);
-
-        int damage =
-            DamageCalculator.CalculateDamage(
-                playerCharacter,
-                enemyCharacter,
-                skill,
-                playerCharacterEquipment,
-                skillEquipment,
-                null);
-
-        if (skillPanel != null)
-        {
-            skillPanel.SetActive(false);
-        }
-
-        StartCoroutine(PlayerTurnSequence(
-            skill,
-            skillEquipment,
-            enemySkillEquipment,
-            damage,
-            adverbContestLog));
+        if (skillPanel != null) skillPanel.SetActive(false);
+        StartCoroutine(PlayerTurnSequence(result, enemySkillEquipment, adverbContestLog));
     }
 
-    private IEnumerator PlayerTurnSequence(
-        SkillData skill,
-        EquipmentData skillEquipment,
-        EquipmentData enemySkillEquipment,
-        int damage,
-        string adverbContestLog)
+    private IEnumerator PlayerTurnSequence(BattleActionResult result,
+        EquipmentData enemySkillEquipment, string adverbContestLog)
     {
         if (!string.IsNullOrEmpty(adverbContestLog) && battleLogText != null)
         {
             battleLogText.text = adverbContestLog;
             yield return new WaitForSeconds(0.8f);
         }
-
         if (battleLogText != null)
+            yield return StartCoroutine(ShowPlayerAttackLog(result.Action.Skill, result.Action.SkillEquipment, result.Damage));
+        if (!battleContext.Apply(result))
         {
-            yield return StartCoroutine(ShowPlayerAttackLog(skill, skillEquipment, damage));
+            isProcessing = false;
+            SetAdverbCardInteraction(true);
+            yield break;
         }
-
-        enemyHP -= damage;
-
-        if (enemyHP < 0)
-        {
-            enemyHP = 0;
-        }
-
         PlaySoundEffect("slash");
-
         UpdateHPText();
-        StartCoroutine(ShowEnemyDamage(damage));
+        StartCoroutine(ShowEnemyDamage(result.Damage));
         StartCoroutine(ShakeRenderer(enemyRenderer));
-
         yield return new WaitForSeconds(0.4f);
-
-        if (enemyHP <= 0)
+        if (battleContext.Outcome == BattleOutcome.PlayerWin)
         {
             GameManager.IsWin = true;
             SceneManager.LoadScene("Result");
             yield break;
         }
-
         EnemyAttack(enemySkillEquipment);
-
         yield return new WaitForSeconds(1f);
-
-        if (playerHP <= 0)
+        if (battleContext.Outcome == BattleOutcome.EnemyWin)
         {
             GameManager.IsWin = false;
             SceneManager.LoadScene("Result");
@@ -362,62 +336,27 @@ public class BattleManager : MonoBehaviour
 
     private IEnumerator ShowPlayerAttackLog(SkillData skill, EquipmentData skillEquipment, int damage)
     {
-        string baseNoun = playerCharacter.characterName;
-        string equippedNoun = GetEquippedCharacterName(playerCharacter, playerCharacterEquipment);
+        BattleSentence sentence = SentenceGenerator.Generate(new SentenceContext {
+            Subject = playerCharacter, Target = enemyCharacter, Skill = skill,
+            CharacterEquipment = playerCharacterEquipment, SkillEquipment = skillEquipment
+        });
         string characterEffect = GetCharacterEquipmentEffectText(playerCharacterEquipment);
-
-        string baseVerb = GetConjugatedSkillName(skill, playerCharacter);
-        string equippedVerb = GetEquippedSkillName(baseVerb, skillEquipment);
         string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
-
-        string target = enemyCharacter.characterName;
         string effectivenessText = GetEffectivenessText(playerCharacter, enemyCharacter);
-        Coroutine attackAudioCoroutine = StartCoroutine(PlayAttackAudio(skill, skillEquipment));
-
-        battleLogText.text = baseNoun;
+        Coroutine audio = StartCoroutine(AttackAudioPlayback.Play(audioSource, sentence));
+        battleLogText.text = sentence.BaseSubject;
         yield return new WaitForSeconds(0.4f);
-
-        battleLogText.text = equippedNoun + characterEffect;
+        battleLogText.text = sentence.EquippedSubject + characterEffect;
         yield return new WaitForSeconds(0.4f);
-
-        battleLogText.text = equippedNoun + characterEffect + "\n" + baseVerb;
+        battleLogText.text = sentence.EquippedSubject + characterEffect + "\n" + sentence.BaseVerb;
         yield return new WaitForSeconds(0.3f);
-
-        battleLogText.text = equippedNoun + characterEffect + "\n" + equippedVerb + skillEffect;
+        battleLogText.text = sentence.EquippedSubject + characterEffect + "\n" + sentence.EquippedVerb + skillEffect;
         yield return new WaitForSeconds(0.3f);
-
-        battleLogText.text =
-            equippedNoun + characterEffect + "\n" +
-            equippedVerb + skillEffect + "\n" +
-            "→ " + target + "\n" +
+        battleLogText.text = sentence.EquippedSubject + characterEffect + "\n" +
+            sentence.EquippedVerb + skillEffect + "\n" + "→ " + sentence.Target + "\n" +
             "<color=#ff5555>" + damage + " damage!</color> " + effectivenessText;
-
-        if (attackAudioCoroutine != null)
-        {
-            yield return attackAudioCoroutine;
-        }
-
+        if (audio != null) yield return audio;
         yield return new WaitForSeconds(0.8f);
-    }
-
-    private string GetEquippedCharacterName(CharacterData character, EquipmentData equipment)
-    {
-        if (equipment == null)
-        {
-            return character.characterName;
-        }
-
-        return "<color=#66ccff>" + equipment.equipmentName + "</color> " + character.characterName;
-    }
-
-    private string GetEquippedSkillName(string skillName, EquipmentData equipment)
-    {
-        if (equipment == null)
-        {
-            return skillName;
-        }
-
-        return "<color=#66ccff>" + equipment.equipmentName + "</color> " + skillName;
     }
 
     private string GetCharacterEquipmentEffectText(EquipmentData equipment)
@@ -554,134 +493,59 @@ public class BattleManager : MonoBehaviour
         UseSkill(skill, playerAdverb, enemyAdverb, contestLog);
     }
 
-    private void ResolveTurnAdverbContest(
-        out EquipmentData playerAdverb,
-        out EquipmentData enemyAdverb,
-        out string contestLog)
+    private void ResolveTurnAdverbContest(out EquipmentData playerAdverb,
+        out EquipmentData enemyAdverb, out string contestLog)
     {
-        playerAdverb = selectedTurnAdverb;
-        enemyAdverb = enemySelectedTurnAdverb;
-        contestLog = "";
-
-        bool selectedSameAdverb =
-            playerAdverb != null &&
-            enemyAdverb != null &&
-            !string.IsNullOrEmpty(playerAdverb.id) &&
-            playerAdverb.id == enemyAdverb.id;
-
-        if (!selectedSameAdverb)
-        {
-            return;
-        }
-
-        int playerSpeed = playerCharacter.speed +
-            DamageCalculator.GetCharacterSpeedBonus(playerCharacterEquipment);
+        int playerSpeed = playerCharacter.speed + DamageCalculator.GetCharacterSpeedBonus(playerCharacterEquipment);
         int enemySpeed = enemyCharacter.speed;
-        string adverbName = playerAdverb.equipmentName;
-
-        if (playerSpeed > enemySpeed)
-        {
-            enemyAdverb = null;
-            contestLog =
-                $"Both chose {adverbName}. " +
-                $"{playerCharacter.characterName} won it (SPD {playerSpeed} > {enemySpeed})!";
-        }
-        else if (enemySpeed > playerSpeed)
-        {
-            playerAdverb = null;
-            contestLog =
-                $"Both chose {adverbName}. " +
-                $"{enemyCharacter.characterName} won it (SPD {enemySpeed} > {playerSpeed})!";
-        }
+        var contest = AdverbContestResolver.Resolve(selectedTurnAdverb, enemySelectedTurnAdverb,
+            playerSpeed, enemySpeed, () => Random.value < 0.5f);
+        playerAdverb = contest.PlayerAdverb;
+        enemyAdverb = contest.EnemyAdverb;
+        contestLog = "";
+        if (!contest.Contested) return;
+        string name = selectedTurnAdverb.equipmentName;
+        string winner = contest.PlayerWon ? playerCharacter.characterName : enemyCharacter.characterName;
+        if (playerSpeed == enemySpeed)
+            contestLog = $"Both chose {name} and tied at SPD {playerSpeed}. {winner} won the draw!";
         else
         {
-            bool playerWinsTie = Random.value < 0.5f;
-
-            if (playerWinsTie)
-            {
-                enemyAdverb = null;
-                contestLog =
-                    $"Both chose {adverbName} and tied at SPD {playerSpeed}. " +
-                    $"{playerCharacter.characterName} won the draw!";
-            }
-            else
-            {
-                playerAdverb = null;
-                contestLog =
-                    $"Both chose {adverbName} and tied at SPD {playerSpeed}. " +
-                    $"{enemyCharacter.characterName} won the draw!";
-            }
+            int faster = contest.PlayerWon ? playerSpeed : enemySpeed;
+            int slower = contest.PlayerWon ? enemySpeed : playerSpeed;
+            contestLog = $"Both chose {name}. {winner} won it (SPD {faster} > {slower})!";
         }
     }
 
     private void EnemyAttack(EquipmentData skillEquipment = null)
     {
-        if (enemyCharacter == null ||
-            enemyCharacter.skillIds == null ||
-            enemyCharacter.skillIds.Length == 0)
-        {
-            Debug.LogError("Enemy cannot attack because it has no skills.");
-            if (battleLogText != null)
-            {
-                battleLogText.text = "Enemy has no usable skills.";
-            }
-            return;
-        }
-
-        List<SkillData> usableSkills = new List<SkillData>();
-        foreach (string skillId in enemyCharacter.skillIds)
+        var usableSkills = new List<SkillData>();
+        foreach (string skillId in enemyCharacter.skillIds ?? System.Array.Empty<string>())
         {
             SkillData candidate = GameDatabase.Instance.GetSkill(skillId);
-            if (candidate != null)
-            {
-                usableSkills.Add(candidate);
-            }
+            if (candidate != null) usableSkills.Add(candidate);
         }
-
         if (usableSkills.Count == 0)
         {
-            Debug.LogError("Enemy cannot attack because none of its skill ids are valid.");
-            if (battleLogText != null)
-            {
-                battleLogText.text = "Enemy has no usable skills.";
-            }
+            Debug.LogError("Enemy cannot attack because it has no usable skills.");
+            if (battleLogText != null) battleLogText.text = "Enemy has no usable skills.";
+            battleContext.SkipEnemyTurn();
             return;
         }
-
+        // Preserve the existing random enemy skill choice and its random-number consumption.
         SkillData skill = usableSkills[Random.Range(0, usableSkills.Count)];
-
-        int damage =
-            DamageCalculator.CalculateDamage(
-                enemyCharacter,
-                playerCharacter,
-                skill,
-                null,
-                skillEquipment,
-                playerCharacterEquipment);
-
-        playerHP -= damage;
+        var result = battleContext.Resolve(new BattleAction(BattleSide.Enemy, skill, skillEquipment));
+        if (!result.CanUse || !battleContext.Apply(result)) return;
         StartCoroutine(ShakeRenderer(playerRenderer));
-
         PlaySoundEffect("slash");
-
-        if(playerHP < 0)
-            playerHP = 0;
-
         UpdateHPText();
-
-        string effectivenessText = GetEffectivenessText(enemyCharacter, playerCharacter);
-
-        string enemySkillName = GetConjugatedSkillName(skill, enemyCharacter);
-        string equippedEnemySkillName = GetEquippedSkillName(enemySkillName, skillEquipment);
+        var sentence = SentenceGenerator.Generate(new SentenceContext {
+            Subject = enemyCharacter, Target = playerCharacter, Skill = skill, SkillEquipment = skillEquipment
+        });
         string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
-
+        string effectivenessText = GetEffectivenessText(enemyCharacter, playerCharacter);
         if (battleLogText != null)
-        {
-            battleLogText.text =
-                $"Enemy used {equippedEnemySkillName}{skillEffect}! " +
-                $"{damage} damage! {effectivenessText}";
-        }
-        StartCoroutine(ShowPlayerDamage(damage));
+            battleLogText.text = $"Enemy used {sentence.EquippedVerb}{skillEffect}! {result.Damage} damage! {effectivenessText}";
+        StartCoroutine(ShowPlayerDamage(result.Damage));
     }
 
     private void LoadCharacterImages()
@@ -768,126 +632,6 @@ public class BattleManager : MonoBehaviour
         return "";
     }
 
-    private string GetConjugatedSkillName(SkillData skill, CharacterData subject)
-    {
-        if (skill == null) return "";
-
-        if (skill.conjugations == null)
-        {
-            return skill.skillName;
-        }
-
-        if (subject != null && subject.grammaticalNumber == "plural")
-        {
-            if (!string.IsNullOrEmpty(skill.conjugations.thirdPersonPlural))
-            {
-                return skill.conjugations.thirdPersonPlural;
-            }
-        }
-        else
-        {
-            if (!string.IsNullOrEmpty(skill.conjugations.thirdPersonSingular))
-            {
-                return skill.conjugations.thirdPersonSingular;
-            }
-        }
-
-        return skill.skillName;
-    }
-
-    private string BuildAttackSentenceAudioKey(SkillData skill, EquipmentData skillEquipment)
-    {
-        string subjectPart = playerCharacter.characterName;
-        if (playerCharacterEquipment != null)
-        {
-            subjectPart = playerCharacterEquipment.equipmentName + " " + subjectPart;
-        }
-
-        string verbPart = GetConjugatedSkillName(skill, playerCharacter);
-        if (skillEquipment != null)
-        {
-            verbPart = skillEquipment.equipmentName + " " + verbPart;
-        }
-
-        string sentence = subjectPart + " " + verbPart + " " + enemyCharacter.characterName;
-        return BuildAudioKey(sentence);
-    }
-
-    private IEnumerator PlayAttackAudio(SkillData skill, EquipmentData skillEquipment)
-    {
-        if (audioSource == null) yield break;
-
-        string sentenceKey = BuildAttackSentenceAudioKey(skill, skillEquipment);
-        AudioClip sentenceClip = Resources.Load<AudioClip>($"Audio/Sentences/{sentenceKey}");
-
-        if (sentenceClip != null)
-        {
-            audioSource.PlayOneShot(sentenceClip);
-            yield return new WaitForSeconds(sentenceClip.length + 0.05f);
-            yield break;
-        }
-
-        Debug.LogWarning($"Sentence audio not found: Audio/Sentences/{sentenceKey}. Falling back to word audio.");
-        yield return StartCoroutine(PlayAttackWordSequence(skill, skillEquipment));
-    }
-
-    private IEnumerator PlayAttackWordSequence(SkillData skill, EquipmentData skillEquipment)
-    {
-        if (audioSource == null) yield break;
-
-        if (playerCharacterEquipment != null)
-        {
-            yield return StartCoroutine(PlayWordAudioAndWait(playerCharacterEquipment.equipmentName));
-        }
-
-        yield return StartCoroutine(PlayWordAudioAndWait(playerCharacter.characterName));
-
-        if (skillEquipment != null)
-        {
-            yield return StartCoroutine(PlayWordAudioAndWait(skillEquipment.equipmentName));
-        }
-
-        string verb = GetConjugatedSkillName(skill, playerCharacter);
-        yield return StartCoroutine(PlayWordAudioAndWait(verb));
-
-        yield return StartCoroutine(PlayWordAudioAndWait(enemyCharacter.characterName));
-    }
-    private IEnumerator PlayWordAudioAndWait(string word)
-    {
-        if (audioSource == null || string.IsNullOrEmpty(word))
-        {
-            yield break;
-        }
-
-        string key = BuildAudioKey(word);
-        AudioClip clip = Resources.Load<AudioClip>($"Audio/Words/{key}");
-
-        if (clip == null)
-        {
-            Debug.LogWarning($"Word audio not found: Audio/Words/{key}");
-            yield return new WaitForSeconds(0.15f);
-            yield break;
-        }
-
-        audioSource.PlayOneShot(clip);
-        yield return new WaitForSeconds(clip.length + 0.05f);
-    }
-
-    private string BuildAudioKey(string text)
-    {
-        return text
-            .Trim()
-            .ToLowerInvariant()
-            .Replace(" ", "_")
-            .Replace("<color=#66ccff>", "")
-            .Replace("<color=#ff5555>", "")
-            .Replace("</color>", "")
-            .Replace(".", "")
-            .Replace(",", "")
-            .Replace("!", "")
-            .Replace("?", "");
-    }
-
     private void PlaySoundEffect(string effectName)
     {
         if (audioSource == null) return;
@@ -904,20 +648,6 @@ public class BattleManager : MonoBehaviour
         {
             Debug.LogWarning(
                 $"Sound effect not found: {effectName}");
-        }
-    }
-
-    private void PlayWordAudio(string word)
-    {
-        if (audioSource == null) return;
-
-        AudioClip clip =
-            Resources.Load<AudioClip>(
-                $"Audio/Words/{word}");
-
-        if (clip != null)
-        {
-            audioSource.PlayOneShot(clip);
         }
     }
 

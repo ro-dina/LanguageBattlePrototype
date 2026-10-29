@@ -9,16 +9,38 @@ public class GameDatabase : MonoBehaviour
     private Dictionary<string, SkillData> skills;
     private Dictionary<string, EquipmentData> equipments;
 
-    private void Awake()
+    public bool ContainsCharacter(string id) => !string.IsNullOrEmpty(id) && characters != null && characters.ContainsKey(id);
+    public bool ContainsSkill(string id) => !string.IsNullOrEmpty(id) && skills != null && skills.ContainsKey(id);
+    public bool ContainsEquipment(string id) => !string.IsNullOrEmpty(id) && equipments != null && equipments.ContainsKey(id);
+
+    public static GameDatabase EnsureAvailable()
     {
-        if (Instance != null)
+        if (Instance == null)
+        {
+            var database = new GameObject("GameDatabase").AddComponent<GameDatabase>();
+            database.Initialize();
+        }
+        return Instance;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
+    private void Awake() => Initialize();
+
+    private void Initialize()
+    {
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
+        if (Instance == this && characters != null) return;
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (Application.isPlaying) DontDestroyOnLoad(gameObject);
 
         LoadCharacters();
         LoadSkills();
