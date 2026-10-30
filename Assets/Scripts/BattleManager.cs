@@ -94,6 +94,41 @@ public class BattleManager : MonoBehaviour
     private int playerHP => battleContext?.Player.HP ?? 0;
     private int enemyHP => battleContext?.Enemy.HP ?? 0;
     private bool isProcessing = false;
+    [SerializeField] private BattleModifierUI modifierUI;
+    public BattleSelection Selection { get; private set; } = new BattleSelection();
+    public BattleAction LastCommittedAction { get; private set; }
+    public bool CanChoose => !isProcessing && battleContext != null &&
+        battleContext.TurnState == BattleTurnState.AwaitingPlayer && battleContext.Outcome == BattleOutcome.Ongoing;
+
+    public bool SelectFuture(bool selected)
+    {
+        if (!CanChoose || (selected && (Selection.Modal != BattleModal.None || battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
+        Selection.Select(BattleElementKind.Tense, selected ? "futur1" : null);
+        RefreshSelectionUI(); return true;
+    }
+    public bool SelectMuessen(bool selected)
+    {
+        if (!CanChoose || (selected && (Selection.Tense != BattleTense.Present || battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
+        Selection.Select(BattleElementKind.Modal, selected ? "muessen" : null);
+        RefreshSelectionUI(); return true;
+    }
+    public void ClearModifiers()
+    {
+        if (!CanChoose) return;
+        selectedTurnAdverb = null; Selection.ClearModifiers(); RefreshSelectionUI();
+    }
+    private void RefreshSelectionUI()
+    {
+        if (modifierUI != null) modifierUI.Refresh();
+        if (adverbCardButtons != null)
+            for (int i = 0; i < adverbCardButtons.Length; i++)
+                if (adverbCardButtons[i] != null && i < currentAdverbCards.Count)
+                    adverbCardButtons[i].image.color = selectedTurnAdverb != null && currentAdverbCards[i].id == selectedTurnAdverb.id
+                        ? new Color(0.65f, 0.84f, 1f) : Color.white;
+        if (noAdverbButton != null) noAdverbButton.image.color = selectedTurnAdverb == null ? new Color(0.65f, 0.84f, 1f) : Color.white;
+    }
+    private void OnDestroy() { battleContext?.Cancel(); }
+
 
     private void Start()
     {
@@ -131,6 +166,7 @@ public class BattleManager : MonoBehaviour
         SetupCharacterEquipment();
 
         battleContext = new BattleContext(playerCharacter, enemyCharacter, playerCharacterEquipment);
+        if (modifierUI != null) modifierUI.Bind(this);
 
         if (enemyDamageText != null)
         {
@@ -283,14 +319,17 @@ public class BattleManager : MonoBehaviour
         EquipmentData enemySkillEquipment, string adverbContestLog)
     {
         if (isProcessing) return;
-        BattleActionResult result = battleContext.Resolve(new BattleAction(BattleSide.Player, skill, skillEquipment));
+        BattleActionResult result = battleContext.Resolve(new BattleAction(BattleSide.Player, skill, skillEquipment,
+            Selection.Tense, Selection.Modal, Selection.Commit(skill.id)));
         if (!result.CanUse)
         {
             if (battleLogText != null) battleLogText.text = result.FailureReason;
             return;
         }
+        LastCommittedAction = result.Action;
         isProcessing = true;
         SetAdverbCardInteraction(false);
+        RefreshSelectionUI();
         if (skillPanel != null) skillPanel.SetActive(false);
         StartCoroutine(PlayerTurnSequence(result, enemySkillEquipment, adverbContestLog));
     }
@@ -303,59 +342,63 @@ public class BattleManager : MonoBehaviour
             battleLogText.text = adverbContestLog;
             yield return new WaitForSeconds(0.8f);
         }
-        if (battleLogText != null)
-            yield return StartCoroutine(ShowPlayerAttackLog(result.Action.Skill, result.Action.SkillEquipment, result.Damage));
+        yield return PresentPlayerAttack(result);
         if (!battleContext.Apply(result))
         {
             isProcessing = false;
-            SetAdverbCardInteraction(true);
+            SetAdverbCardInteraction(CanChoose);
+            RefreshSelectionUI();
             yield break;
         }
-        PlaySoundEffect("slash");
-        UpdateHPText();
-        StartCoroutine(ShowEnemyDamage(result.Damage));
-        StartCoroutine(ShakeRenderer(enemyRenderer));
-        yield return new WaitForSeconds(0.4f);
-        if (battleContext.Outcome == BattleOutcome.PlayerWin)
-        {
-            GameManager.IsWin = true;
-            SceneManager.LoadScene("Result");
-            yield break;
-        }
+        RefreshSelectionUI();
+        if (!result.IsReservation) yield return PresentPlayerHit(result.Damage);
+        if (CompleteBattle()) yield break;
         EnemyAttack(enemySkillEquipment);
         yield return new WaitForSeconds(1f);
-        if (battleContext.Outcome == BattleOutcome.EnemyWin)
+        if (CompleteBattle()) yield break;
+
+        // Enemy turn has ended; resolve the frozen reservation before re-enabling any input.
+        if (battleContext.TurnState == BattleTurnState.ResolvingPending)
         {
-            GameManager.IsWin = false;
-            SceneManager.LoadScene("Result");
-            yield break;
+            var pending = battleContext.ResolvePendingAttack();
+            yield return PresentPlayerAttack(pending);
+            if (battleContext.Apply(pending)) yield return PresentPlayerHit(pending.Damage);
+            RefreshSelectionUI();
+            if (CompleteBattle()) yield break;
         }
         isProcessing = false;
         GenerateAdverbCards();
     }
 
-    private IEnumerator ShowPlayerAttackLog(SkillData skill, EquipmentData skillEquipment, int damage)
+    private bool CompleteBattle()
     {
-        BattleSentence sentence = SentenceGenerator.Generate(new SentenceContext {
-            Subject = playerCharacter, Target = enemyCharacter, Skill = skill,
-            CharacterEquipment = playerCharacterEquipment, SkillEquipment = skillEquipment
-        });
-        string characterEffect = GetCharacterEquipmentEffectText(playerCharacterEquipment);
-        string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
-        string effectivenessText = GetEffectivenessText(playerCharacter, enemyCharacter);
-        Coroutine audio = StartCoroutine(AttackAudioPlayback.Play(audioSource, sentence));
-        battleLogText.text = sentence.BaseSubject;
+        if (battleContext.Outcome == BattleOutcome.Ongoing) return false;
+        GameManager.IsWin = battleContext.Outcome == BattleOutcome.PlayerWin;
+        SceneManager.LoadScene("Result");
+        return true;
+    }
+
+    private IEnumerator PresentPlayerHit(int damage)
+    {
+        PlaySoundEffect("slash");
+        UpdateHPText();
+        StartCoroutine(ShowEnemyDamage(damage));
+        StartCoroutine(ShakeRenderer(enemyRenderer));
         yield return new WaitForSeconds(0.4f);
-        battleLogText.text = sentence.EquippedSubject + characterEffect;
-        yield return new WaitForSeconds(0.4f);
-        battleLogText.text = sentence.EquippedSubject + characterEffect + "\n" + sentence.BaseVerb;
-        yield return new WaitForSeconds(0.3f);
-        battleLogText.text = sentence.EquippedSubject + characterEffect + "\n" + sentence.EquippedVerb + skillEffect;
-        yield return new WaitForSeconds(0.3f);
-        battleLogText.text = sentence.EquippedSubject + characterEffect + "\n" +
-            sentence.EquippedVerb + skillEffect + "\n" + "→ " + sentence.Target + "\n" +
-            "<color=#ff5555>" + damage + " damage!</color> " + effectivenessText;
-        if (audio != null) yield return audio;
+    }
+
+    private IEnumerator PresentPlayerAttack(BattleActionResult result)
+    {
+        var sentence = result.Sentence;
+        if (battleLogText != null)
+        {
+            string status = result.IsReservation ? $"Reserved: {result.ReservedDamage} damage next turn (0 now)" :
+                result.IsPendingAttack ? $"Reserved attack: {result.Damage} damage!" : $"{result.Damage} damage!";
+            battleLogText.text = sentence.Text + "\n→ " + sentence.Target + "\n" + status +
+                (result.Action.Modal == BattleModal.Muessen ? " (müssen ×2)" : "");
+        }
+        // Sentence and fallback words were captured with damage at reservation time.
+        yield return AttackAudioPlayback.Play(audioSource, sentence);
         yield return new WaitForSeconds(0.8f);
     }
 
@@ -544,7 +587,7 @@ public class BattleManager : MonoBehaviour
         string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
         string effectivenessText = GetEffectivenessText(enemyCharacter, playerCharacter);
         if (battleLogText != null)
-            battleLogText.text = $"Enemy used {sentence.EquippedVerb}{skillEffect}! {result.Damage} damage! {effectivenessText}";
+            battleLogText.text = $"Enemy used {sentence.EquippedVerb}{skillEffect}!\n{sentence.Text}\n{result.Damage} damage! {effectivenessText}";
         StartCoroutine(ShowPlayerDamage(result.Damage));
     }
 
@@ -653,6 +696,7 @@ public class BattleManager : MonoBehaviour
 
     private void GenerateAdverbCards()
     {
+        Selection = new BattleSelection();
         selectedTurnAdverb = null;
         enemySelectedTurnAdverb = null;
         currentAdverbCards.Clear();
@@ -705,6 +749,7 @@ public class BattleManager : MonoBehaviour
 
         ChooseEnemyAdverb();
         SetAdverbCardInteraction(true);
+        RefreshSelectionUI();
     }
 
     private List<EquipmentData> GetBattleAdverbCandidates()
@@ -858,6 +903,8 @@ public class BattleManager : MonoBehaviour
         if (index < 0 || index >= currentAdverbCards.Count) return;
 
         selectedTurnAdverb = currentAdverbCards[index];
+        Selection.Select(BattleElementKind.Adverb, selectedTurnAdverb.id);
+        RefreshSelectionUI();
 
         if (battleLogText != null)
         {
@@ -872,6 +919,8 @@ public class BattleManager : MonoBehaviour
         if (isProcessing) return;
 
         selectedTurnAdverb = null;
+        Selection.Select(BattleElementKind.Adverb, null);
+        RefreshSelectionUI();
 
         if (battleLogText != null)
         {

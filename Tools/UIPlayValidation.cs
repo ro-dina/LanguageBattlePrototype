@@ -193,11 +193,48 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return RenderSizes("Battle-commands");
         Click("back");
         Check(!Field<GameObject>(Find<BattleManager>(), "skillPanel").activeSelf, "Back closes skill commands");
-        Click("NoAdverbButton"); Click("Fight"); Click("SkillButton1");
+        Click("FutureButton");
+        Check(Find<BattleManager>().Selection.Tense == BattleTense.Future && !ButtonNamed("MuessenButton").interactable,
+            "Future selection disables müssen");
+        yield return RenderSizes("Battle-future-selected");
+        Click("NoTenseButton"); Click("MuessenButton");
+        Check(Find<BattleManager>().Selection.Modal == BattleModal.Muessen && !ButtonNamed("FutureButton").interactable,
+            "Müssen selection disables future");
+        yield return RenderSizes("Battle-muessen-selected");
+        Click("ClearModifiersButton");
+        Check(Find<BattleManager>().Selection.Tense == BattleTense.Present && Find<BattleManager>().Selection.Modal == BattleModal.None,
+            "Clear modifiers restores an ordinary skill command");
+        Click("NoAdverbButton"); Click("Fight"); yield return null; yield return null; Click("SkillButton1");
         Check(Field<bool>(Find<BattleManager>(), "isProcessing"), "Skill command starts the existing battle turn");
         float deadline = Time.realtimeSinceStartup + 25;
         while (Find<BattleManager>() != null && Field<bool>(Find<BattleManager>(), "isProcessing") && Time.realtimeSinceStartup < deadline) yield return null;
         Check(Find<BattleManager>() == null || !Field<bool>(Find<BattleManager>(), "isProcessing"), "Battle turn completes without getting stuck");
+        yield return Load("Battle");
+        var futureBattle = Find<BattleManager>(); var futureContext = futureBattle.Context;
+        Click("NoAdverbButton"); Click("FutureButton"); Click("Fight"); yield return null; yield return null; Click("SkillButton1");
+        deadline = Time.realtimeSinceStartup + 20;
+        while (futureContext.PendingAttack == null && futureContext.Outcome == BattleOutcome.Ongoing && Time.realtimeSinceStartup < deadline) yield return null;
+        Check(futureContext.PendingAttack != null && futureContext.Enemy.HP == futureContext.Enemy.Character.hp,
+            "Future reservation causes zero immediate enemy damage");
+        Time.timeScale = 0;
+        yield return RenderSizes("Battle-reserved");
+        Check(!ButtonNamed("FutureButton").interactable && !ButtonNamed("MuessenButton").interactable,
+            "Modifier input stays locked while resolving the reserved turn");
+        Time.timeScale = 1;
+        deadline = Time.realtimeSinceStartup + 20;
+        while (Find<BattleManager>() != null && Field<bool>(Find<BattleManager>(), "isProcessing") && Time.realtimeSinceStartup < deadline) yield return null;
+        yield return null;
+        Check(futureContext.Outcome == BattleOutcome.PlayerWin && futureContext.PendingAttack == null && SceneManager.GetActiveScene().name == "Result",
+            "Reserved knockout enters Result without requesting another skill");
+        yield return Load("Battle");
+        var muessenBattle = Find<BattleManager>();
+        typeof(BattleCombatant).GetProperty("HP").SetValue(muessenBattle.Context.Enemy, 200);
+        Click("NoAdverbButton"); Click("MuessenButton"); Click("Fight"); yield return null; yield return null; Click("SkillButton1");
+        deadline = Time.realtimeSinceStartup + 20;
+        while (Field<bool>(muessenBattle, "isProcessing") && Time.realtimeSinceStartup < deadline) yield return null;
+        Check(muessenBattle.Context.MuessenUsed && !ButtonNamed("MuessenButton").interactable &&
+            ButtonNamed("MuessenButton").GetComponentInChildren<TMP_Text>().text.Contains("USED"), "Müssen used state is visible and unavailable");
+        yield return RenderSizes("Battle-muessen-used");
         // Test direct entry after destroying the persistent database.
         if (GameDatabase.Instance != null) Destroy(GameDatabase.Instance.gameObject);
         yield return null;

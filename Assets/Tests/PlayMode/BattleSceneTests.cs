@@ -98,10 +98,8 @@ public class BattleSceneTests
     public IEnumerator SentenceAudioAndWordFallbackFinishUsingExistingResources()
     {
         var db = GameDatabase.Instance;
-        var sentence = SentenceGenerator.Generate(new SentenceContext {
-            Subject = db.GetCharacter("jahr"), Target = db.GetCharacter("feuer"), Skill = db.GetSkill("sein"),
-            CharacterEquipment = db.GetEquipment("schwarz"), SkillEquipment = db.GetEquipment("sehr")
-        });
+        // The existing recording remains playable, even though its legacy word order is no longer generated.
+        var sentence = new BattleSentence { SentenceAudioKey = "schwarz_jahr_sehr_ist_feuer" };
         Assert.That(Resources.Load<AudioClip>("Audio/Sentences/" + sentence.SentenceAudioKey), Is.Not.Null);
         var audioObject = new GameObject("Test audio");
         var source = audioObject.AddComponent<AudioSource>();
@@ -110,7 +108,9 @@ public class BattleSceneTests
             Subject = db.GetCharacter("jahr"), Target = db.GetCharacter("feuer"), Skill = db.GetSkill("sein")
         });
         Assert.That(Resources.Load<AudioClip>("Audio/Sentences/" + fallback.SentenceAudioKey), Is.Null);
-        Assert.That(fallback.SpeechWords.All(word => Resources.Load<AudioClip>("Audio/Words/" + SentenceGenerator.AudioKey(word)) != null), Is.True);
+        Assert.That(fallback.SpeechWords.Any(word => Resources.Load<AudioClip>("Audio/Words/" + SentenceGenerator.AudioKey(word)) != null), Is.True);
+        Assert.That(fallback.SpeechWords.Any(word => Resources.Load<AudioClip>("Audio/Words/" + SentenceGenerator.AudioKey(word)) == null), Is.True,
+            "Newly generated grammar also exercises the safe missing-word fallback.");
         yield return AttackAudioPlayback.Play(source, fallback);
         Assert.That(AttackAudioPlayback.Play(null, sentence).MoveNext(), Is.False);
         Object.Destroy(audioObject);

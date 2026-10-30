@@ -47,6 +47,14 @@ public class SkillData
     public string effectType;
     public int effectValue;
     public SkillConjugations conjugations;
+
+    // Optional grammar metadata. Existing skillName is already the German infinitive.
+    // Separable verbs use e.g. infinitive=angreifen, separablePrefix=an,
+    // conjugations.thirdPersonSingular=greift an (or greift).
+    public string infinitive;
+    public string separablePrefix;
+    public string sentenceComplement;
+
 }
 
 [Serializable]

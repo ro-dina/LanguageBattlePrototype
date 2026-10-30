@@ -93,16 +93,16 @@ public class BattleRulesTests
     }
 
     [Test]
-    public void SentenceDisplayAndSpeechShareExistingWordOrderAndConjugation()
+    public void SentenceDisplayAndSpeechShareGermanVerbSecondOrderAndConjugation()
     {
         var subject = Character("jahr");
         var context = new SentenceContext { Subject = subject, Target = Character("feuer"), Skill = Skill("sein"),
             CharacterEquipment = Equipment("schwarz"), SkillEquipment = Equipment("sehr") };
         var sentence = SentenceGenerator.Generate(context);
-        Assert.That(sentence.EquippedSubject, Is.EqualTo("<color=#66ccff>schwarz</color> Jahr"));
-        Assert.That(sentence.EquippedVerb, Is.EqualTo("<color=#66ccff>sehr</color> ist"));
-        Assert.That(sentence.SpeechWords, Is.EqualTo(new[] { "schwarz", "Jahr", "sehr", "ist", "Feuer" }));
-        Assert.That(sentence.SentenceAudioKey, Is.EqualTo("schwarz_jahr_sehr_ist_feuer"));
+        Assert.That(sentence.EquippedSubject, Is.EqualTo("Das schwarze Jahr"));
+        Assert.That(sentence.EquippedVerb, Is.EqualTo("ist sehr"));
+        Assert.That(sentence.SpeechWords, Is.EqualTo(new[] { "Das", "schwarze", "Jahr", "ist", "sehr", "aktiv" }));
+        Assert.That(sentence.SentenceAudioKey, Is.EqualTo("das_schwarze_jahr_ist_sehr_aktiv"));
         subject.grammaticalNumber = "plural";
         Assert.That(SentenceGenerator.Generate(context).BaseVerb, Is.EqualTo("sind"));
         context.Skill = new SkillData { skillName = "fallback" };

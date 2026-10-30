@@ -2,6 +2,7 @@
   "skills": [
     {
       "id": "sein",
+      "sentenceComplement": "aktiv",
       "skillName": "sein",
       "language": "de",
       "power": 3,
@@ -22,6 +23,7 @@
     },
     {
       "id": "werden",
+      "sentenceComplement": "aktiv",
       "skillName": "werden",
       "language": "de",
       "power": 4,
@@ -42,6 +44,7 @@
     },
     {
       "id": "haben",
+      "sentenceComplement": "großen Erfolg",
       "skillName": "haben",
       "language": "de",
       "power": 5,
