@@ -11,11 +11,18 @@ using Object = UnityEngine.Object;
 [PostBuildCleanup(typeof(TestSaveIsolation))]
 public class SaveSceneTests
 {
+    private static string Instance(string species)
+    {
+        var instances = CharacterInstances.GetByCharacterId(species);
+        return instances.Count > 0 ? instances[0].instanceId : CharacterInstances.Create(species).instanceId;
+    }
+
     private string directory;
 
     [UnitySetUp]
     public IEnumerator Setup()
     {
+        SceneManager.LoadScene("GermanyHome"); yield return null; yield return null;
         if (PlayerSaveService.Instance != null) Object.DestroyImmediate(PlayerSaveService.Instance.gameObject);
         directory = Path.Combine(Path.GetTempPath(), "LanguageBattlePlayTests", Guid.NewGuid().ToString("N"));
         PlayerSaveService.Initialize(directory);
@@ -38,7 +45,7 @@ public class SaveSceneTests
         OwnedCharacters.UnlockCharacter("hund");
         StageProgress.Unlock("test-stage");
         StageProgress.MarkCleared("test-stage");
-        var draft = CharacterLoadoutStore.GetLoadout("hund");
+        var draft = CharacterLoadoutStore.GetLoadout(Instance("hund"));
         draft.adjectiveId = "schnell";
         draft.skillSlots[0].equippedAdverbId = "sehr";
         CharacterLoadoutStore.Commit(draft);
@@ -51,8 +58,8 @@ public class SaveSceneTests
         Assert.That(service.LoadStatus, Is.EqualTo(SaveLoadStatus.Loaded));
         Assert.That(InventoryManager.GetItemCount("letter_a"), Is.EqualTo(7));
         Assert.That(OwnedCharacters.IsCharacterOwned("hund"), Is.True);
-        Assert.That(CharacterLoadoutStore.GetLoadout("hund").skillSlots[0].equippedAdverbId, Is.EqualTo("sehr"));
-        Assert.That(CharacterLoadoutStore.GetLoadout("hund").adjectiveId, Is.EqualTo("schnell"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("hund")).skillSlots[0].equippedAdverbId, Is.EqualTo("sehr"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("hund")).adjectiveId, Is.EqualTo("schnell"));
         Assert.That(StageProgress.CaptureState().clearedStageIds, Does.Contain("test-stage"));
         SceneManager.LoadScene("Inventory");
         yield return null;

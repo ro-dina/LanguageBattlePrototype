@@ -5,32 +5,30 @@ using UnityEngine;
 [Serializable]
 public sealed class SaveData
 {
-    // No initializer: a missing version must not silently become the current version.
     public int version;
     public InventoryState inventory;
-    public OwnedCharactersState ownedCharacters;
+    public CharacterInstanceState characterInstances;
     public CharacterLoadoutState characterEquipment;
+    public CharacterCollectionState characterCollection;
     public StageProgressState stageProgress;
 }
 
 public static class NewGameDefaults
 {
-    // Provisional starter, matching GameManager's existing default. Edit this list to change it.
     public static readonly string[] StarterCharacterIds = { "nacht" };
-
     public static SaveData Create()
     {
-        var data = new SaveData {
-            version = SaveDataValidator.CurrentVersion,
-            inventory = new InventoryState(),
-            ownedCharacters = new OwnedCharactersState(),
-            characterEquipment = new CharacterLoadoutState(),
-            stageProgress = new StageProgressState()
-        };
+        var data = new SaveData { version = SaveDataValidator.CurrentVersion,
+            inventory = new InventoryState(), characterInstances = new CharacterInstanceState(),
+            characterEquipment = new CharacterLoadoutState(), characterCollection = new CharacterCollectionState(),
+            stageProgress = new StageProgressState() };
         foreach (string id in StarterCharacterIds)
-            if (GameDatabase.Instance.ContainsCharacter(id)) data.ownedCharacters.characterIds.Add(id);
-        if (data.ownedCharacters.characterIds.Count == 0)
-            throw new InvalidOperationException("No valid starter character is configured.");
+            if (GameDatabase.Instance.ContainsCharacter(id))
+            {
+                data.characterInstances.instances.Add(new CharacterInstance { instanceId = CharacterInstances.NewId(), characterId = id });
+                data.characterCollection.discoveredCharacterIds.Add(id);
+            }
+        if (data.characterInstances.instances.Count == 0) throw new InvalidOperationException("No valid starter character is configured.");
         return data;
     }
 }
@@ -63,39 +61,44 @@ public static class GameContentIds
 
 public static class SaveDataValidator
 {
-    public const int CurrentVersion = 1;
-
+    public const int CurrentVersion = 2;
     public static bool Validate(SaveData data, out string error)
     {
         error = null;
-        if (data == null) error = "Save data is null.";
-        else if (data.version != CurrentVersion) error = $"Unsupported save version: {data.version}.";
-        else if (data.inventory?.items == null || data.ownedCharacters?.characterIds == null ||
-                 data.characterEquipment?.characters == null || data.stageProgress == null)
-            error = "Required save sections are missing.";
-        else
+        if (data == null) { error = "Save data is null."; return false; }
+        if (data.version != CurrentVersion) { error = $"Unsupported save version: {data.version}."; return false; }
+        if (!ValidateCommon(data.inventory, data.stageProgress, out error)) return false;
+        if (!CharacterInstances.ValidState(data.characterInstances, out error)) return false;
+        if (!CharacterCollection.ValidState(data.characterCollection) || data.characterEquipment?.characters == null)
+        { error = "Missing or invalid collection/loadout sections."; return false; }
+        var instances = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var instance in data.characterInstances.instances)
         {
-            var items = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var entry in data.inventory.items)
-                if (entry == null || !GameContentIds.IsItem(entry.itemId) || entry.count <= 0 || !items.Add(entry.itemId))
-                { error = "Invalid inventory ID/count or duplicate entry."; break; }
-            var owned = new HashSet<string>(StringComparer.Ordinal);
-            foreach (string id in data.ownedCharacters.characterIds)
-                if (!GameDatabase.Instance.ContainsCharacter(id) || !owned.Add(id))
-                { error = "Unknown or duplicate owned character."; break; }
-            if (owned.Count == 0) error = "Save contains no playable characters.";
-            var loadouts = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var loadout in data.characterEquipment.characters)
-            {
-                if (!CharacterLoadoutStore.Validate(loadout, out string loadoutError)) { error = loadoutError; break; }
-                if (!loadouts.Add(loadout.characterId)) { error = "Duplicate character loadout."; break; }
-            }
-            if (!StageProgress.ValidIds(data.stageProgress.unlockedStageIds) || !StageProgress.ValidIds(data.stageProgress.clearedStageIds))
-                error = "Invalid stage progress IDs.";
+            instances.Add(instance.instanceId, instance.characterId);
+            if (!data.characterCollection.discoveredCharacterIds.Contains(instance.characterId))
+            { error = "Owned species is missing its discovery record."; return false; }
         }
-        return error == null;
+        var loadouts = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var loadout in data.characterEquipment.characters)
+        {
+            if (!CharacterLoadoutStore.ValidateDefinition(loadout, out error)) return false;
+            if (string.IsNullOrEmpty(loadout.instanceId) || !instances.TryGetValue(loadout.instanceId, out var species) ||
+                species != loadout.characterId || !loadouts.Add(loadout.instanceId))
+            { error = "Orphaned, mismatched or duplicate instance loadout."; return false; }
+        }
+        return true;
     }
-
+    internal static bool ValidateCommon(InventoryState inventory, StageProgressState stage, out string error)
+    {
+        error = null;
+        if (inventory?.items == null || stage == null || !StageProgress.ValidIds(stage.unlockedStageIds) || !StageProgress.ValidIds(stage.clearedStageIds))
+        { error = "Missing inventory or invalid stage progress."; return false; }
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var entry in inventory.items)
+            if (entry == null || !GameContentIds.IsItem(entry.itemId) || entry.count <= 0 || !ids.Add(entry.itemId))
+            { error = "Invalid inventory ID/count or duplicate entry."; return false; }
+        return true;
+    }
     public static bool TryDecode(string json, out SaveData data, out string error)
     {
         data = null;
@@ -106,10 +109,6 @@ public static class SaveDataValidator
             data = JsonUtility.FromJson<SaveData>(json);
             return Validate(data, out error);
         }
-        catch (Exception exception)
-        {
-            error = "Invalid save JSON: " + exception.Message;
-            return false;
-        }
+        catch (Exception exception) { error = "Invalid save JSON: " + exception.Message; return false; }
     }
 }

@@ -5,6 +5,7 @@ using UnityEngine;
 [Serializable]
 public sealed class CharacterLoadout
 {
+    public string instanceId;
     public string characterId;
     public string adjectiveId;
     public string articleId;
@@ -28,11 +29,17 @@ public static class CharacterLoadoutStore
     private static void Reset() => Overrides.Clear();
 
     // Always return a detached draft. Merely viewing/editing a character never commits.
-    public static CharacterLoadout GetLoadout(string characterId)
+    public static CharacterLoadout GetLoadout(string instanceId)
     {
-        if (string.IsNullOrEmpty(characterId) || GameDatabase.Instance == null) return null;
-        if (Overrides.TryGetValue(characterId, out CharacterLoadout saved)) return Clone(saved);
-        CharacterData master = GameDatabase.Instance.GetCharacter(characterId);
+        var instance = CharacterInstances.Get(instanceId);
+        if (instance == null) return null;
+        if (Overrides.TryGetValue(instanceId, out CharacterLoadout saved)) return Clone(saved);
+        return GetDefaultLoadout(instance.characterId, instanceId);
+    }
+
+    public static CharacterLoadout GetDefaultLoadout(string characterId, string instanceId = null)
+    {
+        CharacterData master = GameDatabase.Instance?.GetCharacter(characterId);
         if (master == null) return null;
         var slots = new List<CharacterSkillSlotData>();
         foreach (string skillId in master.skillIds ?? Array.Empty<string>())
@@ -43,6 +50,7 @@ public static class CharacterLoadoutStore
             slots.Add(new CharacterSkillSlotData { skillId = skillId, equippedAdverbId = adverbId });
         }
         return new CharacterLoadout {
+            instanceId = instanceId,
             characterId = characterId,
             adjectiveId = master.equippedAdjectiveId ?? "",
             articleId = !string.IsNullOrEmpty(master.equippedArticleId)
@@ -54,12 +62,21 @@ public static class CharacterLoadoutStore
     public static bool Commit(CharacterLoadout draft)
     {
         if (!Validate(draft, out _)) return false;
-        Overrides[draft.characterId] = Clone(draft);
+        Overrides[draft.instanceId] = Clone(draft);
         PlayerStateChanges.Notify();
         return true;
     }
 
     public static bool Validate(CharacterLoadout loadout, out string error)
+    {
+        var instance = CharacterInstances.Get(loadout?.instanceId);
+        if (instance == null || instance.characterId != loadout.characterId)
+        { error = "Loadout does not belong to an owned instance."; return false; }
+        return ValidateDefinition(loadout, out error);
+    }
+
+    // Pure validation also supports save decoding before runtime ownership is restored.
+    public static bool ValidateDefinition(CharacterLoadout loadout, out string error)
     {
         error = null;
         GameDatabase db = GameDatabase.Instance;
@@ -83,10 +100,12 @@ public static class CharacterLoadoutStore
     private static bool ValidEquipment(GameDatabase db, string id) =>
         string.IsNullOrEmpty(id) || db.ContainsEquipment(id);
 
-    public static CharacterData GetCharacterForBattle(string characterId)
+    public static CharacterData GetCharacterForBattle(string instanceId)
     {
-        CharacterData master = GameDatabase.Instance.GetCharacter(characterId);
-        CharacterLoadout loadout = GetLoadout(characterId);
+        var instance = CharacterInstances.Get(instanceId);
+        if (instance == null) return null;
+        CharacterData master = GameDatabase.Instance.GetCharacter(instance.characterId);
+        CharacterLoadout loadout = GetLoadout(instanceId);
         if (master == null || loadout == null) return null;
         CharacterData result = JsonUtility.FromJson<CharacterData>(JsonUtility.ToJson(master));
         result.equippedAdjectiveId = loadout.adjectiveId;
@@ -101,7 +120,7 @@ public static class CharacterLoadoutStore
     {
         var state = new CharacterLoadoutState();
         foreach (var id in new List<string>(Overrides.Keys)) state.characters.Add(Clone(Overrides[id]));
-        state.characters.Sort((a, b) => StringComparer.Ordinal.Compare(a.characterId, b.characterId));
+        state.characters.Sort((a, b) => StringComparer.Ordinal.Compare(a.instanceId, b.instanceId));
         return state;
     }
 
@@ -111,13 +130,18 @@ public static class CharacterLoadoutStore
         var restored = new Dictionary<string, CharacterLoadout>(StringComparer.Ordinal);
         foreach (var loadout in state.characters)
         {
-            if (!Validate(loadout, out _) || restored.ContainsKey(loadout.characterId)) return false;
-            restored.Add(loadout.characterId, Clone(loadout));
+            if (!Validate(loadout, out _) || restored.ContainsKey(loadout.instanceId)) return false;
+            restored.Add(loadout.instanceId, Clone(loadout));
         }
         Overrides.Clear();
         foreach (var pair in restored) Overrides.Add(pair.Key, pair.Value);
         PlayerStateChanges.Notify();
         return true;
+    }
+
+    public static void RemoveInstance(string instanceId)
+    {
+        if (instanceId != null && Overrides.Remove(instanceId)) PlayerStateChanges.Notify();
     }
 
     private static CharacterLoadout Clone(CharacterLoadout source) =>

@@ -10,6 +10,12 @@ using UnityEngine.UI;
 [PostBuildCleanup(typeof(TestSaveIsolation))]
 public class LoadoutSceneTests
 {
+    private static string Instance(string species)
+    {
+        var instances = CharacterInstances.GetByCharacterId(species);
+        return instances.Count > 0 ? instances[0].instanceId : CharacterInstances.Create(species).instanceId;
+    }
+
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static T Field<T>(object target, string name) => (T)target.GetType().GetField(name, Private).GetValue(target);
     private static void Call(object target, string name, params object[] args) => target.GetType().GetMethod(name, Private).Invoke(target, args);
@@ -17,7 +23,9 @@ public class LoadoutSceneTests
     [UnitySetUp]
     public IEnumerator Setup()
     {
+        SceneManager.LoadScene("GermanyHome"); yield return null; yield return null;
         GameDatabase.EnsureAvailable();
+        var seed = new OwnedCharactersState(); seed.characterIds.AddRange(new[] { "nacht", "hund" }); OwnedCharacters.RestoreState(seed);
         CharacterLoadoutStore.RestoreState(new CharacterLoadoutState());
         yield return null;
     }
@@ -42,7 +50,7 @@ public class LoadoutSceneTests
         detail.CancelBack();
         Assert.That(Field<GameObject>(detail, "unsavedConfirmPanel").activeSelf, Is.False);
         Assert.That(Field<string>(detail, "tempCharacterEquipmentId"), Is.EqualTo("schwarz"));
-        Assert.That(CharacterLoadoutStore.GetLoadout("nacht").adjectiveId, Is.Null.Or.Empty);
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("nacht")).adjectiveId, Is.Null.Or.Empty);
         detail.Back();
         detail.DiscardChangesAndBack();
         yield return null;
@@ -77,14 +85,14 @@ public class LoadoutSceneTests
         Call(detail, "EquipCharacterEquipment", "schnell");
         detail.ConfirmEquipment();
         yield return null;
-        Assert.That(CharacterLoadoutStore.GetLoadout("nacht").adjectiveId, Is.EqualTo("schwarz"));
-        Assert.That(CharacterLoadoutStore.GetLoadout("hund").adjectiveId, Is.EqualTo("schnell"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("nacht")).adjectiveId, Is.EqualTo("schwarz"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("hund")).adjectiveId, Is.EqualTo("schnell"));
     }
 
     [UnityTest]
     public IEnumerator SelectionPreviewUsesCommittedEquipmentStats()
     {
-        var draft = CharacterLoadoutStore.GetLoadout("nacht");
+        var draft = CharacterLoadoutStore.GetLoadout(Instance("nacht"));
         draft.adjectiveId = "schwarz";
         CharacterLoadoutStore.Commit(draft);
         var owned = new OwnedCharactersState(); owned.characterIds.Add("nacht");
@@ -99,7 +107,7 @@ public class LoadoutSceneTests
     [UnityTest]
     public IEnumerator BattleReadsCommittedEquipmentAndEquippedSkills()
     {
-        var draft = CharacterLoadoutStore.GetLoadout("nacht");
+        var draft = CharacterLoadoutStore.GetLoadout(Instance("nacht"));
         draft.adjectiveId = "schwarz";
         draft.skillSlots = new[] { new CharacterSkillSlotData { skillId = "brennen", equippedAdverbId = "sehr" } };
         Assert.That(CharacterLoadoutStore.Commit(draft), Is.True);

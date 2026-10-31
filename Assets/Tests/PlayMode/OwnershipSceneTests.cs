@@ -19,10 +19,12 @@ public class OwnershipSceneTests
     [UnitySetUp]
     public IEnumerator Setup()
     {
+        SceneManager.LoadScene("GermanyHome"); yield return null; yield return null;
         GameDatabase.EnsureAvailable();
         var owned = new OwnedCharactersState();
         owned.characterIds.Add("nacht");
         OwnedCharacters.RestoreState(owned);
+        CharacterCollection.RestoreState(new CharacterCollectionState { discoveredCharacterIds = new System.Collections.Generic.List<string> { "nacht" } });
         CharacterLoadoutStore.RestoreState(new CharacterLoadoutState());
         GameManager.SelectedCharacterId = "nacht";
         yield return null;
@@ -53,7 +55,7 @@ public class OwnershipSceneTests
         var collection = Object.FindAnyObjectByType<CharacterCollectionManager>();
         var buttons = Field<Transform>(collection, "characterButtonParent").GetComponentsInChildren<Button>();
         Assert.That(buttons.Length, Is.EqualTo(GameDatabase.Instance.GetAllCharacters().Length));
-        var hund = buttons.Single(b => b.GetComponentInChildren<TMP_Text>().text == "Hund [Not owned]");
+        var hund = buttons.Single(b => b.GetComponentInChildren<TMP_Text>().text == "Hund [Undiscovered]");
         hund.onClick.Invoke();
         collection.OpenSelectedCharacterDetail();
         yield return null; yield return null;

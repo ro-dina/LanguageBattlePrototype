@@ -25,6 +25,25 @@ public class CharacterDetailManager : MonoBehaviour
     [SerializeField] private GameObject battleButton;
 
     private int selectedSkillIndex = -1;
+    private string viewedInstanceId;
+    private bool CanEdit => character != null && CharacterInstances.Get(viewedInstanceId)?.characterId == character.id;
+    private bool started;
+    private void OnEnable() => PlayerStateChanges.Changed += RefreshOwnership;
+    private void OnDisable() => PlayerStateChanges.Changed -= RefreshOwnership;
+    private void RefreshOwnership()
+    {
+        if (!started) return;
+        if (characterNameText != null) characterNameText.text = character.characterName;
+        UpdateCharacterInfoText();
+        foreach (var button in GetComponentsInChildren<Button>(true))
+            for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
+            {
+                string method = button.onClick.GetPersistentMethodName(i);
+                if (method == "OpenAdjectiveEquipmentList" || method == "OpenArticleEquipmentList" || method == "OpenCharacterEquipmentList") button.interactable = CanEdit;
+            }
+        if (skillSlotButtons != null) foreach (var button in skillSlotButtons) if (button != null) button.interactable = CanEdit;
+        SetupSceneMode();
+    }
 
     private EquipmentData selectedArticleEquipment;
     private CharacterData character;
@@ -46,9 +65,10 @@ public class CharacterDetailManager : MonoBehaviour
             return;
         }
 
-        character =
-            CharacterLoadoutStore.GetCharacterForBattle(
-                GameManager.SelectedCharacterId);
+        viewedInstanceId = GameManager.SelectedCharacterInstanceId;
+        var master = GameDatabase.Instance.GetCharacter(GameManager.SelectedCharacterId);
+        character = CharacterLoadoutStore.GetCharacterForBattle(viewedInstanceId) ??
+            (master == null ? null : JsonUtility.FromJson<CharacterData>(JsonUtility.ToJson(master)));
 
         if (character == null)
         {
@@ -72,7 +92,8 @@ public class CharacterDetailManager : MonoBehaviour
             skillEquipmentPanel.SetActive(false);
         }
 
-        SetupSceneMode();
+        started = true;
+        RefreshOwnership();
 
         if (unsavedConfirmPanel != null)
         {
@@ -82,7 +103,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void SetupTemporaryEquipmentState()
     {
-        CharacterLoadout loadout = CharacterLoadoutStore.GetLoadout(character.id);
+        CharacterLoadout loadout = CharacterLoadoutStore.GetLoadout(viewedInstanceId) ?? CharacterLoadoutStore.GetDefaultLoadout(character.id);
         tempCharacterEquipmentId = loadout.adjectiveId;
         tempArticleEquipmentId = loadout.articleId;
         tempSkillEquipmentIds = new string[4] { "", "", "", "" };
@@ -138,6 +159,7 @@ public class CharacterDetailManager : MonoBehaviour
         int speed = character.speed + DamageCalculator.GetCharacterSpeedBonus(selectedCharacterEquipment);
 
         characterInfoText.text =
+            (CanEdit ? "Instance: " + CharacterInstances.DisplayBadge(viewedInstanceId) : CharacterCollection.StatusLabel(character.id) + " • read only") + "\n" +
             $"Gender: {character.grammaticalGender}\n" +
             $"HP: {character.hp}\n" +
             $"ATK: {attack}\n" +
@@ -174,7 +196,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenAdjectiveEquipmentList()
     {
-        if (character == null || GameDatabase.Instance == null) return;
+        if (!CanEdit || GameDatabase.Instance == null) return;
 
         currentCharacterEquipmentMode = "adjective";
 
@@ -190,7 +212,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenArticleEquipmentList()
     {
-        if (character == null || GameDatabase.Instance == null) return;
+        if (!CanEdit || GameDatabase.Instance == null) return;
 
         currentCharacterEquipmentMode = "article";
 
@@ -310,6 +332,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void EquipCharacterEquipment(string equipmentId)
     {
+        if (!CanEdit) return;
         EquipmentData equipment = GameDatabase.Instance.GetEquipment(equipmentId);
 
         if (currentCharacterEquipmentMode == "article")
@@ -350,6 +373,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void ConfirmEquipment()
     {
+        if (!CanEdit) { ReturnToPreviousScene(); return; }
         if (!ApplyEquipmentChanges()) return;
         hasUnsavedChanges = false;
         ReturnToPreviousScene();
@@ -357,6 +381,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private bool ApplyEquipmentChanges()
     {
+        if (!CanEdit) return false;
         var slots = new CharacterSkillSlotData[character.skillIds.Length];
         for (int i = 0; i < slots.Length; i++)
             slots[i] = new CharacterSkillSlotData {
@@ -364,6 +389,7 @@ public class CharacterDetailManager : MonoBehaviour
                 equippedAdverbId = tempSkillEquipmentIds[i]
             };
         bool committed = CharacterLoadoutStore.Commit(new CharacterLoadout {
+            instanceId = viewedInstanceId,
             characterId = character.id,
             adjectiveId = tempCharacterEquipmentId,
             articleId = tempArticleEquipmentId,
@@ -407,12 +433,13 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void StartBattle()
     {
-        if (character == null || !OwnedCharacters.IsCharacterOwned(character.id))
+        if (!CanEdit)
         {
             Debug.LogWarning("Only owned characters can enter battle.", this);
             return;
         }
         if (!ApplyEquipmentChanges()) return;
+        GameManager.SelectedCharacterInstanceId = viewedInstanceId;
         hasUnsavedChanges = false;
         SceneManager.LoadScene("Battle");
     }
@@ -483,7 +510,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenSkillEquipmentList(int skillIndex)
     {
-        if (character == null || character.skillIds == null ||
+        if (!CanEdit || character.skillIds == null ||
             skillIndex < 0 || skillIndex >= character.skillIds.Length ||
             tempSkillEquipmentIds == null || skillIndex >= tempSkillEquipmentIds.Length ||
             GameDatabase.Instance == null || equipmentButtonPrefab == null ||
@@ -565,6 +592,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void EquipSkillEquipment(string equipmentId)
     {
+        if (!CanEdit) return;
         if (selectedSkillIndex < 0) return;
 
         if (tempSkillEquipmentIds == null || tempSkillEquipmentIds.Length < 4)
@@ -664,12 +692,12 @@ public class CharacterDetailManager : MonoBehaviour
 
             if (buttonText != null)
             {
-                buttonText.text = OwnedCharacters.IsCharacterOwned(character.id) ? "Battle" : "Not owned";
+                buttonText.text = CanEdit ? "Battle" : "Not owned";
             }
 
             if (button != null)
             {
-                button.interactable = OwnedCharacters.IsCharacterOwned(character.id);
+                button.interactable = CanEdit;
                 button.onClick.AddListener(StartBattle);
             }
         }

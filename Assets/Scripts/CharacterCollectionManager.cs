@@ -50,6 +50,13 @@ public class CharacterCollectionManager : MonoBehaviour
         }
 
         RefreshCharacterButtons();
+        PlayerStateChanges.Changed += RefreshCollectionState;
+    }
+
+    private void RefreshCollectionState()
+    {
+        RefreshCharacterButtons();
+        if (!string.IsNullOrEmpty(selectedCharacterId)) SelectCharacter(selectedCharacterId, GameDatabase.Instance.GetCharacter(selectedCharacterId).characterName);
     }
 
     private void OnSearchChanged(string _) => RefreshCharacterButtons();
@@ -57,6 +64,7 @@ public class CharacterCollectionManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        PlayerStateChanges.Changed -= RefreshCollectionState;
         if (searchInputField != null)
             searchInputField.onValueChanged.RemoveListener(OnSearchChanged);
         if (genderDropdown != null)
@@ -145,7 +153,7 @@ public class CharacterCollectionManager : MonoBehaviour
             TMP_Text text = buttonObj.GetComponentInChildren<TMP_Text>();
             if (text != null)
             {
-                text.text = character.characterName + (OwnedCharacters.IsCharacterOwned(character.id) ? "" : " [Not owned]");
+                text.text = character.characterName + " [" + CharacterCollection.StatusLabel(character.id) + "]";
             }
 
             Image icon = null;
@@ -184,11 +192,12 @@ public class CharacterCollectionManager : MonoBehaviour
     private void SelectCharacter(string characterId, string characterName)
     {
         selectedCharacterId = characterId;
-        GameManager.SelectedCharacterId = characterId;
+        GameManager.PreviewCharacterType(characterId);
 
         if (selectedCharacterText != null)
         {
-            selectedCharacterText.text = characterName + (OwnedCharacters.IsCharacterOwned(characterId) ? "" : " [Not owned]");
+            selectedCharacterText.text = characterName + " [" + CharacterCollection.StatusLabel(characterId) + "]" +
+                (CharacterInstances.Owns(GameManager.SelectedCharacterInstanceId) ? "\nDetails: " + CharacterInstances.DisplayName(GameManager.SelectedCharacterInstanceId) : "\nRead only");
         }
     }
 
@@ -200,7 +209,7 @@ public class CharacterCollectionManager : MonoBehaviour
             return;
         }
 
-        GameManager.SelectedCharacterId = selectedCharacterId;
+        GameManager.PreviewCharacterType(selectedCharacterId);
         GameManager.PreviousSceneName = "CharacterCollection";
         SceneManager.LoadScene("CharacterDetail");
     }

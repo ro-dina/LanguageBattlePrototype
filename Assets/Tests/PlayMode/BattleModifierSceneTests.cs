@@ -14,6 +14,12 @@ using UnityEngine.UI;
 [PostBuildCleanup(typeof(TestSaveIsolation))]
 public class BattleModifierSceneTests
 {
+    private static string Instance(string species)
+    {
+        var instances = CharacterInstances.GetByCharacterId(species);
+        return instances.Count > 0 ? instances[0].instanceId : CharacterInstances.Create(species).instanceId;
+    }
+
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static T Field<T>(object target, string name) => (T)target.GetType().GetField(name, Private).GetValue(target);
     private static Button Button(string name) => Object.FindObjectsByType<Button>(FindObjectsSortMode.None).Single(b => b.name == name);
@@ -114,7 +120,7 @@ public class BattleModifierSceneTests
     }
     [UnityTest] public IEnumerator TransientModifiersNeverChangeSavedLoadoutsInventoryOwnershipOrSaveFormat()
     {
-        var draft = CharacterLoadoutStore.GetLoadout("nacht"); draft.adjectiveId = "schwarz";
+        var draft = CharacterLoadoutStore.GetLoadout(Instance("nacht")); draft.adjectiveId = "schwarz";
         draft.skillSlots[0].equippedAdverbId = "sehr"; CharacterLoadoutStore.Commit(draft);
         var service = PlayerSaveService.Instance;
         string before = JsonUtility.ToJson(service.Capture());
@@ -128,8 +134,8 @@ public class BattleModifierSceneTests
         SceneManager.LoadScene("Battle"); yield return null; yield return null;
         battle = Object.FindAnyObjectByType<BattleManager>();
         Assert.That(battle.Context.MuessenUsed, Is.False); Assert.That(battle.Context.PendingAttack, Is.Null);
-        Assert.That(CharacterLoadoutStore.GetLoadout("nacht").adjectiveId, Is.EqualTo("schwarz"));
-        Assert.That(CharacterLoadoutStore.GetLoadout("nacht").skillSlots[0].equippedAdverbId, Is.EqualTo("sehr"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("nacht")).adjectiveId, Is.EqualTo("schwarz"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("nacht")).skillSlots[0].equippedAdverbId, Is.EqualTo("sehr"));
     }
     [UnityTest] public IEnumerator NewControlsAndExistingCommandsFitAndReceivePointerInputAtAllRequiredResolutions()
     {

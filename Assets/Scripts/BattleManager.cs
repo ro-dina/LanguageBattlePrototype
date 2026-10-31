@@ -9,24 +9,42 @@ using UnityEngine.UI;
 public static class GameManager
 {
     public static bool IsWin;
-    public static string PlayerCharacterId = "nacht";
+    private static string selectedInstanceId = "";
+    private static string previewCharacterId = "nacht";
     public static string EnemyCharacterId = "feuer";
-    public static string SelectedCharacterId = "nacht";
-    // Compatibility accessors route old callers to the selected character's committed loadout.
+    public static string SelectedCharacterInstanceId
+    {
+        get => selectedInstanceId;
+        set { selectedInstanceId = value ?? ""; var instance = CharacterInstances.Get(value); if (instance != null) previewCharacterId = instance.characterId; }
+    }
+    // Species-only compatibility/collection preview. New player selection uses SelectedCharacterInstanceId.
+    public static string SelectedCharacterId
+    {
+        get => CharacterInstances.Get(selectedInstanceId)?.characterId ?? previewCharacterId;
+        set => PreviewCharacterType(value);
+    }
+    public static string PlayerCharacterId { get => SelectedCharacterId; set => PreviewCharacterType(value); }
+    public static void PreviewCharacterType(string characterId)
+    {
+        if (CharacterInstances.Get(selectedInstanceId)?.characterId != characterId)
+            selectedInstanceId = CharacterInstances.GetByCharacterId(characterId).FirstOrDefault()?.instanceId ?? "";
+        previewCharacterId = characterId;
+    }
+    public static void EnsureOwnedSelection()
+    {
+        if (!CharacterInstances.Owns(selectedInstanceId)) SelectedCharacterInstanceId = CharacterInstances.GetAll().FirstOrDefault()?.instanceId ?? "";
+    }
+    public static void OnInstanceRemoved(string instanceId)
+    { if (selectedInstanceId == instanceId || !CharacterInstances.Owns(selectedInstanceId)) EnsureOwnedSelection(); }
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetSelection() { selectedInstanceId = ""; previewCharacterId = "nacht"; PreviousSceneName = ""; }
     public static string SelectedCharacterEquipmentId
     {
-        get => CharacterLoadoutStore.GetLoadout(SelectedCharacterId)?.adjectiveId ?? "";
-        set
-        {
-            var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterId);
-            if (draft == null) return;
-            draft.adjectiveId = value;
-            CharacterLoadoutStore.Commit(draft);
-        }
+        get => CharacterLoadoutStore.GetLoadout(SelectedCharacterInstanceId)?.adjectiveId ?? "";
+        set { var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterInstanceId); if (draft == null) return; draft.adjectiveId = value; CharacterLoadoutStore.Commit(draft); }
     }
     public static string[] SelectedSkillEquipmentIds => System.Array.ConvertAll(
-        CharacterLoadoutStore.GetLoadout(SelectedCharacterId)?.skillSlots ?? System.Array.Empty<CharacterSkillSlotData>(),
-        slot => slot.equippedAdverbId);
+        CharacterLoadoutStore.GetLoadout(SelectedCharacterInstanceId)?.skillSlots ?? System.Array.Empty<CharacterSkillSlotData>(), slot => slot.equippedAdverbId);
     public static string PreviousSceneName = "";
 
     public static void SetBattleCharacters(string playerCharacterId, string enemyCharacterId)
@@ -42,7 +60,7 @@ public static class GameManager
 
     public static void SetSkillEquipment(int skillIndex, string equipmentId)
     {
-        var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterId);
+        var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterInstanceId);
         if (draft == null || skillIndex < 0 || skillIndex >= draft.skillSlots.Length) return;
         draft.skillSlots[skillIndex].equippedAdverbId = equipmentId;
         CharacterLoadoutStore.Commit(draft);
@@ -127,12 +145,20 @@ public class BattleManager : MonoBehaviour
                         ? new Color(0.65f, 0.84f, 1f) : Color.white;
         if (noAdverbButton != null) noAdverbButton.image.color = selectedTurnAdverb == null ? new Color(0.65f, 0.84f, 1f) : Color.white;
     }
-    private void OnDestroy() { battleContext?.Cancel(); }
+    private string battleInstanceId;
+    private bool ownsBattleLock;
+    public string PlayerInstanceId => battleInstanceId;
+    private void OnDestroy()
+    {
+        battleContext?.Cancel();
+        if (ownsBattleLock) CharacterInstances.EndBattle(battleInstanceId);
+    }
 
 
     private void Start()
     {
-        playerCharacterId = GameManager.SelectedCharacterId;
+        battleInstanceId = GameManager.SelectedCharacterInstanceId;
+        playerCharacterId = CharacterInstances.Get(battleInstanceId)?.characterId;
         enemyCharacterId = GameManager.EnemyCharacterId;
 
         if (GameDatabase.Instance == null)
@@ -142,7 +168,7 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        if (!OwnedCharacters.IsCharacterOwned(playerCharacterId))
+        if (!CharacterInstances.Owns(battleInstanceId))
         {
             Debug.LogWarning("Battle rejected an unowned player character.", this);
             if (battleLogText != null) battleLogText.text = "Character is not owned.";
@@ -152,7 +178,7 @@ public class BattleManager : MonoBehaviour
             enabled = false;
             return;
         }
-        playerCharacter = CharacterLoadoutStore.GetCharacterForBattle(playerCharacterId);
+        playerCharacter = CharacterLoadoutStore.GetCharacterForBattle(battleInstanceId);
         enemyCharacter = GameDatabase.Instance.GetCharacter(enemyCharacterId);
 
         if (playerCharacter == null || enemyCharacter == null)
@@ -163,6 +189,8 @@ public class BattleManager : MonoBehaviour
         }
 
 
+        ownsBattleLock = CharacterInstances.TryBeginBattle(battleInstanceId);
+        if (!ownsBattleLock) { isProcessing = true; enabled = false; return; }
         SetupCharacterEquipment();
 
         battleContext = new BattleContext(playerCharacter, enemyCharacter, playerCharacterEquipment);

@@ -70,7 +70,7 @@ public static class CraftingManager
 
         if (resultKind == CraftingResultKind.Character)
         {
-            return !OwnedCharacters.IsCharacterOwned(registeredRecipe.resultId);
+            return GameDatabase.Instance != null && GameDatabase.Instance.ContainsCharacter(registeredRecipe.resultId);
         }
 
         return CanAddInventoryResult(registeredRecipe, requirements);
@@ -110,13 +110,6 @@ public static class CraftingManager
             return false;
         }
 
-        if (resultKind == CraftingResultKind.Character &&
-            OwnedCharacters.IsCharacterOwned(registeredRecipe.resultId))
-        {
-            Debug.LogWarning($"Cannot craft {registeredRecipe.resultId}: character already owned");
-            return false;
-        }
-
         if (!HasAllMaterials(requirements))
         {
             Debug.Log($"Cannot craft {registeredRecipe.resultId}: missing materials");
@@ -142,8 +135,7 @@ public static class CraftingManager
             bool resultGranted;
             if (resultKind == CraftingResultKind.Character)
             {
-                OwnedCharacters.UnlockCharacter(registeredRecipe.resultId);
-                resultGranted = OwnedCharacters.IsCharacterOwned(registeredRecipe.resultId);
+                resultGranted = CharacterInstances.Create(registeredRecipe.resultId) != null;
             }
             else
             {
@@ -343,6 +335,8 @@ public static class CraftingManager
             return false;
         }
 
+        if (resultKind == CraftingResultKind.Character && (GameDatabase.Instance == null || !GameDatabase.Instance.ContainsCharacter(recipe.resultId)))
+        { error = "unknown result character"; return false; }
         return TryBuildRequirements(recipe, out requirements, out error);
     }
 

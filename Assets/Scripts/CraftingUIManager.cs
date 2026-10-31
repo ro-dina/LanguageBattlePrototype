@@ -141,7 +141,7 @@ public class CraftingUIManager : MonoBehaviour
         string craftedResultId = matchingRecipe.resultId;
         selectedMaterialIds.Clear();
         UpdateSelectionTexts();
-        SetResultText($"Crafted: {craftedResultId}");
+        SetResultText($"Crafted: {craftedResultId}" + (matchingRecipe.resultType == "character" ? "\nOwned: " + CharacterInstances.Count(craftedResultId) : ""));
         RefreshInventory();
     }
 

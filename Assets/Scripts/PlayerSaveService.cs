@@ -57,16 +57,17 @@ public sealed class PlayerSaveService : MonoBehaviour
         {
             LoadStatus = Files.Load(out SaveData data);
             if (Files.LastError != null) Debug.LogWarning(Files.LastError);
+            if (!CharacterInstances.CanRestore(data.characterInstances))
+            { Debug.LogWarning("Reload refused: it would remove an active battle instance."); return; }
             using (PlayerStateChanges.BeginBatch())
             {
                 InventoryManager.RestoreState(data.inventory);
-                OwnedCharacters.RestoreState(data.ownedCharacters);
+                CharacterInstances.RestoreState(data.characterInstances);
+                CharacterCollection.RestoreState(data.characterCollection);
                 CharacterLoadoutStore.RestoreState(data.characterEquipment);
                 StageProgress.RestoreState(data.stageProgress);
             }
-            GameManager.SelectedCharacterId = data.ownedCharacters.characterIds.Contains(GameManager.SelectedCharacterId)
-                ? GameManager.SelectedCharacterId : data.ownedCharacters.characterIds[0];
-            GameManager.PlayerCharacterId = GameManager.SelectedCharacterId;
+            GameManager.EnsureOwnedSelection();
             GameManager.PreviousSceneName = "";
             dirty = false;
         }
@@ -76,7 +77,8 @@ public sealed class PlayerSaveService : MonoBehaviour
     public SaveData Capture() => new SaveData {
         version = SaveDataValidator.CurrentVersion,
         inventory = InventoryManager.CaptureState(),
-        ownedCharacters = OwnedCharacters.CaptureState(),
+        characterInstances = CharacterInstances.CaptureState(),
+        characterCollection = CharacterCollection.CaptureState(),
         characterEquipment = CharacterLoadoutStore.CaptureState(),
         stageProgress = StageProgress.CaptureState()
     };

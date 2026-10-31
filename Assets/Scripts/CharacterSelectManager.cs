@@ -16,6 +16,18 @@ public class CharacterSelectManager : MonoBehaviour
     [SerializeField] private AspectRatioFitter selectedCharacterAspectFitter;
 
     private string selectedId;
+    private bool started;
+    private void OnEnable() => PlayerStateChanges.Changed += RefreshOwnedList;
+    private void OnDisable() => PlayerStateChanges.Changed -= RefreshOwnedList;
+    private void RefreshOwnedList() { if (started) { CreateCharacterButtons(); SelectInitialInstance(); } }
+    private void SelectInitialInstance()
+    {
+        var instances = GetSelectableCharacters();
+        if (instances.Length > 0)
+            SelectCharacter(instances.Any(i => i.instanceId == GameManager.SelectedCharacterInstanceId)
+                ? GameManager.SelectedCharacterInstanceId : instances[0].instanceId);
+        else { selectedId = null; if (selectedCharacterText != null) selectedCharacterText.text = "No owned characters."; if (selectedCharacterImage != null) selectedCharacterImage.enabled = false; }
+    }
 
     private void Start()
     {
@@ -25,23 +37,18 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        started = true;
         CreateCharacterButtons();
-
-        CharacterData[] characters = GetSelectableCharacters();
-        if (characters.Length > 0)
-        {
-            string initial = characters.Any(c => c.id == GameManager.SelectedCharacterId)
-                ? GameManager.SelectedCharacterId : characters[0].id;
-            SelectCharacter(initial);
-        }
+        SelectInitialInstance();
     }
 
-    private CharacterData[] GetSelectableCharacters() => GameDatabase.Instance.GetAllCharacters()
-        .Where(c => c != null && OwnedCharacters.IsCharacterOwned(c.id)).ToArray();
+    private CharacterInstance[] GetSelectableCharacters() => CharacterInstances.GetAll()
+        .Where(i => GameDatabase.Instance.ContainsCharacter(i.characterId))
+        .OrderBy(i => GameDatabase.Instance.GetCharacter(i.characterId).characterName).ThenBy(i => i.instanceId).ToArray();
 
     private void CreateCharacterButtons()
     {
-        CharacterData[] characters = GetSelectableCharacters();
+        CharacterInstance[] characters = GetSelectableCharacters();
 
         if (characterButtonParent != null && characterButtonParent.name == "Scroll View")
         {
@@ -73,16 +80,17 @@ public class CharacterSelectManager : MonoBehaviour
 
         Debug.Log($"Creating character buttons: {characters.Length}");
 
-        foreach (CharacterData character in characters)
+        foreach (CharacterInstance instance in characters)
         {
+            CharacterData character = GameDatabase.Instance.GetCharacter(instance.characterId);
             GameObject buttonObj = Instantiate(characterButtonPrefab, characterButtonParent);
-            buttonObj.name = $"CharacterButton_{character.id}";
+            buttonObj.name = $"CharacterButton_{instance.instanceId}";
             buttonObj.SetActive(true);
 
             TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
             if (buttonText != null)
             {
-                buttonText.text = character.characterName;
+                buttonText.text = CharacterInstances.DisplayName(instance.instanceId) + "\nOwned: " + CharacterInstances.Count(character.id);
             }
             else
             {
@@ -106,7 +114,7 @@ public class CharacterSelectManager : MonoBehaviour
             Button button = buttonObj.GetComponent<Button>();
             if (button != null)
             {
-                string id = character.id;
+                string id = instance.instanceId;
                 // List entries only update the selection preview. Replacing the
                 // event also prevents prefab callbacks from causing navigation.
                 button.onClick = new Button.ButtonClickedEvent();
@@ -119,23 +127,26 @@ public class CharacterSelectManager : MonoBehaviour
         }
     }
 
-    private void SelectCharacter(string characterId)
+    private void SelectCharacter(string instanceId)
     {
-        if (!OwnedCharacters.IsCharacterOwned(characterId)) return;
-        selectedId = characterId;
-        GameManager.SelectedCharacterId = characterId;
+        if (!CharacterInstances.Owns(instanceId)) return;
+        selectedId = instanceId;
+        GameManager.SelectedCharacterInstanceId = instanceId;
 
-        CharacterData character = CharacterLoadoutStore.GetCharacterForBattle(characterId);
+        CharacterData character = CharacterLoadoutStore.GetCharacterForBattle(instanceId);
 
         if (character == null)
         {
             if (selectedCharacterText != null)
             {
-                selectedCharacterText.text = $"Selected: {characterId}";
+                selectedCharacterText.text = "Character unavailable.";
             }
             return;
         }
 
+        if (characterButtonParent != null)
+            foreach (var button in characterButtonParent.GetComponentsInChildren<Button>())
+                if (button.image != null) button.image.color = button.name == "CharacterButton_" + instanceId ? new Color(0.65f, 0.84f, 1f) : Color.white;
         EquipmentData equipment = GameDatabase.Instance.GetEquipment(character.equippedAdjectiveId);
         int attack = character.attack + DamageCalculator.GetCharacterAttackBonus(equipment);
         int defense = character.defense + DamageCalculator.GetCharacterDefenseBonus(equipment);
@@ -143,7 +154,7 @@ public class CharacterSelectManager : MonoBehaviour
         if (selectedCharacterText != null)
         {
             selectedCharacterText.text =
-                $"{character.characterName}\n" +
+                $"{CharacterInstances.DisplayName(instanceId)}\nOwned: {CharacterInstances.Count(character.id)}\n" +
                 $"Gender:\n{character.grammaticalGender}\n" +
                 $"HP: {character.hp}\n" +
                 $"ATK: {attack} /\nDEF: {defense} /\nSPD: {speed}";
@@ -181,23 +192,23 @@ public class CharacterSelectManager : MonoBehaviour
 
     public void StartBattle()
     {
-        if (string.IsNullOrEmpty(selectedId) || !OwnedCharacters.IsCharacterOwned(selectedId))
+        if (string.IsNullOrEmpty(selectedId) || !CharacterInstances.Owns(selectedId))
         {
             return;
         }
 
-        GameManager.SelectedCharacterId = selectedId;
+        GameManager.SelectedCharacterInstanceId = selectedId;
         SceneManager.LoadScene("Battle");
     }
 
     public void CharacterDetail()
     {
-        if (string.IsNullOrEmpty(selectedId) || !OwnedCharacters.IsCharacterOwned(selectedId))
+        if (string.IsNullOrEmpty(selectedId) || !CharacterInstances.Owns(selectedId))
         {
             return;
         }
 
-        GameManager.SelectedCharacterId = selectedId;
+        GameManager.SelectedCharacterInstanceId = selectedId;
         GameManager.PreviousSceneName = "CharacterSelect";
         SceneManager.LoadScene("CharacterDetail");
     }

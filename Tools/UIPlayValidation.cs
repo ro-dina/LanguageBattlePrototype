@@ -110,6 +110,9 @@ public sealed class UIPlayValidation : MonoBehaviour
 
     private IEnumerator Validate()
     {
+        CharacterInstances.Create("nacht");
+        CharacterInstances.Create("hund"); CharacterInstances.Create("hund");
+        var discoveredFire = CharacterInstances.Create("feuer"); CharacterInstances.Remove(discoveredFire.instanceId);
         foreach (var item in JsonUtility.FromJson<GachaItemDatabase>(Resources.Load<TextAsset>("Data/gacha_items").text).items)
             InventoryManager.AddItem(item.id, 5);
 
@@ -128,6 +131,29 @@ public sealed class UIPlayValidation : MonoBehaviour
             }
             yield return RenderSizes(scene);
         }
+
+        yield return Load("CharacterSelect");
+        var copies = CharacterInstances.GetByCharacterId("nacht");
+        var select = Find<CharacterSelectManager>();
+        var list = Field<Transform>(select, "characterButtonParent");
+        Check(list.GetComponentsInChildren<Button>().Length == CharacterInstances.GetAll().Count,
+            "Selection shows every owned instance rather than unique species");
+        Check(list.GetComponentsInChildren<Button>().Select(b => b.GetComponentInChildren<TMP_Text>().text).Distinct().Count() == CharacterInstances.GetAll().Count,
+            "Duplicate species have distinct short identity labels");
+        var scroll = list.GetComponentInParent<ScrollRect>();
+        if (scroll != null) scroll.verticalNormalizedPosition = 0;
+        yield return null; yield return null;
+        Click("CharacterButton_" + copies[1].instanceId);
+        Check(GameManager.SelectedCharacterInstanceId == copies[1].instanceId, "Pointer selects the second Nacht identity");
+        yield return RenderSizes("CharacterSelect-instanceB");
+        Click("CharacterListButton"); yield return null; yield return null;
+        var secondDetail = Find<CharacterDetailManager>();
+        Call(secondDetail, "EquipCharacterEquipment", "schnell");
+        yield return RenderSizes("CharacterDetail-instanceB");
+        secondDetail.Back(); yield return null; yield return null; Click("SaveButton"); yield return null; yield return null;
+        Check(CharacterLoadoutStore.GetLoadout(copies[1].instanceId).adjectiveId == "schnell" &&
+            string.IsNullOrEmpty(CharacterLoadoutStore.GetLoadout(copies[0].instanceId).adjectiveId),
+            "Saving the second Nacht leaves the first Nacht equipment unchanged");
 
         yield return Load("Inventory");
         var inventory = Find<InventoryUIManager>();
@@ -153,8 +179,18 @@ public sealed class UIPlayValidation : MonoBehaviour
         Click("CraftButton"); yield return null;
         Check(InventoryManager.GetItemCount("word_wasser") == waterBefore - 1 && InventoryManager.GetItemCount("word_pistole") == pistolBefore - 1 && OwnedCharacters.IsCharacterOwned("wasserpistole"), "Craft consumes the original recipe and unlocks its character");
 
+        Call(craft, "SelectMaterial", "word_wasser"); Call(craft, "SelectMaterial", "word_pistole");
+        Click("CraftButton"); yield return null;
+        Check(CharacterInstances.Count("wasserpistole") == 2 &&
+            CharacterInstances.GetByCharacterId("wasserpistole").Select(i => i.instanceId).Distinct().Count() == 2,
+            "Repeated Wasserpistole crafting creates a second distinct instance");
+        yield return RenderSizes("Crafting-repeat");
+
         yield return Load("CharacterCollection");
         var collection = Find<CharacterCollectionManager>();
+        var collectionLabels = Field<Transform>(collection, "characterButtonParent").GetComponentsInChildren<Button>().Select(b => b.GetComponentInChildren<TMP_Text>().text).ToArray();
+        Check(collectionLabels.Contains("Nacht [Owned: 2]") && collectionLabels.Contains("Feuer [Discovered • 0 owned]") &&
+            collectionLabels.Any(t => t.Contains("Undiscovered")), "Collection distinguishes owned, discovered-not-owned and undiscovered species");
         var search = Field<TMP_InputField>(collection, "searchInputField");
         search.text = "nacht"; yield return null;
         Check(ActiveChildren(Field<Transform>(collection, "characterButtonParent")) == 1, "Character search filters without duplicate rows");
@@ -279,6 +315,13 @@ public sealed class UIPlayValidation : MonoBehaviour
     private void InspectGeometry(string label, Vector2Int size, Camera camera)
     {
         string context = $"{label} {size.x}x{size.y}";
+        var detailView = Find<CharacterDetailManager>();
+        if (detailView != null)
+        {
+            var identityText = Field<TMP_Text>(detailView, "characterInfoText");
+            Check(identityText.text.Contains("Instance: ") || identityText.text.Contains("read only"), context + " identifies instance or read-only species");
+            Check(!identityText.isTextOverflowing, context + " identity and stats are not truncated");
+        }
         foreach (var button in Object.FindObjectsByType<Button>())
         {
             if (button.name == "Image") continue; // intentionally full-screen dismiss target

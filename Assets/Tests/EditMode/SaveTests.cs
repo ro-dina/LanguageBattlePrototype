@@ -6,6 +6,12 @@ using Object = UnityEngine.Object;
 
 public class SaveTests
 {
+    private static string Instance(string species)
+    {
+        var instances = CharacterInstances.GetByCharacterId(species);
+        return instances.Count > 0 ? instances[0].instanceId : CharacterInstances.Create(species).instanceId;
+    }
+
     private string directory;
     private SaveFileStore files;
 
@@ -30,8 +36,8 @@ public class SaveTests
     public void NewGameHasExplicitStarterAndNoInventedStageProgress()
     {
         Assert.That(files.Load(out var data), Is.EqualTo(SaveLoadStatus.NewGame));
-        Assert.That(data.version, Is.EqualTo(1));
-        Assert.That(data.ownedCharacters.characterIds, Does.Contain("nacht"));
+        Assert.That(data.version, Is.EqualTo(2));
+        Assert.That(data.characterCollection.discoveredCharacterIds, Does.Contain("nacht"));
         Assert.That(data.inventory.items, Is.Empty);
         Assert.That(data.stageProgress.unlockedStageIds, Is.Empty);
         Assert.That(data.stageProgress.clearedStageIds, Is.Empty);
@@ -43,8 +49,10 @@ public class SaveTests
         var data = NewGameDefaults.Create();
         Assert.That(files.Save(data), Is.True, files.LastError);
         data.inventory.items.Add(new InventoryEntry("letter_a", 3));
-        data.ownedCharacters.characterIds.Add("hund");
-        var loadout = CharacterLoadoutStore.GetLoadout("hund");
+        var hundId = CharacterInstances.NewId();
+        data.characterInstances.instances.Add(new CharacterInstance { instanceId = hundId, characterId = "hund" });
+        data.characterCollection.discoveredCharacterIds.Add("hund");
+        var loadout = CharacterLoadoutStore.GetDefaultLoadout("hund", hundId);
         loadout.adjectiveId = "schnell";
         loadout.articleId = "die_nom_fem_sg";
         loadout.skillSlots[0].equippedAdverbId = "sehr";
@@ -97,7 +105,7 @@ public class SaveTests
         string recovery = Path.Combine(directory, "save.recovery-broken.json");
         File.WriteAllText(recovery, "broken-recovery");
         Assert.That(files.Load(out var data), Is.EqualTo(SaveLoadStatus.Recovered));
-        Assert.That(data.ownedCharacters.characterIds, Does.Contain("nacht"));
+        Assert.That(data.characterCollection.discoveredCharacterIds, Does.Contain("nacht"));
         Assert.That(files.Save(data), Is.True);
         Assert.That(File.ReadAllText(files.MainPath), Is.EqualTo("broken-main"));
         Assert.That(File.ReadAllText(files.MainPath + ".bak"), Is.EqualTo("broken-backup"));
@@ -113,7 +121,7 @@ public class SaveTests
         File.WriteAllText(files.MainPath, "damaged-after-load");
         Assert.That(files.Save(data), Is.True);
         Assert.That(File.ReadAllText(files.MainPath), Is.EqualTo("damaged-after-load"));
-        var future = NewGameDefaults.Create(); future.version = 2;
+        var future = NewGameDefaults.Create(); future.version = 3;
         string json = JsonUtility.ToJson(future);
         File.WriteAllText(files.ActivePath, json);
         Assert.That(files.Save(data), Is.False);
@@ -121,7 +129,7 @@ public class SaveTests
         Assert.That(File.ReadAllText(files.ActivePath), Is.EqualTo(json));
     }
 
-    [TestCase(2)]
+    [TestCase(3)]
     [TestCase(-1)]
     public void UnsupportedVersionBlocksWritesAndRetainsBytes(int version)
     {
@@ -151,10 +159,10 @@ public class SaveTests
     public void UnknownCharacterSkillAndEquipmentIdsAreRejected()
     {
         var data = NewGameDefaults.Create();
-        data.ownedCharacters.characterIds.Add("missing");
+        data.characterInstances.instances.Add(new CharacterInstance { instanceId = "bad", characterId = "missing" });
         Assert.That(files.Save(data), Is.False);
-        data.ownedCharacters.characterIds.Remove("missing");
-        var loadout = CharacterLoadoutStore.GetLoadout("nacht");
+        data.characterInstances.instances.RemoveAt(data.characterInstances.instances.Count - 1);
+        var loadout = CharacterLoadoutStore.GetDefaultLoadout("nacht", data.characterInstances.instances[0].instanceId);
         data.characterEquipment.characters.Add(loadout);
         loadout.skillSlots[0].skillId = "missing";
         Assert.That(files.Save(data), Is.False);
@@ -180,7 +188,7 @@ public class SaveTests
         Assert.That(InventoryManager.AddItem("word_wasser", 1), Is.True);
         Assert.That(InventoryManager.AddItem("word_pistole", 1), Is.True);
         string beforeDraft = File.ReadAllText(files.MainPath);
-        var draft = CharacterLoadoutStore.GetLoadout("nacht");
+        var draft = CharacterLoadoutStore.GetLoadout(Instance("nacht"));
         draft.adjectiveId = "schwarz";
         Assert.That(File.ReadAllText(files.MainPath), Is.EqualTo(beforeDraft));
         CharacterLoadoutStore.Commit(draft);
@@ -195,6 +203,6 @@ public class SaveTests
         service.Reload();
         Assert.That(InventoryManager.GetItemCount("word_wasser"), Is.EqualTo(0));
         Assert.That(OwnedCharacters.IsCharacterOwned("wasserpistole"), Is.True);
-        Assert.That(CharacterLoadoutStore.GetLoadout("nacht").adjectiveId, Is.EqualTo("schwarz"));
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("nacht")).adjectiveId, Is.EqualTo("schwarz"));
     }
 }

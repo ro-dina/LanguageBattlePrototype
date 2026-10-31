@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Linq;
 
+// Version-1 data and a species-only compatibility facade. New gameplay uses CharacterInstances.
 [Serializable]
 public sealed class OwnedCharactersState
 {
@@ -10,99 +11,17 @@ public sealed class OwnedCharactersState
 
 public static class OwnedCharacters
 {
-    private static readonly object SyncRoot = new object();
-    private static readonly HashSet<string> CharacterIds =
-        new HashSet<string>(StringComparer.Ordinal);
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetState()
-    {
-        lock (SyncRoot)
-        {
-            CharacterIds.Clear();
-        }
-    }
-
-    public static bool UnlockCharacter(string characterId)
-    {
-        if (!IsValidId(characterId))
-        {
-            return false;
-        }
-
-        if (GameDatabase.Instance == null || !GameDatabase.Instance.ContainsCharacter(characterId)) return false;
-        bool added;
-        lock (SyncRoot) { added = CharacterIds.Add(characterId); }
-        if (added) PlayerStateChanges.Notify();
-        return added;
-    }
-
-    public static bool IsCharacterOwned(string characterId)
-    {
-        if (!IsValidId(characterId))
-        {
-            return false;
-        }
-
-        lock (SyncRoot)
-        {
-            return CharacterIds.Contains(characterId);
-        }
-    }
-
-    public static List<string> GetAllOwnedCharacters()
-    {
-        List<string> result;
-
-        lock (SyncRoot)
-        {
-            result = new List<string>(CharacterIds);
-        }
-
-        result.Sort(StringComparer.Ordinal);
-        return result;
-    }
-
-    public static OwnedCharactersState CaptureState()
-    {
-        return new OwnedCharactersState
-        {
-            characterIds = GetAllOwnedCharacters()
-        };
-    }
-
+    // Legacy idempotent unlock; creating additional copies is explicitly CharacterInstances.Create.
+    public static bool UnlockCharacter(string characterId) => !IsCharacterOwned(characterId) && CharacterInstances.Create(characterId) != null;
+    public static bool IsCharacterOwned(string characterId) => CharacterInstances.Count(characterId) > 0;
+    public static List<string> GetAllOwnedCharacters() => CharacterInstances.GetAll().Select(i => i.characterId).Distinct().OrderBy(i => i, StringComparer.Ordinal).ToList();
+    public static OwnedCharactersState CaptureState() => new OwnedCharactersState { characterIds = GetAllOwnedCharacters() };
     public static bool RestoreState(OwnedCharactersState state)
     {
-        if (state == null || state.characterIds == null)
-        {
-            return false;
-        }
-
-        HashSet<string> restoredCharacterIds =
-            new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (string characterId in state.characterIds)
-        {
-            if (!IsValidId(characterId) || GameDatabase.Instance == null || !GameDatabase.Instance.ContainsCharacter(characterId))
-            {
-                return false;
-            }
-
-            restoredCharacterIds.Add(characterId);
-        }
-
-        lock (SyncRoot)
-        {
-            CharacterIds.Clear();
-            CharacterIds.UnionWith(restoredCharacterIds);
-        }
-
-        PlayerStateChanges.Notify();
-        return true;
-    }
-
-    private static bool IsValidId(string characterId)
-    {
-        return !string.IsNullOrWhiteSpace(characterId);
+        if (state?.characterIds == null || state.characterIds.Any(id => GameDatabase.Instance == null || !GameDatabase.Instance.ContainsCharacter(id))) return false;
+        var instances = new CharacterInstanceState();
+        foreach (string id in state.characterIds.Distinct())
+            instances.instances.Add(CharacterInstances.GetByCharacterId(id).FirstOrDefault() ?? new CharacterInstance { instanceId = CharacterInstances.NewId(), characterId = id });
+        return CharacterInstances.RestoreState(instances);
     }
 }

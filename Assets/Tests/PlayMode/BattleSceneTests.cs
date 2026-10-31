@@ -11,6 +11,12 @@ using UnityEngine.TestTools;
 [PostBuildCleanup(typeof(TestSaveIsolation))]
 public class BattleSceneTests
 {
+    private static string Instance(string species)
+    {
+        var instances = CharacterInstances.GetByCharacterId(species);
+        return instances.Count > 0 ? instances[0].instanceId : CharacterInstances.Create(species).instanceId;
+    }
+
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static T Field<T>(object target, string name) => (T)target.GetType().GetField(name, Private).GetValue(target);
     private static void Call(object target, string name, params object[] args) => target.GetType().GetMethod(name, Private).Invoke(target, args);
@@ -18,6 +24,7 @@ public class BattleSceneTests
     [UnitySetUp]
     public IEnumerator Setup()
     {
+        SceneManager.LoadScene("GermanyHome"); yield return null; yield return null;
         GameDatabase.EnsureAvailable();
         var owned = new OwnedCharactersState(); owned.characterIds.Add("nacht");
         OwnedCharacters.RestoreState(owned);
@@ -61,7 +68,7 @@ public class BattleSceneTests
     [UnityTest]
     public IEnumerator ChosenAdverbAndCommittedAdjectiveProduceWinResult()
     {
-        var draft = CharacterLoadoutStore.GetLoadout("nacht");
+        var draft = CharacterLoadoutStore.GetLoadout(Instance("nacht"));
         draft.adjectiveId = "schwarz";
         CharacterLoadoutStore.Commit(draft);
         yield return LoadBattle();
