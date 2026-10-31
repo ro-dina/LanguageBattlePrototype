@@ -14,6 +14,7 @@ public class CharacterInstanceTests
         CharacterCollection.RestoreState(new CharacterCollectionState());
         CharacterLoadoutStore.RestoreState(new CharacterLoadoutState());
         InventoryManager.RestoreState(new InventoryState());
+        PlayerStateTransactions.TryChange(data => { data.wallet = new WalletState { balance = EconomySettings.Current.initialCoins }; return true; },out _);
     }
     [TearDown] public void Cleanup()
     {
@@ -104,8 +105,10 @@ public class CharacterInstanceTests
         int notifications = 0; Action listener = () => notifications++; PlayerStateChanges.Changed += listener;
         try
         {
-            Assert.That(CraftingManager.Craft("craft_wasserpistole"), Is.True);
-            Assert.That(CraftingManager.Craft("craft_wasserpistole"), Is.True);
+            Assert.That(CraftingManager.TryCraft(new[] { CraftingElement.Character(CharacterInstances.GetByCharacterId("wasser")[0].instanceId),
+                CraftingElement.Character(CharacterInstances.GetByCharacterId("pistole")[0].instanceId) },out _,out _), Is.True);
+            Assert.That(CraftingManager.TryCraft(new[] { CraftingElement.Character(CharacterInstances.GetByCharacterId("wasser")[0].instanceId),
+                CraftingElement.Character(CharacterInstances.GetByCharacterId("pistole")[0].instanceId) },out _,out _), Is.True);
         }
         finally { PlayerStateChanges.Changed -= listener; }
         Assert.That(notifications, Is.EqualTo(2));
@@ -120,8 +123,8 @@ public class CharacterInstanceTests
         var field = typeof(GameDatabase).GetField("characters", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
         ((System.Collections.Generic.Dictionary<string, CharacterData>)field.GetValue(GameDatabase.Instance)).Remove("wasserpistole");
         Assert.That(CraftingManager.Craft("craft_wasserpistole"), Is.False);
-        Assert.That(InventoryManager.GetItemCount("word_wasser"), Is.EqualTo(1));
-        Assert.That(InventoryManager.GetItemCount("word_pistole"), Is.EqualTo(1));
-        Assert.That(CharacterInstances.GetAll(), Is.Empty);
+        Assert.That(CharacterInstances.Count("wasser"), Is.EqualTo(1));
+        Assert.That(CharacterInstances.Count("pistole"), Is.EqualTo(1));
+        Assert.That(CharacterInstances.GetAll().Count, Is.EqualTo(2));
     }
 }

@@ -10,10 +10,22 @@ public class ResultManager : MonoBehaviour
 
     [SerializeField] private Sprite winBackground;
     [SerializeField] private Sprite loseBackground;
+    [SerializeField] private GameObject rewardPanel;
+    [SerializeField] private TMP_Text rewardText;
+    public string RewardSummary => rewardText != null ? rewardText.text : "";
 
     void Start()
     {
-        if (GameManager.IsWin)
+        var receipt = BattleRewardService.Latest;
+        bool completed = receipt != null && receipt.status != BattleRewardStatus.Pending;
+        bool victory = completed ? receipt.status == BattleRewardStatus.Victory : GameManager.IsWin;
+        if (rewardPanel != null) rewardPanel.SetActive(victory && completed);
+        if (rewardText != null)
+        {
+            rewardText.text = victory && completed ? FormatRewards(receipt) : "";
+            rewardText.rectTransform.anchoredPosition = Vector2.zero;
+        }
+        if (victory)
         {
             if (resultText != null)
             {
@@ -37,6 +49,21 @@ public class ResultManager : MonoBehaviour
                 backgroundImage.sprite = loseBackground;
             }
         }
+    }
+
+    public static string FormatRewards(BattleRewardRecord receipt)
+    {
+        if (receipt == null || receipt.status != BattleRewardStatus.Victory) return "";
+        var text = new System.Text.StringBuilder();
+        text.Append(GameDatabase.EnsureAvailable().GetCharacter(receipt.enemyCharacterId).characterName).Append(" defeated!\n\nRewards\n");
+        if (receipt.coins > 0) text.Append(EconomySettings.Current.currencyDisplayName).Append(" +").Append(EconomySettings.Amount(receipt.coins)).Append("\n");
+        if (receipt.materials.Count > 0)
+        {
+            text.Append("\nMaterials\n");
+            foreach (var entry in receipt.materials) text.Append(entry.text).Append(" ×").Append(entry.count).Append("\n");
+        }
+        if (!string.IsNullOrEmpty(receipt.characterId)) text.Append("\nCharacter obtained!\n").Append(GameDatabase.Instance.GetCharacter(receipt.characterId).characterName).Append(" ×1\n");
+        return text.ToString();
     }
 
     public void GoStageSelect()

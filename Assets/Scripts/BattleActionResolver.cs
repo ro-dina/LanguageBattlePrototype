@@ -79,7 +79,12 @@ public sealed class BattleContext
     public BattleActionResult Resolve(BattleAction action)
     {
         var result = BattleActionResolver.Resolve(this, action);
-        if (result.CanUse && action.Side == BattleSide.Player) TurnState = BattleTurnState.ResolvingPlayer;
+        if (result.CanUse && action.Side == BattleSide.Player)
+        {
+            TurnState = BattleTurnState.ResolvingPlayer;
+            // Resolve accepts the committed command; selecting/deselecting alone never spends the use.
+            if (action.Modal == BattleModal.Muessen) MuessenUsed = true;
+        }
         return result;
     }
 
@@ -103,7 +108,6 @@ public sealed class BattleContext
         if (TurnState != required) return false;
         result.Applied = true;
         if (result.IsReservation) PendingAttack = new PendingBattleAttack(result, Round + 1);
-        if (player && result.Action.Modal == BattleModal.Muessen) MuessenUsed = true;
         if (result.IsPendingAttack) PendingAttack = null;
         var target = player ? Enemy : Player;
         target.HP = Math.Max(0, target.HP - result.Damage);

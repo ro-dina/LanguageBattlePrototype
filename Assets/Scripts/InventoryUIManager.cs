@@ -13,8 +13,10 @@ public sealed class InventoryUIManager : MonoBehaviour
 
     private void OnEnable()
     {
+        PlayerStateChanges.Changed += RefreshInventory;
         RefreshInventory();
     }
+    private void OnDisable() => PlayerStateChanges.Changed -= RefreshInventory;
 
     public void RefreshInventory()
     {
@@ -59,8 +61,9 @@ public sealed class InventoryUIManager : MonoBehaviour
                 continue;
             }
 
-            itemNameText.text = entry.itemId;
+            itemNameText.text = ItemDisplayNames.Get(entry.itemId);
             itemCountText.text = $"×{entry.count}";
+            if (DynamicMaterials.IsId(entry.itemId)) MaterialRowLayout.Configure(itemObject,itemNameText);
         }
     }
 

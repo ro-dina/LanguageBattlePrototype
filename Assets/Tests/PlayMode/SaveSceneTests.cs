@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections;
 using System.IO;
@@ -68,23 +69,18 @@ public class SaveSceneTests
     }
 
     [UnityTest]
-    public IEnumerator GachaAutosavesItemsWithoutGrantingCharacters()
+    public IEnumerator GachaAutosavesMaterialAndCharacterRewardsTogether()
     {
-        SceneManager.LoadScene("Gacha");
-        yield return null;
-        yield return null;
-        var gacha = Object.FindAnyObjectByType<GachaManager>();
-        gacha.PullOnce();
-        gacha.PullTen();
-        int count = 0;
-        foreach (var entry in InventoryManager.GetAllItems()) count += entry.count;
-        Assert.That(count, Is.EqualTo(11));
-        Assert.That(OwnedCharacters.GetAllOwnedCharacters(), Is.EqualTo(new[] { "nacht" }));
+        int before=CharacterInstances.GetAll().Count;
+        SceneManager.LoadScene("Gacha");yield return null;yield return null;
+        var gacha=Object.FindAnyObjectByType<GachaManager>();gacha.PullOnce();yield return new WaitForSecondsRealtime(.3f);gacha.PullTen();
+        int count=InventoryManager.GetAllItems().Sum(e=>e.count)+CharacterInstances.GetAll().Count-before;
+        Assert.That(count,Is.EqualTo(11));
+        var ids=CharacterInstances.GetAll().Select(i=>i.instanceId).ToArray();
         PlayerSaveService.Instance.Reload();
-        count = 0;
-        foreach (var entry in InventoryManager.GetAllItems()) count += entry.count;
-        Assert.That(count, Is.EqualTo(11));
-        Assert.That(OwnedCharacters.GetAllOwnedCharacters(), Is.EqualTo(new[] { "nacht" }));
+        Assert.That(InventoryManager.GetAllItems().Sum(e=>e.count)+CharacterInstances.GetAll().Count-before,Is.EqualTo(11));
+        Assert.That(CharacterInstances.GetAll().Select(i=>i.instanceId),Is.EqualTo(ids));
+        Assert.That(InventoryManager.GetItemCount("word_nacht"),Is.Zero);
     }
 
     [UnityTest]

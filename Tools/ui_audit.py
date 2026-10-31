@@ -40,7 +40,7 @@ class Asset:
 if __name__=='__main__':
  import sys
  failures=[]; assets=[]
- for p in sorted((ROOT/'Assets/Scenes').glob('*.unity'))+sorted((ROOT/'Assets/Prefabs').glob('*.prefab')):
+ for p in sorted((ROOT/'Assets/Scenes').glob('*.unity'))+sorted((ROOT/'Assets/Prefabs').glob('*.prefab'))+sorted((ROOT/'Assets/Resources/UI').glob('*.prefab')):
   a=Asset(p);assets.append(a)
   if '--dump' in sys.argv:a.dump()
   for i,b in a.blocks.items():

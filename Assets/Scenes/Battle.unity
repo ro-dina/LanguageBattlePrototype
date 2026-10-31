@@ -4835,7 +4835,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &99870882
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5195,7 +5195,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &633028805
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5335,7 +5335,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 552, y: -88}
-  m_SizeDelta: {x: 312, y: 72}
+  m_SizeDelta: {x: 512, y: 72}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &633782396
 MonoBehaviour:
@@ -5454,7 +5454,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 8, y: -4}
-  m_SizeDelta: {x: 296, y: 64}
+  m_SizeDelta: {x: 496, y: 64}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &929837472
 MonoBehaviour:
@@ -5476,7 +5476,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "m\xFCssen \u2022 \xD72 once"
+  m_text: "m\xFCssen \u2022 OFF \u2022 \xD72"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -5867,7 +5867,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 16, y: -88}
-  m_SizeDelta: {x: 312, y: 72}
+  m_SizeDelta: {x: 512, y: 72}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1625009721
 MonoBehaviour:
@@ -6260,7 +6260,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 8, y: -4}
-  m_SizeDelta: {x: 296, y: 64}
+  m_SizeDelta: {x: 496, y: 64}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1938650414
 MonoBehaviour:
@@ -6282,7 +6282,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Futur I \u2022 next turn \xD71.5"
+  m_text: "Futur I \u2022 OFF \u2022 \xD71.5"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

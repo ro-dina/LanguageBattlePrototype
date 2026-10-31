@@ -3643,6 +3643,24 @@
       "defense": 3,
       "speed": 5,
       "skillIds": ["sein", "haben", "werden"]
+    },
+    {
+      "id": "pistole",
+      "characterName": "Pistole",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 2,
+      "illustration": "wasserpistole",
+      "hp": 22,
+      "attack": 7,
+      "defense": 3,
+      "speed": 5,
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
     }
   ]
 }

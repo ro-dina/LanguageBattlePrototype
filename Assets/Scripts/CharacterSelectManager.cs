@@ -15,6 +15,11 @@ public class CharacterSelectManager : MonoBehaviour
     [SerializeField] private Image selectedCharacterImage;
     [SerializeField] private AspectRatioFitter selectedCharacterAspectFitter;
 
+    [Header("Individual selection")]
+    [SerializeField] private Button previousInstanceButton;
+    [SerializeField] private Button nextInstanceButton;
+    [SerializeField] private TMP_Text instancePositionText;
+
     private string selectedId;
     private bool started;
     private void OnEnable() => PlayerStateChanges.Changed += RefreshOwnedList;
@@ -26,7 +31,7 @@ public class CharacterSelectManager : MonoBehaviour
         if (instances.Length > 0)
             SelectCharacter(instances.Any(i => i.instanceId == GameManager.SelectedCharacterInstanceId)
                 ? GameManager.SelectedCharacterInstanceId : instances[0].instanceId);
-        else { selectedId = null; if (selectedCharacterText != null) selectedCharacterText.text = "No owned characters."; if (selectedCharacterImage != null) selectedCharacterImage.enabled = false; }
+        else { selectedId = null; if (selectedCharacterText != null) selectedCharacterText.text = "No owned characters."; if (selectedCharacterImage != null) selectedCharacterImage.enabled = false; RefreshInstanceControls(); }
     }
 
     private void Start()
@@ -37,6 +42,8 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        previousInstanceButton.onClick.AddListener(PreviousInstance);
+        nextInstanceButton.onClick.AddListener(NextInstance);
         started = true;
         CreateCharacterButtons();
         SelectInitialInstance();
@@ -44,11 +51,11 @@ public class CharacterSelectManager : MonoBehaviour
 
     private CharacterInstance[] GetSelectableCharacters() => CharacterInstances.GetAll()
         .Where(i => GameDatabase.Instance.ContainsCharacter(i.characterId))
-        .OrderBy(i => GameDatabase.Instance.GetCharacter(i.characterId).characterName).ThenBy(i => i.instanceId).ToArray();
+        .OrderBy(i => GameDatabase.Instance.GetCharacter(i.characterId).characterName).ToArray();
 
     private void CreateCharacterButtons()
     {
-        CharacterInstance[] characters = GetSelectableCharacters();
+        CharacterInstance[] characters = GetSelectableCharacters().GroupBy(i => i.characterId).Select(g => g.First()).ToArray();
 
         if (characterButtonParent != null && characterButtonParent.name == "Scroll View")
         {
@@ -84,13 +91,13 @@ public class CharacterSelectManager : MonoBehaviour
         {
             CharacterData character = GameDatabase.Instance.GetCharacter(instance.characterId);
             GameObject buttonObj = Instantiate(characterButtonPrefab, characterButtonParent);
-            buttonObj.name = $"CharacterButton_{instance.instanceId}";
+            buttonObj.name = $"CharacterButton_{character.id}";
             buttonObj.SetActive(true);
 
             TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
             if (buttonText != null)
             {
-                buttonText.text = CharacterInstances.DisplayName(instance.instanceId) + "\nOwned: " + CharacterInstances.Count(character.id);
+                buttonText.text = character.characterName + " ×" + CharacterInstances.Count(character.id);
             }
             else
             {
@@ -114,17 +121,43 @@ public class CharacterSelectManager : MonoBehaviour
             Button button = buttonObj.GetComponent<Button>();
             if (button != null)
             {
-                string id = instance.instanceId;
+                string id = instance.characterId;
                 // List entries only update the selection preview. Replacing the
                 // event also prevents prefab callbacks from causing navigation.
                 button.onClick = new Button.ButtonClickedEvent();
-                button.onClick.AddListener(() => SelectCharacter(id));
+                button.onClick.AddListener(() => SelectSpecies(id));
             }
             else
             {
                 Debug.LogError($"Button component was not found in character button prefab: {character.id}");
             }
         }
+    }
+
+    private void SelectSpecies(string characterId)
+    {
+        var instances = CharacterInstances.GetByCharacterId(characterId);
+        if (instances.Count == 0) return;
+        string current = GameManager.SelectedCharacterInstanceId;
+        SelectCharacter(instances.Any(i => i.instanceId == current) ? current : instances[0].instanceId);
+    }
+
+    public void PreviousInstance() => CycleInstance(-1);
+    public void NextInstance() => CycleInstance(1);
+    private void CycleInstance(int direction)
+    {
+        var current = CharacterInstances.Get(selectedId);
+        if (current == null) { SelectInitialInstance(); return; }
+        var instances = CharacterInstances.GetByCharacterId(current.characterId);
+        int index = instances.FindIndex(i => i.instanceId == selectedId);
+        SelectCharacter(instances[(index + direction + instances.Count) % instances.Count].instanceId);
+    }
+    private void RefreshInstanceControls()
+    {
+        var current = CharacterInstances.Get(selectedId);
+        int count = current == null ? 0 : CharacterInstances.Count(current.characterId);
+        previousInstanceButton.interactable = nextInstanceButton.interactable = count > 1;
+        instancePositionText.text = current == null ? "No individual" : "Individual " + CharacterInstances.DisplayBadge(selectedId);
     }
 
     private void SelectCharacter(string instanceId)
@@ -146,19 +179,26 @@ public class CharacterSelectManager : MonoBehaviour
 
         if (characterButtonParent != null)
             foreach (var button in characterButtonParent.GetComponentsInChildren<Button>())
-                if (button.image != null) button.image.color = button.name == "CharacterButton_" + instanceId ? new Color(0.65f, 0.84f, 1f) : Color.white;
+                if (button.image != null) button.image.color = button.name == "CharacterButton_" + character.id ? new Color(0.65f, 0.84f, 1f) : Color.white;
         EquipmentData equipment = GameDatabase.Instance.GetEquipment(character.equippedAdjectiveId);
         int attack = character.attack + DamageCalculator.GetCharacterAttackBonus(equipment);
         int defense = character.defense + DamageCalculator.GetCharacterDefenseBonus(equipment);
         int speed = character.speed + DamageCalculator.GetCharacterSpeedBonus(equipment);
         if (selectedCharacterText != null)
         {
+            var loadout = CharacterLoadoutStore.GetLoadout(instanceId);
+            string adjective = string.IsNullOrEmpty(loadout.adjectiveId) ? "none" : GameDatabase.Instance.GetEquipment(loadout.adjectiveId).equipmentName;
+            string article = string.IsNullOrEmpty(loadout.articleId) ? "default" : GameDatabase.Instance.GetEquipment(loadout.articleId).equipmentName;
+            string skills = string.Join("\n", loadout.skillSlots.Select(slot =>
+                GameDatabase.Instance.GetSkill(slot.skillId).skillName + (string.IsNullOrEmpty(slot.equippedAdverbId) ? "" :
+                " + " + GameDatabase.Instance.GetEquipment(slot.equippedAdverbId).equipmentName)));
             selectedCharacterText.text =
-                $"{CharacterInstances.DisplayName(instanceId)}\nOwned: {CharacterInstances.Count(character.id)}\n" +
-                $"Gender:\n{character.grammaticalGender}\n" +
-                $"HP: {character.hp}\n" +
-                $"ATK: {attack} /\nDEF: {defense} /\nSPD: {speed}";
+                $"{character.characterName}\nOwned: {CharacterInstances.Count(character.id)}\n" +
+                $"Gender: {character.grammaticalGender}\nHP: {character.hp}\nATK: {attack} / DEF: {defense}\nSPD: {speed}\n" +
+                $"Adjective: {adjective}\nArticle: {article}\nSkills:\n{skills}";
         }
+
+        RefreshInstanceControls();
 
         if (selectedCharacterImage == null)
         {
@@ -186,7 +226,7 @@ public class CharacterSelectManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"Character select sprite not found: {character.illustration}");
+            Debug.LogWarning($"Character artwork is not yet available: {character.characterName}");
         }
     }
 

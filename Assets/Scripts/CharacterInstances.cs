@@ -43,6 +43,8 @@ public static class CharacterInstances
     public static List<CharacterInstance> GetAll() => Instances.Select(Copy).ToList();
     public static List<CharacterInstance> GetByCharacterId(string characterId) => Instances.Where(i => i.characterId == characterId).Select(Copy).ToList();
     public static int Count(string characterId) => Instances.Count(i => i.characterId == characterId);
+    // Central consumption guard; future per-instance locks can be added here. No story-required identities exist yet.
+    public static bool CanConsume(string instanceId) => Owns(instanceId) && !BattleLocks.Contains(instanceId);
     public static bool Remove(string instanceId)
     {
         if (BattleLocks.Contains(instanceId ?? "")) return false;
@@ -99,11 +101,8 @@ public static class CharacterInstances
     {
         var instance = Get(instanceId);
         if (instance == null) return "—";
-        string id = instance.instanceId.StartsWith("character-", StringComparison.Ordinal) ? instance.instanceId.Substring(10) : instance.instanceId;
-        int length = Math.Min(6, id.Length);
-        // Expand a short badge only if another owned identity would have the same badge.
-        while (length < id.Length && Instances.Any(i => i.instanceId != instanceId &&
-            (i.instanceId.StartsWith("character-", StringComparison.Ordinal) ? i.instanceId.Substring(10) : i.instanceId).StartsWith(id.Substring(0, length), StringComparison.Ordinal))) length++;
-        return id.Substring(0, length).ToUpperInvariant();
+        // This ordinal is a presentation detail; all state continues to use instanceId.
+        var siblings = GetByCharacterId(instance.characterId);
+        return $"{siblings.FindIndex(i => i.instanceId == instanceId) + 1} / {siblings.Count}";
     }
 }

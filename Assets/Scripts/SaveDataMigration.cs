@@ -22,7 +22,7 @@ public static class SaveDataMigration
         try { return JsonUtility.FromJson<Header>(json)?.version ?? 0; }
         catch (Exception) { return 0; }
     }
-    public static bool TryMigrate(string json, out SaveData migrated, out string error)
+    private static bool VersionOneToTwo(string json, out SaveData migrated, out string error)
     {
         migrated = null; error = null;
         try
@@ -54,7 +54,63 @@ public static class SaveDataMigration
                 loadout.instanceId = instanceId;
                 data.characterEquipment.characters.Add(loadout);
             }
-            if (!SaveDataValidator.Validate(data, out error)) return false;
+            if (!SaveDataValidator.ValidateVersionTwo(data, out error)) return false;
+            migrated = data; return true;
+        }
+        catch (Exception exception) { error = "Migration failed: " + exception.Message; return false; }
+    }
+    public static bool TryMigrate(string json,out SaveData migrated,out string error)
+    {
+        migrated = null; error = null;
+        try
+        {
+            SaveData data;
+            int version = Version(json);
+            if (version == 3 || version == 4)
+            {
+                if (version == 4) { if (!SaveDataValidator.TryDecodeVersionFour(json,out data,out error)) return false; }
+                else { data = JsonUtility.FromJson<SaveData>(json); if (!SaveDataValidator.ValidateVersionThree(data,out error)) return false; data.wallet = new WalletState { balance = EconomySettings.Current.initialCoins }; }
+                data.battleRewards = new BattleRewardState();
+                data.version = SaveDataValidator.CurrentVersion;
+                if (!SaveDataValidator.Validate(data,out error)) return false;
+                if (Encoding.UTF8.GetByteCount(JsonUtility.ToJson(data,true)) > SaveFileStore.MaxBytes)
+                { error = "Migrated save exceeds the existing 4 MB budget; original retained."; return false; }
+                migrated = data; return true;
+            }
+            if (version == 1) { if (!VersionOneToTwo(json,out data,out error)) return false; }
+            else if (version == 2)
+            {
+                data = JsonUtility.FromJson<SaveData>(json);
+                if (!SaveDataValidator.ValidateVersionTwo(data,out error)) return false;
+            }
+            else { error = "Only versions 1 through 4 require migration."; return false; }
+            data.convertedWordItems = new List<WordItemConversion>();
+            var remaining = new List<InventoryEntry>();
+            var ids = new HashSet<string>();
+            foreach (var instance in data.characterInstances.instances) ids.Add(instance.instanceId);
+            foreach (var entry in data.inventory.items)
+            {
+                if (WordCharacterRewards.Ambiguous(entry.itemId)) { error = "Ambiguous word reward; original retained."; return false; }
+                var character = WordCharacterRewards.Character(entry.itemId);
+                if (character == null) { remaining.Add(entry); continue; }
+                if ((long)data.characterInstances.instances.Count + entry.count > SaveFileStore.MaxBytes / 64)
+                { error = "Converted individuals exceed the save size budget; original retained."; return false; }
+                int before = data.characterInstances.instances.Count;
+                for (int n=0;n<entry.count;n++)
+                {
+                    string id = MigratedId(json,"word/" + entry.itemId + "/" + n);
+                    if (!ids.Add(id)) { error = "Migrated identity collision."; return false; }
+                    PlayerStateTransactions.AddCharacter(data,character.id,id);
+                }
+                if (data.characterInstances.instances.Count-before != entry.count) return false;
+                data.convertedWordItems.Add(new WordItemConversion { itemId=entry.itemId, characterId=character.id, count=entry.count });
+            }
+            data.inventory.items = remaining; data.version = SaveDataValidator.CurrentVersion;
+            data.wallet = new WalletState { balance = EconomySettings.Current.initialCoins };
+            data.battleRewards = new BattleRewardState();
+            if (!SaveDataValidator.Validate(data,out error)) return false;
+            if (Encoding.UTF8.GetByteCount(JsonUtility.ToJson(data,true)) > SaveFileStore.MaxBytes)
+            { error = "Converted save exceeds the existing 4 MB budget; original retained."; return false; }
             migrated = data; return true;
         }
         catch (Exception exception) { error = "Migration failed: " + exception.Message; return false; }

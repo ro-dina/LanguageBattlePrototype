@@ -51,12 +51,14 @@ public class BattleModifierSceneTests
         HP(context.Enemy, 200); HP(context.Player, 200);
         Button("FutureButton").onClick.Invoke();
         Assert.That(battle.Selection.Tense, Is.EqualTo(BattleTense.Future));
-        Assert.That(Button("MuessenButton").interactable, Is.False);
-        Assert.That(battle.SelectMuessen(true), Is.False);
+        Assert.That(Button("MuessenButton").interactable, Is.True);
         battle.UseSkill1();
         float end = Time.realtimeSinceStartup + 10;
         while (context.PendingAttack == null && Time.realtimeSinceStartup < end) yield return null;
         Assert.That(context.PendingAttack, Is.Not.Null); Assert.That(context.Enemy.HP, Is.EqualTo(200));
+        var reserved = context.PendingAttack; battle.ClearModifiers();
+        Assert.That(context.PendingAttack, Is.SameAs(reserved), "UI clear cannot cancel a committed reservation.");
+        Assert.That(battle.SelectFuture(true), Is.False, "Cannot queue a duplicate while resolving.");
         Assert.That(battle.CanChoose, Is.False); Assert.That(Button("FutureButton").interactable, Is.False);
         Assert.That(GameObject.Find("ModifierStatus").GetComponent<TMP_Text>().text, Does.Contain("21 damage next turn"));
         yield return WaitForTurn(battle);
@@ -84,8 +86,7 @@ public class BattleModifierSceneTests
     [UnityTest] public IEnumerator MuessenUsedIndicatorAndNewBattleResetAreVisible()
     {
         var battle = Object.FindAnyObjectByType<BattleManager>(); HP(battle.Context.Enemy, 200); HP(battle.Context.Player, 200);
-        Button("MuessenButton").onClick.Invoke(); Assert.That(Button("FutureButton").interactable, Is.False);
-        Assert.That(battle.SelectFuture(true), Is.False);
+        Button("MuessenButton").onClick.Invoke(); Assert.That(Button("FutureButton").interactable, Is.True);
         battle.UseSkill1(); yield return WaitForTurn(battle);
         Assert.That(battle.Context.Enemy.HP, Is.EqualTo(172)); Assert.That(battle.Context.MuessenUsed, Is.True);
         Assert.That(Button("MuessenButton").interactable, Is.False);
@@ -103,10 +104,10 @@ public class BattleModifierSceneTests
         cardButtons[0].onClick.Invoke(); string adverb = battle.Selection.Get(BattleElementKind.Adverb);
         Assert.That(adverb, Is.Not.Null);
         Field<Button>(battle, "noAdverbButton").onClick.Invoke(); Assert.That(battle.Selection.Get(BattleElementKind.Adverb), Is.Null);
-        Button("FutureButton").onClick.Invoke(); Button("NoTenseButton").onClick.Invoke();
+        Button("FutureButton").onClick.Invoke(); Button("FutureButton").onClick.Invoke();
         Assert.That(battle.Selection.Tense, Is.EqualTo(BattleTense.Present));
         Assert.That(Button("MuessenButton").interactable, Is.True);
-        Button("MuessenButton").onClick.Invoke(); Button("NoModalButton").onClick.Invoke();
+        Button("MuessenButton").onClick.Invoke(); Button("MuessenButton").onClick.Invoke();
         Assert.That(battle.Selection.Modal, Is.EqualTo(BattleModal.None));
         cardButtons[0].onClick.Invoke(); Button("FutureButton").onClick.Invoke(); Button("ClearModifiersButton").onClick.Invoke();
         Assert.That(battle.Selection.Modal, Is.EqualTo(BattleModal.None));
@@ -164,5 +165,31 @@ public class BattleModifierSceneTests
             }
             battle.CloseSkillPanel();
         }
+    }
+    [UnityTest] public IEnumerator ToggleSwitchesPreserveHistoryAndOnlyAcceptedSkillConsumesMuessen()
+    {
+        var battle = Object.FindAnyObjectByType<BattleManager>();
+        Button("FutureButton").onClick.Invoke(); Button("MuessenButton").onClick.Invoke();
+        Assert.That(battle.Selection.Tense, Is.EqualTo(BattleTense.Present));
+        Assert.That(battle.Selection.Modal, Is.EqualTo(BattleModal.Muessen));
+        Assert.That(battle.Context.MuessenUsed, Is.False);
+        Button("FutureButton").onClick.Invoke();
+        Assert.That(battle.Selection.Tense, Is.EqualTo(BattleTense.Future));
+        Assert.That(battle.Selection.Modal, Is.EqualTo(BattleModal.None));
+        Button("FutureButton").onClick.Invoke();
+        Assert.That(battle.Selection.Tense, Is.EqualTo(BattleTense.Present));
+        Button("MuessenButton").onClick.Invoke(); Button("MuessenButton").onClick.Invoke();
+        Assert.That(battle.Context.MuessenUsed, Is.False);
+        Assert.That(battle.Selection.Modal, Is.EqualTo(BattleModal.None));
+        Button("MuessenButton").onClick.Invoke();
+        HP(battle.Context.Player,200); HP(battle.Context.Enemy,200);
+        battle.UseSkill1();
+        Assert.That(battle.Context.MuessenUsed, Is.True, "Spent when the skill command is accepted, before audio/hit.");
+        battle.ClearModifiers(); Assert.That(battle.Context.MuessenUsed, Is.True);
+        Assert.That(battle.LastCommittedAction.Selection.History.Count(e => e.Change == BattleSelectionChange.Cleared), Is.GreaterThanOrEqualTo(4));
+        yield return WaitForTurn(battle);
+        battle.ClearModifiers(); Assert.That(battle.Context.MuessenUsed, Is.True);
+        Assert.That(battle.SelectMuessen(true), Is.False);
+        Assert.That(Button("MuessenButton").interactable, Is.False);
     }
 }

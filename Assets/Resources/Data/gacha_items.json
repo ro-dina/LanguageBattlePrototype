@@ -111,6 +111,153 @@
       "itemType": "letter",
       "rarity": "N",
       "language": "de"
+    },
+    {
+      "id": "letter_b",
+      "displayName": "b",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_c",
+      "displayName": "c",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_d",
+      "displayName": "d",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_f",
+      "displayName": "f",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_g",
+      "displayName": "g",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_h",
+      "displayName": "h",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_j",
+      "displayName": "j",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_k",
+      "displayName": "k",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_m",
+      "displayName": "m",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_n",
+      "displayName": "n",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_q",
+      "displayName": "q",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_r",
+      "displayName": "r",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_u",
+      "displayName": "u",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_v",
+      "displayName": "v",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_x",
+      "displayName": "x",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_y",
+      "displayName": "y",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_z",
+      "displayName": "z",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_ae_umlaut",
+      "displayName": "ä",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_oe_umlaut",
+      "displayName": "ö",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_ue_umlaut",
+      "displayName": "ü",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
+    },
+    {
+      "id": "letter_eszett",
+      "displayName": "ß",
+      "itemType": "letter",
+      "rarity": "N",
+      "language": "de"
     }
   ]
 }

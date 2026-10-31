@@ -24,7 +24,13 @@ public static class PlayerStateChanges
     public static void Notify()
     {
         if (batchDepth > 0) pending = true;
-        else Changed?.Invoke();
+        else Publish();
+    }
+
+    private static void Publish()
+    {
+        foreach (Action callback in Changed?.GetInvocationList() ?? Array.Empty<Delegate>())
+            try { callback(); } catch (Exception exception) { UnityEngine.Debug.LogException(exception); }
     }
 
     private sealed class Batch : IDisposable
@@ -37,7 +43,7 @@ public static class PlayerStateChanges
             if (--batchDepth == 0 && pending)
             {
                 pending = false;
-                Changed?.Invoke();
+                Publish();
             }
         }
     }

@@ -5,6 +5,7 @@ public class GameDatabase : MonoBehaviour
 {
     public static GameDatabase Instance;
 
+    public CharacterDictionary CharacterWords { get; private set; }
     private Dictionary<string, CharacterData> characters;
     private Dictionary<string, SkillData> skills;
     private Dictionary<string, EquipmentData> equipments;
@@ -43,6 +44,7 @@ public class GameDatabase : MonoBehaviour
         if (Application.isPlaying) DontDestroyOnLoad(gameObject);
 
         LoadCharacters();
+        CharacterWords = new CharacterDictionary(GetAllCharacters());
         LoadSkills();
         LoadEquipments();
     }

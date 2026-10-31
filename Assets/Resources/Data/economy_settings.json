@@ -1,0 +1,13 @@
+{
+  "currencyDisplayName": "Coins",
+  "coinSymbol": "C",
+  "initialCoins": 3000,
+  "gachaSingleCost": 100,
+  "gachaTenCost": 1000,
+  "craftingCost": 200,
+  "developmentGrants": [
+    100,
+    1000,
+    10000
+  ]
+}

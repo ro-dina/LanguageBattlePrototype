@@ -8,6 +8,7 @@ public enum SaveLoadStatus { NewGame, Loaded, Recovered, UnsupportedVersion, Mig
 // File operations are isolated so tests can use private temporary directories.
 public sealed class SaveFileStore
 {
+    public const int MaxBytes = 4 * 1024 * 1024;
     public string MainPath { get; }
     public string ActivePath { get; private set; }
     public bool WritesBlocked { get; private set; }
@@ -25,12 +26,11 @@ public sealed class SaveFileStore
         WritesBlocked = false;
         ActivePath = MainPath;
         if (File.Exists(MainPath) && TryRead(MainPath, out data)) return SaveLoadStatus.Loaded;
-        if (File.Exists(MainPath) && ReadVersion(MainPath) == 1)
+        bool migrationFailed = false;
+        if (File.Exists(MainPath) && IsLegacy(MainPath))
         {
             if (TryMigrate(MainPath, out data) && Save(data)) return SaveLoadStatus.Migrated;
-            WritesBlocked = true;
-            LastError = "Version-1 migration failed; original retained and saving disabled. " + LastError;
-            data = NewGameDefaults.Create(); return SaveLoadStatus.MigrationFailed;
+            migrationFailed = true; // A valid backup can still recover without replacing this source.
         }
         // A newer schema may be perfectly valid. Never replace it with an older game's data.
         if (File.Exists(MainPath) && IsUnsupported(MainPath))
@@ -51,19 +51,25 @@ public sealed class SaveFileStore
                 var candidates = Directory.GetFiles(directory, "save.recovery-*.json");
                 Array.Sort(candidates, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
                 foreach (string candidate in candidates)
-                    if (TryRead(candidate, out recovered) || (ReadVersion(candidate) == 1 && TryMigrate(candidate, out recovered))) { ActivePath = candidate; break; }
+                    if (TryRead(candidate, out recovered) || (IsLegacy(candidate) && TryMigrate(candidate, out recovered))) { ActivePath = candidate; break; }
             }
-            if (recovered == null && !TryRead(MainPath + ".bak", out recovered) && ReadVersion(MainPath + ".bak") == 1)
+            if (recovered == null && !TryRead(MainPath + ".bak", out recovered) && IsLegacy(MainPath + ".bak"))
                 TryMigrate(MainPath + ".bak", out recovered);
             if (recovered == null && Directory.Exists(directory))
             {
-                var legacyBackups = Directory.GetFiles(directory, "save*.v1.bak*");
+                var legacyBackups = Directory.GetFiles(directory, "save*.v*.bak*");
                 Array.Sort(legacyBackups, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
                 foreach (string backup in legacyBackups)
-                    if (!backup.Contains(".tmp-") && ReadVersion(backup) == 1 && TryMigrate(backup, out recovered)) break;
+                    if (!backup.Contains(".tmp-") && IsLegacy(backup) && TryMigrate(backup, out recovered)) break;
             }
         }
         catch (Exception exception) { LastError = "Save recovery failed: " + exception.Message; }
+        if (migrationFailed && recovered == null)
+        {
+            WritesBlocked = true;
+            LastError = "Legacy migration failed; original retained and saving disabled. " + LastError;
+            data = NewGameDefaults.Create(); return SaveLoadStatus.MigrationFailed;
+        }
         if (damaged && ActivePath == MainPath) ActivePath = RecoveryPath();
         data = recovered ?? NewGameDefaults.Create();
         return damaged || recovered != null ? SaveLoadStatus.Recovered : SaveLoadStatus.NewGame;
@@ -74,8 +80,8 @@ public sealed class SaveFileStore
         data = null;
         try
         {
-            if (!File.Exists(path) || new FileInfo(path).Length > 4 * 1024 * 1024) return false;
-            if (SaveDataValidator.TryDecode(File.ReadAllText(path), out data, out _)) return true;
+            if (!File.Exists(path) || new FileInfo(path).Length > MaxBytes) return false;
+            if (SaveDataValidator.TryDecode(File.ReadAllText(path), out data, out _) && data.version == SaveDataValidator.CurrentVersion) return true;
             data = null;
             return false;
         }
@@ -84,11 +90,12 @@ public sealed class SaveFileStore
 
     private int ReadVersion(string path)
     {
-        try { return File.Exists(path) && new FileInfo(path).Length <= 4 * 1024 * 1024 ? SaveDataMigration.Version(File.ReadAllText(path)) : 0; }
+        try { return File.Exists(path) && new FileInfo(path).Length <= MaxBytes ? SaveDataMigration.Version(File.ReadAllText(path)) : 0; }
         catch (Exception) { return 0; }
     }
+    private bool IsLegacy(string path) => ReadVersion(path) == 1 || ReadVersion(path) == 2 || ReadVersion(path) == 3 || ReadVersion(path) == 4;
     private bool IsUnsupported(string path)
-    { int version = ReadVersion(path); return version != 0 && version != 1 && version != SaveDataValidator.CurrentVersion; }
+    { int version = ReadVersion(path); return version != 0 && version != 1 && version != 2 && version != 3 && version != 4 && version != SaveDataValidator.CurrentVersion; }
 
     private bool TryMigrate(string path, out SaveData data)
     {
@@ -99,7 +106,7 @@ public sealed class SaveFileStore
             string json = new UTF8Encoding(false).GetString(original).TrimStart('\uFEFF');
             if (!SaveDataMigration.TryMigrate(json, out data, out string error)) { LastError = error; return false; }
             // Recovery sources that are already protected backups are never modified.
-            if (!Path.GetFileName(path).Contains(".v1.bak")) PreserveLegacyBackup(path, original);
+            if (!Path.GetFileName(path).Contains(".v1.bak") && !Path.GetFileName(path).Contains(".v2.bak") && !Path.GetFileName(path).Contains(".v3.bak") && !Path.GetFileName(path).Contains(".v4.bak")) PreserveLegacyBackup(path, original);
             return true;
         }
         catch (Exception exception) { data = null; LastError = "Migration backup failed: " + exception.Message; return false; }
@@ -107,7 +114,7 @@ public sealed class SaveFileStore
 
     private void PreserveLegacyBackup(string path, byte[] original)
     {
-        string backup = path + ".v1.bak";
+        string backup = path + ".v" + ReadVersion(path) + ".bak";
         // A prior attempt may already have retained these bytes under a conflict suffix.
         foreach (string candidate in Directory.GetFiles(Path.GetDirectoryName(path), Path.GetFileName(backup) + "*"))
             if (!candidate.Contains(".tmp-") && new FileInfo(candidate).Length == original.Length &&
@@ -142,13 +149,16 @@ public sealed class SaveFileStore
             {
                 if (IsUnsupported(ActivePath))
                 { WritesBlocked = true; LastError = "Existing save has an unsupported version; preserved."; return false; }
-                if (ReadVersion(ActivePath) == 1)
+                if (IsLegacy(ActivePath))
                 {
-                    if (!TryMigrate(ActivePath, out _)) { WritesBlocked = true; return false; }
+                    if (!TryMigrate(ActivePath, out var expected)) { WritesBlocked = true; return false; }
+                    if (JsonUtility.ToJson(expected) != JsonUtility.ToJson(data))
+                    { WritesBlocked = true; LastError = "Legacy source changed or differs from migration; retained."; return false; }
                 }
                 else ActivePath = RecoveryPath(); // Damaged files remain byte-for-byte untouched.
             }
             string json = JsonUtility.ToJson(data, true);
+            if (Encoding.UTF8.GetByteCount(json) > MaxBytes) { LastError = "Save exceeds the existing 4 MB budget; original retained."; return false; }
             if (!SaveDataValidator.TryDecode(json, out _, out error)) { LastError = error; return false; }
             temporary = ActivePath + ".tmp-" + Guid.NewGuid().ToString("N");
             using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))

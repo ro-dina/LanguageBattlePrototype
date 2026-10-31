@@ -120,13 +120,13 @@ public class BattleManager : MonoBehaviour
 
     public bool SelectFuture(bool selected)
     {
-        if (!CanChoose || (selected && (Selection.Modal != BattleModal.None || battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
+        if (!CanChoose || (selected && (battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
         Selection.Select(BattleElementKind.Tense, selected ? "futur1" : null);
         RefreshSelectionUI(); return true;
     }
     public bool SelectMuessen(bool selected)
     {
-        if (!CanChoose || (selected && (Selection.Tense != BattleTense.Present || battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
+        if (!CanChoose || (selected && (battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
         Selection.Select(BattleElementKind.Modal, selected ? "muessen" : null);
         RefreshSelectionUI(); return true;
     }
@@ -147,11 +147,16 @@ public class BattleManager : MonoBehaviour
     }
     private string battleInstanceId;
     private bool ownsBattleLock;
+    private string rewardBattleId;
+    private bool resultTransitioned;
+    private BattleRewardRetryUI rewardRetryUI;
+    public string RewardBattleId => rewardBattleId;
     public string PlayerInstanceId => battleInstanceId;
     private void OnDestroy()
     {
         battleContext?.Cancel();
         if (ownsBattleLock) CharacterInstances.EndBattle(battleInstanceId);
+        HideRewardSaveFailure();
     }
 
 
@@ -219,7 +224,24 @@ public class BattleManager : MonoBehaviour
         {
             battleLogText.text = "Choose your skill!";
         }
+        BeginRewardTicket();
     }
+
+    private void BeginRewardTicket()
+    {
+        if (!BattleRewardService.Begin(enemyCharacterId,out rewardBattleId,out string error))
+        {
+            isProcessing = true; SetAdverbCardInteraction(false);
+            ShowRewardSaveFailure(error,BeginRewardTicket); return;
+        }
+        HideRewardSaveFailure(); isProcessing = false; SetAdverbCardInteraction(true); RefreshSelectionUI();
+    }
+    private void ShowRewardSaveFailure(string error,System.Action retry)
+    {
+        if (rewardRetryUI == null) rewardRetryUI = Instantiate(Resources.Load<GameObject>("UI/BattleRewardRetryUI")).GetComponent<BattleRewardRetryUI>();
+        rewardRetryUI.Bind(error,retry); rewardRetryUI.gameObject.SetActive(true);
+    }
+    private void HideRewardSaveFailure() { if (rewardRetryUI != null) { Destroy(rewardRetryUI.gameObject); rewardRetryUI = null; } }
 
     private void SetupCharacterEquipment()
     {
@@ -401,7 +423,13 @@ public class BattleManager : MonoBehaviour
     private bool CompleteBattle()
     {
         if (battleContext.Outcome == BattleOutcome.Ongoing) return false;
-        GameManager.IsWin = battleContext.Outcome == BattleOutcome.PlayerWin;
+        if (resultTransitioned) return true;
+        isProcessing = true; SetAdverbCardInteraction(false);
+        bool win = battleContext.Outcome == BattleOutcome.PlayerWin;
+        if (!BattleRewardService.Complete(rewardBattleId,win,out string error))
+        { ShowRewardSaveFailure(error,() => CompleteBattle()); return true; }
+        HideRewardSaveFailure(); resultTransitioned = true;
+        GameManager.IsWin = win;
         SceneManager.LoadScene("Result");
         return true;
     }
@@ -641,7 +669,8 @@ public class BattleManager : MonoBehaviour
 
         if (playerSprite == null)
         {
-            Debug.LogError($"Player sprite not found: Images/Characters/{playerCharacter.illustration}");
+            playerRenderer.sprite = null;
+            Debug.LogWarning($"Character artwork is not yet available: {playerCharacter.characterName}");
         }
         else
         {
@@ -651,7 +680,8 @@ public class BattleManager : MonoBehaviour
 
         if (enemySprite == null)
         {
-            Debug.LogError($"Enemy sprite not found: Images/Characters/{enemyCharacter.illustration}");
+            enemyRenderer.sprite = null;
+            Debug.LogWarning($"Character artwork is not yet available: {enemyCharacter.characterName}");
         }
         else
         {

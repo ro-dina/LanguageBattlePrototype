@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -84,7 +85,7 @@ public class BattleModifierTests
     [Test] public void MuessenDoublesOnceAndResetsForEachBattleWithoutChangingOrdinarySkills()
     {
         var battle = Battle(); var result = battle.Resolve(Action(modal: BattleModal.Muessen));
-        Assert.That(result.Damage, Is.EqualTo(40)); Assert.That(battle.MuessenUsed, Is.False);
+        Assert.That(result.Damage, Is.EqualTo(40)); Assert.That(battle.MuessenUsed, Is.True, "The accepted command spends the use before its presentation.");
         battle.Apply(result); Assert.That(battle.MuessenUsed, Is.True); EnemyTurn(battle);
         Assert.That(battle.Resolve(Action(modal: BattleModal.Muessen)).CanUse, Is.False);
         Assert.That(battle.Resolve(Action()).CanUse, Is.True);
@@ -139,5 +140,23 @@ public class BattleModifierTests
         selection.ClearModifiers(); Assert.That(snapshot.Elements[BattleElementKind.Modal], Is.EqualTo("muessen"));
         Assert.That(snapshot.Elements.ContainsKey(BattleElementKind.Adverb), Is.False);
         Assert.That(snapshot.History.Count, Is.EqualTo(7));
+    }
+    [Test] public void SwitchingModifiersClearsTheOldSelectionAndKeepsOrderedImmutableHistory()
+    {
+        var selection = new BattleSelection();
+        selection.Select(BattleElementKind.Tense,"futur1");
+        selection.Select(BattleElementKind.Modal,"muessen");
+        Assert.That(selection.Tense, Is.EqualTo(BattleTense.Present));
+        Assert.That(selection.Modal, Is.EqualTo(BattleModal.Muessen));
+        selection.Select(BattleElementKind.Tense,"futur1");
+        Assert.That(selection.Modal, Is.EqualTo(BattleModal.None));
+        var snapshot = selection.Commit("sein");
+        Assert.That(snapshot.History.Select(e => e.Order), Is.EqualTo(new[] {1,2,3,4,5,6}));
+        Assert.That(snapshot.History[1].Kind, Is.EqualTo(BattleElementKind.Tense));
+        Assert.That(snapshot.History[1].Change, Is.EqualTo(BattleSelectionChange.Cleared));
+        Assert.That(snapshot.History[1].PreviousId, Is.EqualTo("futur1"));
+        Assert.That(snapshot.History[3].Kind, Is.EqualTo(BattleElementKind.Modal));
+        Assert.That(snapshot.Elements.ContainsKey(BattleElementKind.Modal), Is.False);
+        selection.ClearModifiers(); Assert.That(snapshot.Elements[BattleElementKind.Tense], Is.EqualTo("futur1"));
     }
 }

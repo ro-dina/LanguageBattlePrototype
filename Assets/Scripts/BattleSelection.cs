@@ -44,6 +44,8 @@ public sealed class BattleSelection
     public void Select(BattleElementKind kind, string id)
     {
         if (string.IsNullOrEmpty(id)) id = null;
+        if (kind == BattleElementKind.Tense && id == "futur1") Select(BattleElementKind.Modal, null);
+        if (kind == BattleElementKind.Modal && id == "muessen") Select(BattleElementKind.Tense, null);
         string previous = Get(kind);
         if (previous == id) return;
         if (id == null) elements.Remove(kind); else elements[kind] = id;

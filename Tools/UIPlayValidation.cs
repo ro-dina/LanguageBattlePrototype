@@ -110,11 +110,11 @@ public sealed class UIPlayValidation : MonoBehaviour
 
     private IEnumerator Validate()
     {
-        CharacterInstances.Create("nacht");
+        RewardGrantService.Grant(new[] {new InventoryEntry("word_nacht",26),new InventoryEntry("word_wasser",37),new InventoryEntry("word_pistole",42)},out _);
         CharacterInstances.Create("hund"); CharacterInstances.Create("hund");
         var discoveredFire = CharacterInstances.Create("feuer"); CharacterInstances.Remove(discoveredFire.instanceId);
         foreach (var item in JsonUtility.FromJson<GachaItemDatabase>(Resources.Load<TextAsset>("Data/gacha_items").text).items)
-            InventoryManager.AddItem(item.id, 5);
+            if (WordCharacterRewards.Character(item.id) == null) InventoryManager.AddItem(item.id, 5);
 
         foreach (string scene in new[] { "GermanyHome", "StageSelect", "CharacterSelect", "CharacterCollection", "CharacterDetail", "Gacha", "Inventory", "Crafting", "Battle", "Result" })
         {
@@ -126,25 +126,27 @@ public sealed class UIPlayValidation : MonoBehaviour
             if (scene == "Crafting")
             {
                 var crafting = Find<CraftingUIManager>();
-                Call(crafting, "SelectMaterial", "word_wasser");
-                Call(crafting, "SelectMaterial", "word_pistole");
+                crafting.SelectCharacterInstance(CharacterInstances.GetByCharacterId("wasser")[0].instanceId);
+                crafting.SelectCharacterInstance(CharacterInstances.GetByCharacterId("pistole")[0].instanceId);
             }
+            var walletHUD = Find<CurrencyHUD>();
+            if (scene != "Battle" && scene != "Result")
+                Check(walletHUD != null && Field<TMP_Text>(walletHUD,"balanceText").text == EconomySettings.Price(CurrencyService.Balance),scene + " displays current saved currency");
             yield return RenderSizes(scene);
         }
 
+        GameManager.SelectedCharacterInstanceId = CharacterInstances.GetByCharacterId("nacht")[0].instanceId;
         yield return Load("CharacterSelect");
         var copies = CharacterInstances.GetByCharacterId("nacht");
         var select = Find<CharacterSelectManager>();
         var list = Field<Transform>(select, "characterButtonParent");
-        Check(list.GetComponentsInChildren<Button>().Length == CharacterInstances.GetAll().Count,
-            "Selection shows every owned instance rather than unique species");
-        Check(list.GetComponentsInChildren<Button>().Select(b => b.GetComponentInChildren<TMP_Text>().text).Distinct().Count() == CharacterInstances.GetAll().Count,
-            "Duplicate species have distinct short identity labels");
-        var scroll = list.GetComponentInParent<ScrollRect>();
-        if (scroll != null) scroll.verticalNormalizedPosition = 0;
-        yield return null; yield return null;
-        Click("CharacterButton_" + copies[1].instanceId);
+        Check(list.GetComponentsInChildren<Button>().Length == CharacterInstances.GetAll().Select(i => i.characterId).Distinct().Count(),
+            "Selection groups owned individuals by species");
+        Check(list.GetComponentsInChildren<Button>().Single(b => b.name == "CharacterButton_nacht").GetComponentInChildren<TMP_Text>().text == "Nacht ×" + CharacterInstances.Count("nacht"),
+            "Species row groups dozens of Nacht individuals");
+        Click("CharacterButton_nacht"); Click("NextInstanceButton");
         Check(GameManager.SelectedCharacterInstanceId == copies[1].instanceId, "Pointer selects the second Nacht identity");
+        Check(Field<TMP_Text>(select,"instancePositionText").text == "Individual 2 / " + copies.Count, "Ordinal identifies the second of three individuals");
         yield return RenderSizes("CharacterSelect-instanceB");
         Click("CharacterListButton"); yield return null; yield return null;
         var secondDetail = Find<CharacterDetailManager>();
@@ -155,6 +157,15 @@ public sealed class UIPlayValidation : MonoBehaviour
             string.IsNullOrEmpty(CharacterLoadoutStore.GetLoadout(copies[0].instanceId).adjectiveId),
             "Saving the second Nacht leaves the first Nacht equipment unchanged");
 
+        yield return Load("CharacterSelect");
+        Click("NextInstanceButton");
+        Check(GameManager.SelectedCharacterInstanceId == copies[2].instanceId, "Pointer selects the third Nacht");
+        yield return RenderSizes("CharacterSelect-instanceC");
+        GameManager.SelectedCharacterInstanceId = copies.Last().instanceId;
+        yield return Load("CharacterSelect");
+        Click("NextInstanceButton"); Check(GameManager.SelectedCharacterInstanceId == copies[0].instanceId, "Large individual list wraps to its first ID");
+        Click("PreviousInstanceButton"); Check(GameManager.SelectedCharacterInstanceId == copies.Last().instanceId, "Previous wraps to the last owned ID");
+
         yield return Load("Inventory");
         var inventory = Find<InventoryUIManager>();
         var content = Field<Transform>(inventory, "content");
@@ -162,34 +173,57 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return null;
         Check(content != null && content.parent.name == "Viewport", "Inventory content survives repeated refresh and remains below Viewport");
         Check(ActiveChildren(content) == InventoryManager.GetAllItems().Count, "Inventory repeated refresh has one row per item");
+        var inventoryLabels = content.GetComponentsInChildren<TMP_Text>().Where(t => t.name == "ItemNameText").Select(t => t.text).ToArray();
+        Check(inventoryLabels.Contains("ä") && inventoryLabels.Contains("ö") && inventoryLabels.Contains("ü") && inventoryLabels.Contains("ß") && !inventoryLabels.Any(t => t.StartsWith("letter_")), "Inventory displays German characters rather than internal IDs");
+        content.GetComponentInParent<ScrollRect>().verticalNormalizedPosition = 0; yield return null; yield return null;
+        yield return RenderSizes("Inventory-umlauts");
         Click("BackButton"); yield return null;
         Check(SceneManager.GetActiveScene().name == "GermanyHome", "Inventory Back returns home");
 
         yield return Load("Crafting");
         var craft = Find<CraftingUIManager>();
-        var materials = Field<Transform>(craft, "inventoryContent");
-        craft.RefreshInventory(); craft.RefreshInventory(); yield return null;
-        Check(materials.parent.name == "Viewport" && ActiveChildren(materials) == InventoryManager.GetAllItems().Count, "Crafting refresh preserves viewport and avoids duplicate rows");
-        int waterBefore = InventoryManager.GetItemCount("word_wasser");
-        int pistolBefore = InventoryManager.GetItemCount("word_pistole");
-        Call(craft, "SelectMaterial", "word_wasser"); Call(craft, "SelectMaterial", "word_pistole");
-        Click("ClearButton");
-        Check(Field<TMP_Text>(craft, "selectedMaterialText").text == "", "Clear empties selected crafting materials");
-        Call(craft, "SelectMaterial", "word_wasser"); Call(craft, "SelectMaterial", "word_pistole");
-        Click("CraftButton"); yield return null;
-        Check(InventoryManager.GetItemCount("word_wasser") == waterBefore - 1 && InventoryManager.GetItemCount("word_pistole") == pistolBefore - 1 && OwnedCharacters.IsCharacterOwned("wasserpistole"), "Craft consumes the original recipe and unlocks its character");
-
-        Call(craft, "SelectMaterial", "word_wasser"); Call(craft, "SelectMaterial", "word_pistole");
-        Click("CraftButton"); yield return null;
-        Check(CharacterInstances.Count("wasserpistole") == 2 &&
-            CharacterInstances.GetByCharacterId("wasserpistole").Select(i => i.instanceId).Distinct().Count() == 2,
-            "Repeated Wasserpistole crafting creates a second distinct instance");
+        var materials = Field<Transform>(craft,"inventoryContent");
+        craft.RefreshInventory(); craft.RefreshInventory(); yield return null; yield return null;
+        Check(materials.parent.name == "Viewport" && ActiveChildren(materials) == InventoryManager.GetAllItems().Count + CharacterInstances.GetAll().Select(i=>i.characterId).Distinct().Count(),
+            "Crafting lists materials and grouped characters without duplicate rows");
+        string water = CharacterInstances.GetByCharacterId("wasser")[1].instanceId;
+        string spareWater = CharacterInstances.GetByCharacterId("wasser")[0].instanceId;
+        string pistol = CharacterInstances.GetByCharacterId("pistole")[0].instanceId;
+        var waterGear = CharacterLoadoutStore.GetLoadout(water); waterGear.adjectiveId = "schwarz"; CharacterLoadoutStore.Commit(waterGear);
+        int waterBefore = CharacterInstances.Count("wasser"), pistolBefore = CharacterInstances.Count("pistole");
+        yield return null; yield return null;
+        materials.GetComponentInParent<ScrollRect>().verticalNormalizedPosition = 0; yield return null; yield return null;
+        Click("CraftCharacter_wasser"); yield return null; yield return null;
+        Click("CraftNextIndividual");
+        Check(Field<TMP_Text>(craft,"dialogTitle").text.Contains("2 / ") && Field<TMP_Text>(craft,"dialogDetails").text.Contains("schwarz"),
+            "Individual picker identifies the selected copy and its equipment");
+        yield return RenderSizes("Crafting-individual-picker");
+        Click("CraftDialogAccept"); yield return null; yield return null;
+        Click("CraftCharacter_pistole"); yield return null; yield return null; Click("CraftDialogAccept");
+        Check(Field<TMP_Text>(craft,"combinedWordText").text == "Wasserpistole" && Field<Button>(craft,"craftButton").interactable,
+            "Ordered character concatenation previews a dictionary match");
+        yield return RenderSizes("Crafting-dictionary-match");
+        Click("ClearButton"); Check(Field<TMP_Text>(craft,"selectedMaterialText").text == "", "Clear empties selected crafting elements");
+        craft.SelectCharacterInstance(water); craft.SelectCharacterInstance(pistol);
+        Click("CraftButton"); yield return null; yield return null;
+        Check(CharacterInstances.Owns(water) && CharacterInstances.Owns(pistol), "Opening confirmation consumes nothing");
+        yield return RenderSizes("Crafting-consumption-confirm");
+        Click("CraftDialogCancel"); Check(CharacterInstances.Owns(water), "Cancel retains the selected equipped individual");
+        Click("CraftButton"); yield return null; yield return null; Click("CraftDialogAccept"); yield return null; yield return null;
+        Check(!CharacterInstances.Owns(water) && !CharacterInstances.Owns(pistol) && CharacterInstances.Owns(spareWater) &&
+            CharacterInstances.Count("wasser") == waterBefore-1 && CharacterInstances.Count("pistole") == pistolBefore-1,
+            "Confirmed craft consumes only explicit individuals and retains their same-species siblings");
+        craft.SelectCharacterInstance(CharacterInstances.GetByCharacterId("wasser")[0].instanceId);
+        craft.SelectCharacterInstance(CharacterInstances.GetByCharacterId("pistole")[0].instanceId);
+        Click("CraftButton"); yield return null; yield return null; Click("CraftDialogAccept"); yield return null; yield return null;
+        Check(CharacterInstances.Count("wasserpistole") == 2 && CharacterInstances.GetByCharacterId("wasserpistole").Select(i=>i.instanceId).Distinct().Count()==2,
+            "Dictionary crafting creates a second distinct result");
         yield return RenderSizes("Crafting-repeat");
 
         yield return Load("CharacterCollection");
         var collection = Find<CharacterCollectionManager>();
         var collectionLabels = Field<Transform>(collection, "characterButtonParent").GetComponentsInChildren<Button>().Select(b => b.GetComponentInChildren<TMP_Text>().text).ToArray();
-        Check(collectionLabels.Contains("Nacht [Owned: 2]") && collectionLabels.Contains("Feuer [Discovered • 0 owned]") &&
+        Check(collectionLabels.Contains("Nacht [Owned: " + CharacterInstances.Count("nacht") + "]") && collectionLabels.Contains("Feuer [Discovered • 0 owned]") &&
             collectionLabels.Any(t => t.Contains("Undiscovered")), "Collection distinguishes owned, discovered-not-owned and undiscovered species");
         var search = Field<TMP_InputField>(collection, "searchInputField");
         search.text = "nacht"; yield return null;
@@ -230,13 +264,17 @@ public sealed class UIPlayValidation : MonoBehaviour
         Click("back");
         Check(!Field<GameObject>(Find<BattleManager>(), "skillPanel").activeSelf, "Back closes skill commands");
         Click("FutureButton");
-        Check(Find<BattleManager>().Selection.Tense == BattleTense.Future && !ButtonNamed("MuessenButton").interactable,
-            "Future selection disables müssen");
+        Check(Find<BattleManager>().Selection.Tense == BattleTense.Future && ButtonNamed("MuessenButton").interactable,
+            "Future selection leaves müssen available for switching");
         yield return RenderSizes("Battle-future-selected");
-        Click("NoTenseButton"); Click("MuessenButton");
-        Check(Find<BattleManager>().Selection.Modal == BattleModal.Muessen && !ButtonNamed("FutureButton").interactable,
-            "Müssen selection disables future");
+        Click("FutureButton"); Check(Find<BattleManager>().Selection.Tense == BattleTense.Present, "Second future click switches it off");
+        Click("FutureButton"); Click("MuessenButton");
+        Check(Find<BattleManager>().Selection.Modal == BattleModal.Muessen && Find<BattleManager>().Selection.Tense == BattleTense.Present && ButtonNamed("FutureButton").interactable,
+            "Müssen switches future off while leaving future available");
         yield return RenderSizes("Battle-muessen-selected");
+        Click("MuessenButton"); Check(Find<BattleManager>().Selection.Modal == BattleModal.None && !Find<BattleManager>().Context.MuessenUsed, "Second müssen click switches it off without spending the use");
+        Click("MuessenButton"); Click("FutureButton");
+        Check(Find<BattleManager>().Selection.Tense == BattleTense.Future && Find<BattleManager>().Selection.Modal == BattleModal.None, "Future switches müssen off");
         Click("ClearModifiersButton");
         Check(Find<BattleManager>().Selection.Tense == BattleTense.Present && Find<BattleManager>().Selection.Modal == BattleModal.None,
             "Clear modifiers restores an ordinary skill command");
@@ -276,6 +314,116 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return null;
         yield return Load("CharacterDetail");
         Check(GameDatabase.Instance != null && Field<CharacterData>(Find<CharacterDetailManager>(), "character") != null, "CharacterDetail can start directly with its scene database");
+        yield return Load("GermanyHome");
+        var money = Find<CurrencyHUD>(); long balanceBefore = CurrencyService.Balance;
+        Click("CoinsPlusButton"); yield return RenderSizes("Currency-add-dialog");
+        Click("AddCoins0"); Check(CurrencyService.Balance == balanceBefore+100,"Development +100 commits once");
+        Check(!money.AddDevelopmentCoins(0),"Immediate duplicate development click is ignored");
+        yield return new WaitForSecondsRealtime(.3f); Click("AddCoins1");
+        yield return new WaitForSecondsRealtime(.3f); Click("AddCoins2");
+        Check(CurrencyService.Balance == balanceBefore+11100,"Development grants all use the shared wallet");
+        Click("CloseCoinDialog"); PlayerSaveService.Instance.Reload();
+        Check(Field<TMP_Text>(money,"balanceText").text == EconomySettings.Price(CurrencyService.Balance),"Currency survives reload and is formatted");
+        CurrencyService.TryAdd(long.MaxValue-CurrencyService.Balance,out _);
+        yield return RenderSizes("Currency-long-balance");
+        CurrencyService.TrySpend(CurrencyService.Balance,out _);
+        yield return Load("Gacha");
+        Check(!ButtonNamed("PullButton").interactable && !ButtonNamed("PullTenButton").interactable,"Insufficient funds disable both gacha commands");
+        Check(Field<TMP_Text>(Find<GachaManager>(),"costText").text.Contains("Not enough Coins"),"Gacha explains insufficient currency");
+        yield return RenderSizes("Gacha-insufficient");
+        yield return Load("Crafting");
+        var paidCraft = Find<CraftingUIManager>();
+        foreach (string id in new[] {"letter_f","letter_e","letter_u","letter_e","letter_r"}) Call(paidCraft,"SelectMaterial",id);
+        Check(!Field<Button>(paidCraft,"craftButton").interactable && Field<TMP_Text>(paidCraft,"resultText").text.Contains("Not enough Coins"),"Dictionary match with no funds is disabled and explained");
+        yield return RenderSizes("Crafting-insufficient");
+        CurrencyService.TryAdd(200,out _); Click("CraftButton"); yield return null; yield return null;
+        Check(Field<TMP_Text>(paidCraft,"dialogDetails").text.Contains("Cost: 200 Coins"),"Letter-only crafting confirms currency cost");
+        yield return RenderSizes("Crafting-coin-confirm");
+        Click("CraftDialogCancel"); Check(CurrencyService.Balance == 200,"Cancel spends no coins");
+        Click("CraftButton"); yield return null; yield return null;
+        CurrencyService.TrySpend(100,out _);
+        Check(!ButtonNamed("CraftDialogAccept").interactable && Field<TMP_Text>(paidCraft,"dialogDetails").text.Contains("Current: 100 Coins"),"Open confirmation rechecks and refreshes balance");
+        yield return RenderSizes("Crafting-funds-changed");
+        int paidFireBefore = CharacterInstances.Count("feuer");
+        CurrencyService.TryAdd(100,out _); Click("CraftDialogAccept"); yield return null; yield return null;
+        Check(CurrencyService.Balance == 0 && CharacterInstances.Count("feuer") == paidFireBefore+1,"Confirmed letter-only craft atomically spends 200 and creates its character");
+        yield return RenderSizes("Crafting-coins-spent");
+
+        // Phase 10.1: real saved receipts drive Result; rendering never grants rewards.
+        yield return Load("GermanyHome");
+        long priorCoins=CurrencyService.Balance;int dropIndex=0;
+        Check(BattleRewardService.Begin("feuer",out string dropBattle,out _),"Victory reward ticket saved");
+        Check(BattleRewardService.Complete(dropBattle,true,out _,()=>++dropIndex==4?.9:0),"Coins and separated runs committed");
+        Check(CurrencyService.Balance==priorCoins+100 && InventoryManager.GetItemCount(DynamicMaterials.Id("Feu"))>=1,"Victory grants 100 and Feu material");
+        yield return Load("Result");
+        Check(Find<ResultManager>().RewardSummary.Contains("Coins +100") && Find<ResultManager>().RewardSummary.Contains("Feu ×1") && Find<ResultManager>().RewardSummary.Contains("r ×1"),"Result displays saved partial drops");
+        yield return RenderSizes("Result-material-rewards");
+        string receiptSnapshot=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());
+        yield return Load("Result");
+        Check(JsonUtility.ToJson(PlayerSaveService.Instance.Capture())==receiptSnapshot,"Reopening Result cannot grant again");
+        Check(BattleRewardService.Begin("feuer",out string fullBattle,out _) && BattleRewardService.Complete(fullBattle,true,out _,()=>0),"All-success character granted with currency");
+        yield return Load("Result");
+        Check(Find<ResultManager>().RewardSummary.Contains("Character obtained!") && !Find<ResultManager>().RewardSummary.Contains("Materials"),"All-success result omits material section");
+        yield return RenderSizes("Result-character-reward");
+        Check(BattleRewardService.Begin("feuer",out string loseBattle,out _) && BattleRewardService.Complete(loseBattle,false,out _),"Defeat receipt saved without rewards");
+        yield return Load("Result");
+        Check(Find<ResultManager>().RewardSummary=="" && !Field<GameObject>(Find<ResultManager>(),"rewardPanel").activeSelf,"Defeat hides all victory rewards");
+        yield return RenderSizes("Result-defeat");
+        Check(!BattleRewardService.Complete(fullBattle,true,out _),"Replaced battle ticket cannot be claimed again");
+        InventoryManager.AddText("Feu",2,out _);InventoryManager.AddText("er",1,out _);
+        for(int n=0;n<28;n++)InventoryManager.AddText(new string((char)('a'+n%26),110)+(n<26?"ä":"ß"),1,out _);
+        yield return Load("Inventory");
+        Check(Find<InventoryUIManager>()!=null && Object.FindObjectsByType<TMP_Text>().Any(t=>t.text=="Feu"),"Dynamic material names appear alongside fixed items");
+        yield return RenderSizes("Inventory-dynamic-long-materials");
+        yield return ScrollToLongMaterial();yield return RenderSizes("Inventory-long-material-row");
+        yield return Load("Crafting");
+        var dynamicCraft=Find<CraftingUIManager>();
+        Call(dynamicCraft,"SelectMaterial",DynamicMaterials.Id("Feu"));Call(dynamicCraft,"SelectMaterial",DynamicMaterials.Id("er"));
+        Check(Field<TMP_Text>(dynamicCraft,"combinedWordText").text=="Feuer","Dynamic Feu plus er matches Feuer");
+        yield return RenderSizes("Crafting-dynamic-materials");
+        yield return ScrollToLongMaterial();yield return RenderSizes("Crafting-long-material-row");
+        Click("CraftButton");yield return null;yield return null;
+        Check(Field<TMP_Text>(dynamicCraft,"dialogDetails").text.Contains("Cost: 200 Coins"),"Dynamic crafting shows the unchanged cost");
+        yield return RenderSizes("Crafting-dynamic-confirm");
+        Click("CraftDialogCancel");Check(CurrencyService.Balance==200,"Cancel dynamic craft preserves coins");
+        Click("CraftButton");yield return null;yield return null;int fireBefore=CharacterInstances.Count("feuer");Click("CraftDialogAccept");yield return null;yield return null;
+        Check(CurrencyService.Balance==0 && CharacterInstances.Count("feuer")==fireBefore+1,"Dynamic materials craft a new individual and spend 200");
+        yield return Load("CharacterSelect");yield return RenderSizes("CharacterSelect-dropped-character");
+        yield return Load("CharacterCollection");yield return RenderSizes("CharacterCollection-dropped-character");
+        // Stress only the isolated receipt display: long text must scroll above the old navigation controls.
+        BattleRewardService.Begin("feuer",out string manyBattle,out _);BattleRewardService.Complete(manyBattle,true,out _,()=>.9);
+        Check(PlayerStateTransactions.TryChange(data=>{var receipt=data.battleRewards.latest;for(int n=0;n<28;n++)receipt.materials.Add(DynamicMaterials.Entry(new string((char)('a'+n%26),110)+(n<26?"ä":"ß")));return true;},out _),"Long receipt fixture committed in isolated test profile");
+        yield return Load("Result");
+        var rewardScroll=GameObject.Find("BattleRewardScroll").GetComponent<ScrollRect>();
+        yield return RenderSizes("Result-many-long-rewards");
+        Check(rewardScroll.content.rect.height>rewardScroll.viewport.rect.height,"Many long rewards have scrollable content");
+        rewardScroll.verticalNormalizedPosition=0;yield return RenderSizes("Result-many-long-rewards-bottom");
+        yield return Load("Battle");
+        var rewardBattle=Find<BattleManager>();typeof(BattleCombatant).GetProperty("HP").SetValue(rewardBattle.Context.Enemy,1);
+        string testDirectory=Path.GetDirectoryName(PlayerSaveService.Instance.Files.MainPath);
+        string movedDirectory=testDirectory+"-held";
+        Directory.Move(testDirectory,movedDirectory);File.WriteAllText(testDirectory,"blocked for save retry validation");
+        rewardBattle.UseSkill1();deadline=Time.realtimeSinceStartup+20;
+        while(Find<BattleRewardRetryUI>()==null && Time.realtimeSinceStartup<deadline)yield return null;
+        Check(Find<BattleRewardRetryUI>()!=null && SceneManager.GetActiveScene().name=="Battle" && !rewardBattle.CanChoose,"Failed reward save blocks Result transition and actions");
+        yield return RenderSizes("Battle-reward-save-retry");
+        File.Delete(testDirectory);Directory.Move(movedDirectory,testDirectory);
+        Click("RetryRewardSaveButton");yield return null;yield return null;
+        Check(SceneManager.GetActiveScene().name=="Result" && Find<ResultManager>().RewardSummary.Contains("Coins +100"),"Retry saves rewards then displays Result");
+
+    }
+
+    private IEnumerator ScrollToLongMaterial()
+    {
+        Canvas.ForceUpdateCanvases();
+        var label=Object.FindObjectsByType<TMP_Text>().First(t=>t.name=="ItemNameText" && t.text.Length>100);
+        var scroll=label.GetComponentInParent<ScrollRect>();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);Canvas.ForceUpdateCanvases();scroll.StopMovement();
+        var bounds=RectTransformUtility.CalculateRelativeRectTransformBounds(scroll.viewport,label.transform.parent);
+        var position=scroll.content.anchoredPosition;
+        position.y=Mathf.Clamp(position.y+scroll.viewport.rect.yMax-8-bounds.max.y,0,Mathf.Max(0,scroll.content.rect.height-scroll.viewport.rect.height));scroll.content.anchoredPosition=position;
+        yield return null;yield return null;Canvas.ForceUpdateCanvases();label.ForceMeshUpdate();
+        Check(!label.isTextOverflowing,"Long dynamic row wraps without truncating the label");
     }
 
     private IEnumerator RenderSizes(string label)
@@ -319,7 +467,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         if (detailView != null)
         {
             var identityText = Field<TMP_Text>(detailView, "characterInfoText");
-            Check(identityText.text.Contains("Instance: ") || identityText.text.Contains("read only"), context + " identifies instance or read-only species");
+            Check(identityText.text.Contains("Individual ") || identityText.text.Contains("read only"), context + " identifies instance or read-only species");
             Check(!identityText.isTextOverflowing, context + " identity and stats are not truncated");
         }
         foreach (var button in Object.FindObjectsByType<Button>())
@@ -332,6 +480,41 @@ public sealed class UIPlayValidation : MonoBehaviour
             var points = corners.Select(camera.WorldToViewportPoint).ToArray();
             Check(points.All(p => p.x >= -.002 && p.x <= 1.002 && p.y >= -.002 && p.y <= 1.002), context + " button inside screen: " + button.name);
             Check(rect.rect.height >= 64, context + " button hit height >=64: " + button.name);
+        }
+        foreach (var button in Object.FindObjectsByType<Button>().Where(b => b.interactable &&
+            (b.name == "NextInstanceButton" || b.name == "PreviousInstanceButton" || b.name == "FutureButton" || b.name == "MuessenButton" || b.name.StartsWith("CraftDialog") || b.name == "CraftNextIndividual" || b.name == "CraftPreviousIndividual" || b.name == "RetryRewardSaveButton" || b.name.StartsWith("AddCoins") || b.name == "CloseCoinDialog" ||
+             (b.name == "CoinsPlusButton" && (Find<CurrencyHUD>() == null || !Field<GameObject>(Find<CurrencyHUD>(),"additionDialog").activeSelf)))))
+        {
+            var rect = (RectTransform)button.transform;
+            var pointer = new PointerEventData(EventSystem.current) { position = RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center)) };
+            var hits = new List<RaycastResult>(); EventSystem.current.RaycastAll(pointer,hits);
+            Check(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button, context + " pointer reaches " + button.name);
+        }
+        var resultView = Find<ResultManager>();
+        if(resultView != null && Field<GameObject>(resultView,"rewardPanel").activeSelf)
+        {
+            var viewport = Field<GameObject>(resultView,"rewardPanel").GetComponent<ScrollRect>();
+            Check(viewport.content.rect.width > 0 && viewport.content.rect.height > 0,context + " reward text has a readable layout");
+            foreach(var nav in Object.FindObjectsByType<Button>())
+            {
+                var pointer = new PointerEventData(EventSystem.current) { position=RectTransformUtility.WorldToScreenPoint(camera,((RectTransform)nav.transform).TransformPoint(((RectTransform)nav.transform).rect.center)) };
+                var hits = new List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);
+                Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()==nav,context + " rewards leave navigation clickable " + nav.name);
+            }
+        }
+        var currencyHUD = Find<CurrencyHUD>();
+        if (currencyHUD != null)
+        {
+            var value = Field<TMP_Text>(currencyHUD,"balanceText");
+            Check(value.text == EconomySettings.Price(CurrencyService.Balance),context + " current coin balance");
+            Check(!value.isTextOverflowing,context + " coin amount fits including long values");
+        }
+        var selectView = Find<CharacterSelectManager>();
+        if (selectView != null)
+        {
+            var preview = Field<TMP_Text>(selectView,"selectedCharacterText");
+            Check(!preview.isTextOverflowing, context + " individual equipment and stats fit");
+            Check(!Field<TMP_Text>(selectView,"instancePositionText").isTextOverflowing, context + " individual ordinal fits");
         }
         foreach (var scroll in Object.FindObjectsByType<ScrollRect>())
         {

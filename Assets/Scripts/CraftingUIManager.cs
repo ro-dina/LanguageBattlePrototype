@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,346 +7,171 @@ using UnityEngine.UI;
 
 public class CraftingUIManager : MonoBehaviour
 {
-    private const string GachaItemResourcePath = "Data/gacha_items";
-
     [SerializeField] private Transform inventoryContent;
     [SerializeField] private GameObject craftingMaterialPrefab;
     [SerializeField] private TMP_Text selectedMaterialText;
     [SerializeField] private TMP_Text combinedWordText;
     [SerializeField] private TMP_Text resultText;
     [SerializeField] private Button craftButton;
+    [Header("Individual selection and consumption confirmation")]
+    [SerializeField] private GameObject characterDialog;
+    [SerializeField] private TMP_Text dialogTitle;
+    [SerializeField] private TMP_Text dialogDetails;
+    [SerializeField] private Button dialogPrevious;
+    [SerializeField] private Button dialogNext;
+    [SerializeField] private Button dialogAccept;
+    [SerializeField] private Button dialogCancel;
 
-    private readonly List<string> selectedMaterialIds = new List<string>();
-    private readonly Dictionary<string, string> displayNames =
-        new Dictionary<string, string>(StringComparer.Ordinal);
+    private readonly List<CraftingElement> selection = new List<CraftingElement>();
     private readonly List<GameObject> spawnedMaterialObjects = new List<GameObject>();
-
+    private string pickerInstanceId;
+    private CraftingElement[] pendingCraft;
+    private bool started;
+    private PlayerOperation pendingOperation;
+    private bool crafting;
+    private void OnEnable() { PlayerStateChanges.Changed += OnOwnershipChanged; CurrencyService.BalanceChanged += OnBalanceChanged; }
+    private void OnDisable() { PlayerStateChanges.Changed -= OnOwnershipChanged; CurrencyService.BalanceChanged -= OnBalanceChanged; }
+    private void OnBalanceChanged(long _) { if (started) { UpdateSelectionTexts(); RefreshConfirmationAvailability(); } }
+    private void RefreshConfirmationAvailability()
+    {
+        if (pendingCraft == null || !characterDialog.activeSelf) return;
+        var result = CraftingManager.Preview(pendingCraft);
+        dialogTitle.text = result == null ? "Inputs unavailable" : "Craft " + result.characterName + "?";
+        var individuals = pendingCraft.Where(e => e.Kind == CraftingElementKind.CharacterInstance).ToArray();
+        dialogDetails.text = (individuals.Length == 0 ? "" : string.Join("\n\n",individuals.Select(e => Describe(e.Id))) +
+            "\n\nThese individuals and their equipment will be removed.\n") +
+            "Materials: " + string.Join(" + ",pendingCraft.Where(e => e.Kind == CraftingElementKind.Material).Select(e => ItemDisplayNames.Get(e.Id))) +
+            "\nCost: " + EconomySettings.Price(EconomySettings.Current.craftingCost) +
+            "\nCurrent: " + EconomySettings.Price(CurrencyService.Balance) +
+            "\nResult: " + (result?.characterName ?? "unavailable") + " • new individual, initial equipment";
+        dialogAccept.interactable = CraftingManager.CanCraft(pendingCraft);
+        if (!CurrencyService.CanSpend(EconomySettings.Current.craftingCost)) dialogDetails.text += "\nNot enough " + EconomySettings.Current.currencyDisplayName + ".";
+    }
+    private void OnOwnershipChanged()
+    {
+        if (!started) return;
+        RefreshInventory(); UpdateSelectionTexts();
+        if (characterDialog.activeSelf && pendingCraft == null) RefreshPicker();
+        RefreshConfirmationAvailability();
+    }
     private void Start()
     {
-        LoadDisplayNames();
-        selectedMaterialIds.Clear();
-        UpdateSelectionTexts();
-        SetResultText(string.Empty);
-        RefreshInventory();
-
-        if (craftButton == null)
-        {
-            Debug.LogWarning("Craft Button is not assigned in CraftingUIManager.");
-        }
+        started = true;
+        dialogPrevious.onClick.AddListener(() => CyclePicker(-1));
+        dialogNext.onClick.AddListener(() => CyclePicker(1));
+        dialogAccept.onClick.AddListener(AcceptDialog);
+        dialogCancel.onClick.AddListener(CancelDialog);
+        characterDialog.SetActive(false);
+        RefreshInventory(); UpdateSelectionTexts();
     }
-
     public void RefreshInventory()
     {
-        ClearSpawnedMaterialObjects();
-
-        if (inventoryContent == null)
+        foreach (var row in spawnedMaterialObjects) { if (row != null) { row.SetActive(false); Destroy(row); } }
+        spawnedMaterialObjects.Clear();
+        foreach (var entry in InventoryManager.GetAllItems())
         {
-            Debug.LogError(
-                "Inventory Content is not assigned in CraftingUIManager. " +
-                "Assign InventoryScrollView/Viewport/Content.");
-            return;
+            string id = entry.itemId;
+            AddRow("Material_" + id,"[Material] " + ItemDisplayNames.Get(id),"×" + entry.count,() => SelectMaterial(id));
         }
-
-        if (craftingMaterialPrefab == null)
+        foreach (var group in CharacterInstances.GetAll().GroupBy(i => i.characterId).OrderBy(g => GameDatabase.Instance.GetCharacter(g.Key).characterName))
         {
-            Debug.LogError("Crafting Material Prefab is not assigned in CraftingUIManager.");
-            return;
-        }
-
-        List<InventoryEntry> inventoryItems = InventoryManager.GetAllItems();
-        foreach (InventoryEntry entry in inventoryItems)
-        {
-            if (entry == null || string.IsNullOrWhiteSpace(entry.itemId) || entry.count <= 0)
-            {
-                continue;
-            }
-
-            GameObject materialObject = Instantiate(craftingMaterialPrefab, inventoryContent);
-            materialObject.SetActive(true);
-            spawnedMaterialObjects.Add(materialObject);
-
-            TMP_Text itemNameText = FindChildText(materialObject, "ItemNameText");
-            TMP_Text itemCountText = FindChildText(materialObject, "ItemCountText");
-
-            if (itemNameText != null)
-            {
-                itemNameText.text = GetDisplayName(entry.itemId);
-            }
-            else
-            {
-                Debug.LogError(
-                    $"ItemNameText was not found in CraftingMaterialPrefab for {entry.itemId}.");
-            }
-
-            if (itemCountText != null)
-            {
-                itemCountText.text = $"×{entry.count}";
-            }
-            else
-            {
-                Debug.LogError(
-                    $"ItemCountText was not found in CraftingMaterialPrefab for {entry.itemId}.");
-            }
-
-            Button materialButton = materialObject.GetComponent<Button>();
-            if (materialButton == null)
-            {
-                materialButton = materialObject.AddComponent<Button>();
-                materialButton.targetGraphic = materialObject.GetComponent<Graphic>();
-                Debug.LogWarning(
-                    $"Button was missing on CraftingMaterialPrefab for {entry.itemId}; " +
-                    "a runtime Button was added.");
-            }
-
-            string selectedItemId = entry.itemId;
-            materialButton.onClick = new Button.ButtonClickedEvent();
-            materialButton.onClick.AddListener(() => SelectMaterial(selectedItemId));
+            string id = group.Key;
+            AddRow("CraftCharacter_" + id,"[Character] " + GameDatabase.Instance.GetCharacter(id).characterName,"×" + group.Count(),() => OpenIndividualPicker(id));
         }
     }
-
-    public void ClearSelection()
+    private void AddRow(string name,string label,string count,UnityEngine.Events.UnityAction click)
     {
-        selectedMaterialIds.Clear();
-        UpdateSelectionTexts();
-        SetResultText(string.Empty);
+        var row = Instantiate(craftingMaterialPrefab,inventoryContent); row.name = name; row.SetActive(true);
+        spawnedMaterialObjects.Add(row);
+        FindChildText(row,"ItemNameText").text = label; FindChildText(row,"ItemCountText").text = count;
+        if (name.StartsWith("Material_" + DynamicMaterials.Prefix,System.StringComparison.Ordinal)) MaterialRowLayout.Configure(row,FindChildText(row,"ItemNameText"));
+        var button = row.GetComponent<Button>(); button.onClick = new Button.ButtonClickedEvent(); button.onClick.AddListener(click);
     }
-
-    public void CraftSelectedMaterials()
-    {
-        if (selectedMaterialIds.Count == 0)
-        {
-            SetResultText("Select materials.");
-            return;
-        }
-
-        CraftingRecipeData matchingRecipe = FindMatchingRecipe();
-        if (matchingRecipe == null)
-        {
-            SetResultText("No matching recipe.");
-            return;
-        }
-
-        if (!CraftingManager.CanCraft(matchingRecipe))
-        {
-            SetResultText("Not enough materials.");
-            return;
-        }
-
-        if (!CraftingManager.Craft(matchingRecipe))
-        {
-            SetResultText("Not enough materials.");
-            return;
-        }
-
-        string craftedResultId = matchingRecipe.resultId;
-        selectedMaterialIds.Clear();
-        UpdateSelectionTexts();
-        SetResultText($"Crafted: {craftedResultId}" + (matchingRecipe.resultType == "character" ? "\nOwned: " + CharacterInstances.Count(craftedResultId) : ""));
-        RefreshInventory();
-    }
-
-    public void BackHome()
-    {
-        SceneManager.LoadScene("GermanyHome");
-    }
-
     private void SelectMaterial(string itemId)
     {
-        if (string.IsNullOrWhiteSpace(itemId))
-        {
-            return;
-        }
-
-        int selectedCount = 0;
-        foreach (string selectedId in selectedMaterialIds)
-        {
-            if (string.Equals(selectedId, itemId, StringComparison.Ordinal))
-            {
-                selectedCount++;
-            }
-        }
-
-        if (selectedCount >= InventoryManager.GetItemCount(itemId))
-        {
-            SetResultText("Not enough materials.");
-            return;
-        }
-
-        selectedMaterialIds.Add(itemId);
-        UpdateSelectionTexts();
-        SetResultText(string.Empty);
+        if (WordCharacterRewards.Character(itemId) != null || WordCharacterRewards.Ambiguous(itemId) ||
+            selection.Count(e => e.Kind == CraftingElementKind.Material && e.Id == itemId) >= InventoryManager.GetItemCount(itemId)) return;
+        selection.Add(CraftingElement.Material(itemId)); UpdateSelectionTexts();
     }
-
-    private CraftingRecipeData FindMatchingRecipe()
+    public void SelectCharacterInstance(string instanceId)
     {
-        CraftingRecipeData[] recipes = CraftingManager.GetAllRecipes();
-        foreach (CraftingRecipeData recipe in recipes)
-        {
-            if (RecipeInputOrderMatches(recipe))
-            {
-                return recipe;
-            }
-        }
-
-        return null;
+        if (!CharacterInstances.CanConsume(instanceId) || selection.Any(e => e.Kind == CraftingElementKind.CharacterInstance && e.Id == instanceId)) return;
+        selection.Add(CraftingElement.Character(instanceId)); UpdateSelectionTexts();
     }
-
-    private bool RecipeInputOrderMatches(CraftingRecipeData recipe)
+    public void UndoLast()
+    { if (selection.Count > 0) selection.RemoveAt(selection.Count-1); UpdateSelectionTexts(); }
+    public void ClearSelection() { CancelDialog(); selection.Clear(); UpdateSelectionTexts(); }
+    private static string Describe(string instanceId)
     {
-        if (recipe == null || recipe.inputs == null)
-        {
-            return false;
-        }
-
-        int selectedIndex = 0;
-        foreach (CraftingInputData input in recipe.inputs)
-        {
-            if (input == null || string.IsNullOrWhiteSpace(input.itemId) || input.count <= 0)
-            {
-                return false;
-            }
-
-            for (int occurrence = 0; occurrence < input.count; occurrence++)
-            {
-                if (selectedIndex >= selectedMaterialIds.Count ||
-                    !string.Equals(
-                        selectedMaterialIds[selectedIndex],
-                        input.itemId,
-                        StringComparison.Ordinal))
-                {
-                    return false;
-                }
-
-                selectedIndex++;
-            }
-        }
-
-        return selectedIndex == selectedMaterialIds.Count;
+        var instance = CharacterInstances.Get(instanceId);
+        if (instance == null) return "Unavailable individual";
+        var loadout = CharacterLoadoutStore.GetLoadout(instanceId);
+        string adjective = string.IsNullOrEmpty(loadout.adjectiveId) ? "none" : GameDatabase.Instance.GetEquipment(loadout.adjectiveId).equipmentName;
+        string article = string.IsNullOrEmpty(loadout.articleId) ? "default" : GameDatabase.Instance.GetEquipment(loadout.articleId).equipmentName;
+        string skills = string.Join(", ",loadout.skillSlots.Select(s => GameDatabase.Instance.GetSkill(s.skillId).skillName +
+            (string.IsNullOrEmpty(s.equippedAdverbId) ? "" : " + " + GameDatabase.Instance.GetEquipment(s.equippedAdverbId).equipmentName)));
+        return CharacterInstances.DisplayName(instanceId) + $"\nAdjective: {adjective} | Article: {article}\nSkills: {skills}";
     }
-
+    public void OpenIndividualPicker(string characterId)
+    {
+        var individuals = CharacterInstances.GetByCharacterId(characterId);
+        if (individuals.Count == 0) return;
+        pendingCraft = null; pickerInstanceId = individuals[0].instanceId; characterDialog.SetActive(true); RefreshPicker();
+    }
+    private void CyclePicker(int step)
+    {
+        var current = CharacterInstances.Get(pickerInstanceId); if (current == null || pendingCraft != null) return;
+        var list = CharacterInstances.GetByCharacterId(current.characterId);
+        int index = list.FindIndex(i => i.instanceId == pickerInstanceId);
+        pickerInstanceId = list[(index + step + list.Count) % list.Count].instanceId; RefreshPicker();
+    }
+    private void RefreshPicker()
+    {
+        var current = CharacterInstances.Get(pickerInstanceId);
+        dialogTitle.text = current == null ? "Individual unavailable" : "Choose an individual • " + CharacterInstances.DisplayBadge(pickerInstanceId);
+        dialogDetails.text = Describe(pickerInstanceId) + "\n\nAdding it selects this individual for consumption.\nYou will confirm before crafting.";
+        dialogPrevious.gameObject.SetActive(true); dialogNext.gameObject.SetActive(true);
+        dialogPrevious.interactable = dialogNext.interactable = current != null && CharacterInstances.Count(current.characterId) > 1;
+        dialogAccept.interactable = CharacterInstances.CanConsume(pickerInstanceId) && !selection.Any(e => e.Kind == CraftingElementKind.CharacterInstance && e.Id == pickerInstanceId);
+        dialogAccept.GetComponentInChildren<TMP_Text>().text = "Add individual";
+    }
+    public void CraftSelectedMaterials()
+    {
+        if (crafting || characterDialog.activeSelf) return;
+        if (!CraftingManager.CanCraft(selection))
+        { SetResultText(CurrencyService.CanSpend(EconomySettings.Current.craftingCost) ? "No matching character, or inputs unavailable." : "Not enough " + EconomySettings.Current.currencyDisplayName + ". Need " + EconomySettings.Price(EconomySettings.Current.craftingCost)); return; }
+        pendingCraft = selection.ToArray(); pendingOperation = new PlayerOperation(); characterDialog.SetActive(true);
+        RefreshConfirmationAvailability();
+        dialogPrevious.gameObject.SetActive(false); dialogNext.gameObject.SetActive(false);
+        dialogAccept.GetComponentInChildren<TMP_Text>().text = "Craft & consume";
+    }
+    public void AcceptDialog()
+    {
+        if (!characterDialog.activeSelf) return;
+        if (pendingCraft != null) { var inputs = pendingCraft; var operation = pendingOperation; CancelDialog(); ExecuteCraft(inputs,operation); }
+        else if (dialogAccept.interactable) { SelectCharacterInstance(pickerInstanceId); CancelDialog(); }
+    }
+    public void CancelDialog() { characterDialog.SetActive(false); pendingCraft = null; pendingOperation = null; pickerInstanceId = null; }
+    private void ExecuteCraft(CraftingElement[] inputs,PlayerOperation operation)
+    {
+        if (crafting) return;
+        crafting = true;
+        bool success = CraftingManager.TryCraft(inputs,out var created,out string error,operation);
+        crafting = false;
+        if (!success) { UpdateSelectionTexts(); SetResultText("Craft failed; nothing consumed. " + error); return; }
+        selection.Clear(); UpdateSelectionTexts(); RefreshInventory();
+        SetResultText("Crafted: " + GameDatabase.Instance.GetCharacter(created.characterId).characterName + "\nOwned: " + CharacterInstances.Count(created.characterId));
+    }
     private void UpdateSelectionTexts()
     {
-        List<string> selectedDisplayNames = new List<string>(selectedMaterialIds.Count);
-        List<string> combinedParts = new List<string>(selectedMaterialIds.Count);
-
-        foreach (string itemId in selectedMaterialIds)
-        {
-            string displayName = GetDisplayName(itemId);
-            selectedDisplayNames.Add(displayName);
-            combinedParts.Add(RemoveDisplayHyphens(displayName));
-        }
-
-        if (selectedMaterialText != null)
-        {
-            selectedMaterialText.text = string.Join(" + ", selectedDisplayNames);
-        }
-
-        if (combinedWordText != null)
-        {
-            combinedWordText.text = string.Concat(combinedParts);
-        }
+        selectedMaterialText.text = string.Join(" + ",selection.Select(e => e.Kind == CraftingElementKind.Material ? ItemDisplayNames.Get(e.Id) : CharacterInstances.DisplayName(e.Id)));
+        var character = CraftingManager.Preview(selection);
+        combinedWordText.text = character?.characterName ?? CraftingManager.CombinedWord(selection) ?? "";
+        craftButton.interactable = CraftingManager.CanCraft(selection);
+        SetResultText(selection.Count == 0 ? "Select materials or individuals.\nCost: " + EconomySettings.Price(EconomySettings.Current.craftingCost) : character == null ? "No matching character." :
+            character.characterName + " (Character)\n" + (craftButton.interactable ? "Cost: " + EconomySettings.Price(EconomySettings.Current.craftingCost) : CurrencyService.CanSpend(EconomySettings.Current.craftingCost) ? "Inputs unavailable" : "Not enough " + EconomySettings.Current.currencyDisplayName + ". Need " + EconomySettings.Price(EconomySettings.Current.craftingCost)));
     }
-
-    private void LoadDisplayNames()
-    {
-        displayNames.Clear();
-
-        TextAsset json = Resources.Load<TextAsset>(GachaItemResourcePath);
-        if (json == null)
-        {
-            Debug.LogWarning(
-                "gacha_items.json was not found. Crafting UI will display item IDs instead.");
-            return;
-        }
-
-        GachaItemDatabase database;
-        try
-        {
-            database = JsonUtility.FromJson<GachaItemDatabase>(json.text);
-        }
-        catch (Exception exception)
-        {
-            Debug.LogWarning(
-                $"gacha_items.json could not be parsed. " +
-                $"Crafting UI will display item IDs instead. {exception.Message}");
-            return;
-        }
-
-        if (database == null || database.items == null)
-        {
-            Debug.LogWarning(
-                "gacha_items.json does not contain an items array. " +
-                "Crafting UI will display item IDs instead.");
-            return;
-        }
-
-        foreach (GachaItemData item in database.items)
-        {
-            if (item == null ||
-                string.IsNullOrWhiteSpace(item.id) ||
-                string.IsNullOrWhiteSpace(item.displayName))
-            {
-                continue;
-            }
-
-            string itemId = item.id.Trim();
-            if (!displayNames.ContainsKey(itemId))
-            {
-                displayNames.Add(itemId, item.displayName.Trim());
-            }
-        }
-    }
-
-    private string GetDisplayName(string itemId)
-    {
-        return itemId != null && displayNames.TryGetValue(itemId, out string displayName)
-            ? displayName
-            : itemId ?? string.Empty;
-    }
-
-    private static string RemoveDisplayHyphens(string displayName)
-    {
-        if (string.IsNullOrEmpty(displayName))
-        {
-            return string.Empty;
-        }
-
-        return displayName.Trim().Trim('-', '‐', '‑', '‒', '–', '—', '−');
-    }
-
-    private static TMP_Text FindChildText(GameObject parent, string childName)
-    {
-        TMP_Text[] texts = parent.GetComponentsInChildren<TMP_Text>(true);
-        foreach (TMP_Text text in texts)
-        {
-            if (text.gameObject.name.Equals(childName, StringComparison.Ordinal))
-            {
-                return text;
-            }
-        }
-
-        return null;
-    }
-
-    private void ClearSpawnedMaterialObjects()
-    {
-        foreach (GameObject materialObject in spawnedMaterialObjects)
-        {
-            if (materialObject != null)
-            {
-                materialObject.SetActive(false);
-                Destroy(materialObject);
-            }
-        }
-
-        spawnedMaterialObjects.Clear();
-    }
-
-    private void SetResultText(string message)
-    {
-        if (resultText != null)
-        {
-            resultText.text = message;
-        }
-    }
+    private static TMP_Text FindChildText(GameObject parent,string childName) => parent.GetComponentsInChildren<TMP_Text>(true).First(t => t.name == childName);
+    private void SetResultText(string message) { if (resultText != null) resultText.text = message; }
+    public void BackHome() => SceneManager.LoadScene("GermanyHome");
 }

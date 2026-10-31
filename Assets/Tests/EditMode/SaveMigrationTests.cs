@@ -39,7 +39,7 @@ public class SaveMigrationTests
         string old = Legacy(); var bytes = new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes(old)).ToArray();
         File.WriteAllBytes(files.MainPath, bytes);
         Assert.That(files.Load(out var data), Is.EqualTo(SaveLoadStatus.Migrated), files.LastError);
-        Assert.That(data.version, Is.EqualTo(2)); Assert.That(data.characterInstances.instances.Count, Is.EqualTo(2));
+        Assert.That(data.version, Is.EqualTo(5)); Assert.That(data.characterInstances.instances.Count, Is.EqualTo(2));
         Assert.That(data.characterCollection.discoveredCharacterIds, Is.EquivalentTo(new[] { "nacht", "hund" }));
         var nacht = data.characterInstances.instances.Single(i => i.characterId == "nacht");
         var loadout = data.characterEquipment.characters.Single();

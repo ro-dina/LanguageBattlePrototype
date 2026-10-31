@@ -6,11 +6,22 @@ using UnityEngine;
 public sealed class SaveData
 {
     public int version;
+    public WalletState wallet;
+    public BattleRewardState battleRewards = new BattleRewardState();
     public InventoryState inventory;
     public CharacterInstanceState characterInstances;
     public CharacterLoadoutState characterEquipment;
     public CharacterCollectionState characterCollection;
     public StageProgressState stageProgress;
+    public List<WordItemConversion> convertedWordItems = new List<WordItemConversion>();
+}
+
+[Serializable]
+public sealed class WordItemConversion
+{
+    public string itemId;
+    public string characterId;
+    public int count;
 }
 
 public static class NewGameDefaults
@@ -19,6 +30,7 @@ public static class NewGameDefaults
     public static SaveData Create()
     {
         var data = new SaveData { version = SaveDataValidator.CurrentVersion,
+            wallet = new WalletState { balance = EconomySettings.Current.initialCoins },
             inventory = new InventoryState(), characterInstances = new CharacterInstanceState(),
             characterEquipment = new CharacterLoadoutState(), characterCollection = new CharacterCollectionState(),
             stageProgress = new StageProgressState() };
@@ -55,19 +67,39 @@ public static class GameContentIds
                     if (recipe != null && recipe.resultType != "character" && !string.IsNullOrWhiteSpace(recipe.resultId))
                         itemIds.Add(recipe.resultId);
         }
-        return itemIds.Contains(id);
+        return itemIds.Contains(id) || DynamicMaterials.IsId(id);
     }
 }
 
 public static class SaveDataValidator
 {
-    public const int CurrentVersion = 2;
-    public static bool Validate(SaveData data, out string error)
+    public const int CurrentVersion = 5;
+    public static bool Validate(SaveData data, out string error) => Validate(data,CurrentVersion,out error);
+    internal static bool ValidateVersionFour(SaveData data,out string error) => Validate(data,4,out error);
+    internal static bool ValidateVersionThree(SaveData data,out string error) => Validate(data,3,out error);
+    internal static bool ValidateVersionTwo(SaveData data,out string error) => Validate(data,2,out error);
+    private static bool Validate(SaveData data,int version,out string error)
     {
         error = null;
         if (data == null) { error = "Save data is null."; return false; }
-        if (data.version != CurrentVersion) { error = $"Unsupported save version: {data.version}."; return false; }
-        if (!ValidateCommon(data.inventory, data.stageProgress, out error)) return false;
+        if (data.version != version) { error = $"Unsupported save version: {data.version}."; return false; }
+        if (!ValidateCommon(data.inventory, data.stageProgress, out error,version >= 5)) return false;
+        if (version >= 4 && (data.wallet == null || data.wallet.balance < 0))
+        { error = "Missing wallet or negative balance."; return false; }
+        if (version >= 5 && !BattleRewardService.ValidState(data.battleRewards))
+        { error = "Invalid battle reward state."; return false; }
+        if (version >= 3)
+        {
+            if (data.convertedWordItems == null) { error = "Missing conversion history."; return false; }
+            var converted = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var record in data.convertedWordItems)
+                if (record == null || record.count <= 0 || !converted.Add(record.itemId) ||
+                    WordCharacterRewards.Character(record.itemId)?.id != record.characterId)
+                { error = "Invalid word conversion history."; return false; }
+            foreach (var item in data.inventory.items)
+                if (WordCharacterRewards.Character(item.itemId) != null || WordCharacterRewards.Ambiguous(item.itemId))
+                { error = "Legacy character words cannot remain in current inventory."; return false; }
+        }
         if (!CharacterInstances.ValidState(data.characterInstances, out error)) return false;
         if (!CharacterCollection.ValidState(data.characterCollection) || data.characterEquipment?.characters == null)
         { error = "Missing or invalid collection/loadout sections."; return false; }
@@ -88,18 +120,21 @@ public static class SaveDataValidator
         }
         return true;
     }
-    internal static bool ValidateCommon(InventoryState inventory, StageProgressState stage, out string error)
+    internal static bool ValidateCommon(InventoryState inventory, StageProgressState stage, out string error,bool allowDynamic = false)
     {
         error = null;
         if (inventory?.items == null || stage == null || !StageProgress.ValidIds(stage.unlockedStageIds) || !StageProgress.ValidIds(stage.clearedStageIds))
         { error = "Missing inventory or invalid stage progress."; return false; }
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var entry in inventory.items)
-            if (entry == null || !GameContentIds.IsItem(entry.itemId) || entry.count <= 0 || !ids.Add(entry.itemId))
+            if (entry == null || !GameContentIds.IsItem(entry.itemId) || entry.count <= 0 || !ids.Add(entry.itemId) ||
+                (DynamicMaterials.IsId(entry.itemId) ? !allowDynamic || !DynamicMaterials.ValidEntry(entry) : !string.IsNullOrEmpty(entry.text)))
             { error = "Invalid inventory ID/count or duplicate entry."; return false; }
         return true;
     }
-    public static bool TryDecode(string json, out SaveData data, out string error)
+    public static bool TryDecode(string json, out SaveData data, out string error) => Decode(json,false,out data,out error);
+    internal static bool TryDecodeVersionFour(string json,out SaveData data,out string error) => Decode(json,true,out data,out error);
+    private static bool Decode(string json,bool legacyFour,out SaveData data,out string error)
     {
         data = null;
         try
@@ -107,7 +142,16 @@ public static class SaveDataValidator
             if (string.IsNullOrWhiteSpace(json) || !json.TrimStart().StartsWith("{"))
             { error = "Save is not a JSON object."; return false; }
             data = JsonUtility.FromJson<SaveData>(json);
-            return Validate(data, out error);
+            if (data?.version == CurrentVersion && !System.Text.RegularExpressions.Regex.IsMatch(json,"\"battleRewards\"\\s*:\\s*\\{"))
+            { error = "Missing battle reward state."; return false; }
+            if (data?.version >= 4)
+            {
+                var wallets = System.Text.RegularExpressions.Regex.Matches(json,"\"wallet\"\\s*:\\s*\\{[^{}]*?\"balance\"\\s*:\\s*(-?[0-9]+)\\s*[,}]");
+                if (wallets.Count != 1 || !long.TryParse(wallets[0].Groups[1].Value,System.Globalization.NumberStyles.AllowLeadingSign,
+                    System.Globalization.CultureInfo.InvariantCulture,out long balance) || data.wallet == null || balance != data.wallet.balance)
+                { error = "Wallet balance must be an explicit 64-bit nonnegative integer."; return false; }
+            }
+            return legacyFour ? ValidateVersionFour(data,out error) : Validate(data, out error);
         }
         catch (Exception exception) { error = "Invalid save JSON: " + exception.Message; return false; }
     }

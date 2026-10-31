@@ -159,7 +159,7 @@ public class CharacterDetailManager : MonoBehaviour
         int speed = character.speed + DamageCalculator.GetCharacterSpeedBonus(selectedCharacterEquipment);
 
         characterInfoText.text =
-            (CanEdit ? "Instance: " + CharacterInstances.DisplayBadge(viewedInstanceId) : CharacterCollection.StatusLabel(character.id) + " • read only") + "\n" +
+            (CanEdit ? "Individual " + CharacterInstances.DisplayBadge(viewedInstanceId) : CharacterCollection.StatusLabel(character.id) + " • read only") + "\n" +
             $"Gender: {character.grammaticalGender}\n" +
             $"HP: {character.hp}\n" +
             $"ATK: {attack}\n" +

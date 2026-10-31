@@ -10,6 +10,7 @@ public sealed class PlayerSaveService : MonoBehaviour
     public SaveLoadStatus LoadStatus { get; private set; }
     private bool restoring;
     private bool dirty;
+    private System.Collections.Generic.List<WordItemConversion> convertedWordItems = new System.Collections.Generic.List<WordItemConversion>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Bootstrap() => Initialize(DefaultDirectory());
@@ -61,27 +62,45 @@ public sealed class PlayerSaveService : MonoBehaviour
             { Debug.LogWarning("Reload refused: it would remove an active battle instance."); return; }
             using (PlayerStateChanges.BeginBatch())
             {
+                CurrencyService.Restore(data.wallet);
+                BattleRewardService.Restore(data.battleRewards);
                 InventoryManager.RestoreState(data.inventory);
                 CharacterInstances.RestoreState(data.characterInstances);
                 CharacterCollection.RestoreState(data.characterCollection);
                 CharacterLoadoutStore.RestoreState(data.characterEquipment);
                 StageProgress.RestoreState(data.stageProgress);
             }
+            convertedWordItems = data.convertedWordItems;
             GameManager.EnsureOwnedSelection();
             GameManager.PreviousSceneName = "";
             dirty = false;
+            CurrencyService.PublishCommittedBalance();
         }
         finally { restoring = false; }
     }
 
     public SaveData Capture() => new SaveData {
         version = SaveDataValidator.CurrentVersion,
+        wallet = CurrencyService.CaptureState(),
+        battleRewards = BattleRewardService.CaptureState(),
         inventory = InventoryManager.CaptureState(),
         characterInstances = CharacterInstances.CaptureState(),
         characterCollection = CharacterCollection.CaptureState(),
         characterEquipment = CharacterLoadoutStore.CaptureState(),
-        stageProgress = StageProgress.CaptureState()
+        stageProgress = StageProgress.CaptureState(),
+        convertedWordItems = JsonUtility.FromJson<ConversionHistory>(JsonUtility.ToJson(new ConversionHistory { items = convertedWordItems })).items
     };
+
+    [Serializable] private sealed class ConversionHistory { public System.Collections.Generic.List<WordItemConversion> items; }
+    internal bool CommitPrepared(SaveData candidate,out string error)
+    {
+        error = null;
+        if (!Files.Save(candidate)) { error = Files.LastError ?? "Saving is blocked."; return false; }
+        restoring = true;
+        try { convertedWordItems = candidate.convertedWordItems; PlayerStateTransactions.Apply(candidate); dirty = false; }
+        finally { restoring = false; }
+        return true;
+    }
 
     private void OnStateChanged()
     {
