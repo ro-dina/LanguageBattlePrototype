@@ -36,7 +36,7 @@ public class SaveTests
     public void NewGameHasExplicitStarterAndNoInventedStageProgress()
     {
         Assert.That(files.Load(out var data), Is.EqualTo(SaveLoadStatus.NewGame));
-        Assert.That(data.version, Is.EqualTo(5));
+        Assert.That(data.version, Is.EqualTo(6));
         Assert.That(data.characterCollection.discoveredCharacterIds, Does.Contain("nacht"));
         Assert.That(data.inventory.items, Is.Empty);
         Assert.That(data.stageProgress.unlockedStageIds, Is.Empty);
@@ -121,7 +121,7 @@ public class SaveTests
         File.WriteAllText(files.MainPath, "damaged-after-load");
         Assert.That(files.Save(data), Is.True);
         Assert.That(File.ReadAllText(files.MainPath), Is.EqualTo("damaged-after-load"));
-        var future = NewGameDefaults.Create(); future.version = 6;
+        var future = NewGameDefaults.Create(); future.version = 7;
         string json = JsonUtility.ToJson(future);
         File.WriteAllText(files.ActivePath, json);
         Assert.That(files.Save(data), Is.False);
@@ -129,7 +129,7 @@ public class SaveTests
         Assert.That(File.ReadAllText(files.ActivePath), Is.EqualTo(json));
     }
 
-    [TestCase(6)]
+    [TestCase(7)]
     [TestCase(-1)]
     public void UnsupportedVersionBlocksWritesAndRetainsBytes(int version)
     {

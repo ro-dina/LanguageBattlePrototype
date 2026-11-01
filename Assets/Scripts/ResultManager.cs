@@ -57,6 +57,9 @@ public class ResultManager : MonoBehaviour
         var text = new System.Text.StringBuilder();
         text.Append(GameDatabase.EnsureAvailable().GetCharacter(receipt.enemyCharacterId).characterName).Append(" defeated!\n\nRewards\n");
         if (receipt.coins > 0) text.Append(EconomySettings.Current.currencyDisplayName).Append(" +").Append(EconomySettings.Amount(receipt.coins)).Append("\n");
+        if (receipt.firstClearCoins > 0) text.Append("  Normal: ").Append(EconomySettings.Amount(receipt.coins-receipt.firstClearCoins)).Append(" | First clear: +").Append(EconomySettings.Amount(receipt.firstClearCoins)).Append("\n");
+        if (!string.IsNullOrEmpty(receipt.stageId)) text.Append(StageCatalog.Get(receipt.stageId).displayName).Append(" cleared!\n");
+        if (receipt.tutorialCompleted) text.Append("Tutorial completed!\n");
         if (receipt.materials.Count > 0)
         {
             text.Append("\nMaterials\n");

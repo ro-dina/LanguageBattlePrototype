@@ -93,9 +93,9 @@ public sealed class SaveFileStore
         try { return File.Exists(path) && new FileInfo(path).Length <= MaxBytes ? SaveDataMigration.Version(File.ReadAllText(path)) : 0; }
         catch (Exception) { return 0; }
     }
-    private bool IsLegacy(string path) => ReadVersion(path) == 1 || ReadVersion(path) == 2 || ReadVersion(path) == 3 || ReadVersion(path) == 4;
+    private bool IsLegacy(string path) => ReadVersion(path) == 1 || ReadVersion(path) == 2 || ReadVersion(path) == 3 || ReadVersion(path) == 4 || ReadVersion(path) == 5;
     private bool IsUnsupported(string path)
-    { int version = ReadVersion(path); return version != 0 && version != 1 && version != 2 && version != 3 && version != 4 && version != SaveDataValidator.CurrentVersion; }
+    { int version = ReadVersion(path); return version != 0 && version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != SaveDataValidator.CurrentVersion; }
 
     private bool TryMigrate(string path, out SaveData data)
     {
@@ -106,7 +106,7 @@ public sealed class SaveFileStore
             string json = new UTF8Encoding(false).GetString(original).TrimStart('\uFEFF');
             if (!SaveDataMigration.TryMigrate(json, out data, out string error)) { LastError = error; return false; }
             // Recovery sources that are already protected backups are never modified.
-            if (!Path.GetFileName(path).Contains(".v1.bak") && !Path.GetFileName(path).Contains(".v2.bak") && !Path.GetFileName(path).Contains(".v3.bak") && !Path.GetFileName(path).Contains(".v4.bak")) PreserveLegacyBackup(path, original);
+            if (!Path.GetFileName(path).Contains(".v1.bak") && !Path.GetFileName(path).Contains(".v2.bak") && !Path.GetFileName(path).Contains(".v3.bak") && !Path.GetFileName(path).Contains(".v4.bak") && !Path.GetFileName(path).Contains(".v5.bak")) PreserveLegacyBackup(path, original);
             return true;
         }
         catch (Exception exception) { data = null; LastError = "Migration backup failed: " + exception.Message; return false; }

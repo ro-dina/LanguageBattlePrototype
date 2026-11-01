@@ -1,0 +1,34 @@
+{
+  "dialogues": [
+    {
+      "dialogueId": "technik_intro",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "Here we will learn the basics of battle. First, let us choose a skill.",
+      "nextDialogueId": "technik_verbs",
+      "eventOnComplete": ""
+    },
+    {
+      "dialogueId": "technik_verbs",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "Skills correspond to verbs. Choose the highlighted skill to attack with {skill}.",
+      "nextDialogueId": "",
+      "eventOnComplete": "technik_intro_finished"
+    },
+    {
+      "dialogueId": "technik_after_attack",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "That was a real attack. Selecting a verb skill deals damage and creates a sentence. Continue attacking until Technik is defeated.",
+      "nextDialogueId": "",
+      "eventOnComplete": "technik_attack_explained"
+    }
+  ]
+}

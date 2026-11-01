@@ -7,6 +7,7 @@ public sealed class SaveData
 {
     public int version;
     public WalletState wallet;
+    public TutorialProgressState tutorials = new TutorialProgressState();
     public BattleRewardState battleRewards = new BattleRewardState();
     public InventoryState inventory;
     public CharacterInstanceState characterInstances;
@@ -73,8 +74,9 @@ public static class GameContentIds
 
 public static class SaveDataValidator
 {
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 6;
     public static bool Validate(SaveData data, out string error) => Validate(data,CurrentVersion,out error);
+    internal static bool ValidateVersionFive(SaveData data,out string error) => Validate(data,5,out error);
     internal static bool ValidateVersionFour(SaveData data,out string error) => Validate(data,4,out error);
     internal static bool ValidateVersionThree(SaveData data,out string error) => Validate(data,3,out error);
     internal static bool ValidateVersionTwo(SaveData data,out string error) => Validate(data,2,out error);
@@ -84,6 +86,8 @@ public static class SaveDataValidator
         if (data == null) { error = "Save data is null."; return false; }
         if (data.version != version) { error = $"Unsupported save version: {data.version}."; return false; }
         if (!ValidateCommon(data.inventory, data.stageProgress, out error,version >= 5)) return false;
+        if (version >= 6 && (!StageProgress.ValidState(data.stageProgress) || !TutorialPreferences.ValidState(data.tutorials)))
+        { error = "Invalid stage or tutorial progress."; return false; }
         if (version >= 4 && (data.wallet == null || data.wallet.balance < 0))
         { error = "Missing wallet or negative balance."; return false; }
         if (version >= 5 && !BattleRewardService.ValidState(data.battleRewards))
@@ -132,9 +136,10 @@ public static class SaveDataValidator
             { error = "Invalid inventory ID/count or duplicate entry."; return false; }
         return true;
     }
-    public static bool TryDecode(string json, out SaveData data, out string error) => Decode(json,false,out data,out error);
-    internal static bool TryDecodeVersionFour(string json,out SaveData data,out string error) => Decode(json,true,out data,out error);
-    private static bool Decode(string json,bool legacyFour,out SaveData data,out string error)
+    public static bool TryDecode(string json, out SaveData data, out string error) => Decode(json,CurrentVersion,out data,out error);
+    internal static bool TryDecodeVersionFour(string json,out SaveData data,out string error) => Decode(json,4,out data,out error);
+    internal static bool TryDecodeVersionFive(string json,out SaveData data,out string error) => Decode(json,5,out data,out error);
+    private static bool Decode(string json,int expectedVersion,out SaveData data,out string error)
     {
         data = null;
         try
@@ -142,8 +147,10 @@ public static class SaveDataValidator
             if (string.IsNullOrWhiteSpace(json) || !json.TrimStart().StartsWith("{"))
             { error = "Save is not a JSON object."; return false; }
             data = JsonUtility.FromJson<SaveData>(json);
-            if (data?.version == CurrentVersion && !System.Text.RegularExpressions.Regex.IsMatch(json,"\"battleRewards\"\\s*:\\s*\\{"))
+            if (data?.version >= 5 && !System.Text.RegularExpressions.Regex.IsMatch(json,"\"battleRewards\"\\s*:\\s*\\{"))
             { error = "Missing battle reward state."; return false; }
+            if (data?.version == CurrentVersion && !System.Text.RegularExpressions.Regex.IsMatch(json,"\"tutorials\"\\s*:\\s*\\{"))
+            { error = "Missing tutorial state."; return false; }
             if (data?.version >= 4)
             {
                 var wallets = System.Text.RegularExpressions.Regex.Matches(json,"\"wallet\"\\s*:\\s*\\{[^{}]*?\"balance\"\\s*:\\s*(-?[0-9]+)\\s*[,}]");
@@ -151,7 +158,7 @@ public static class SaveDataValidator
                     System.Globalization.CultureInfo.InvariantCulture,out long balance) || data.wallet == null || balance != data.wallet.balance)
                 { error = "Wallet balance must be an explicit 64-bit nonnegative integer."; return false; }
             }
-            return legacyFour ? ValidateVersionFour(data,out error) : Validate(data, out error);
+            return Validate(data,expectedVersion,out error);
         }
         catch (Exception exception) { error = "Invalid save JSON: " + exception.Message; return false; }
     }

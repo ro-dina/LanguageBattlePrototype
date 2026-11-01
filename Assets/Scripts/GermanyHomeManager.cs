@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class GermanyHomeManager : MonoBehaviour
 {
+    private void Start()=>StageSession.Clear();
     public void GoStageSelect()
     {
         SceneManager.LoadScene("StageSelect");
@@ -40,7 +41,7 @@ public class GermanyHomeManager : MonoBehaviour
 
     public void GoSettings()
     {
-        Debug.Log("Settings is coming soon.");
+        TutorialChoiceUI.ShowSettings();
     }
 
     public void BackToEuropeMap()

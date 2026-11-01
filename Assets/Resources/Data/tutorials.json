@@ -1,0 +1,58 @@
+{
+  "tutorials": [
+    {
+      "tutorialId": "technik_basics",
+      "isImplemented": true,
+      "steps": [
+        {
+          "type": "Dialogue",
+          "dialogueId": "technik_intro"
+        },
+        {
+          "type": "Highlight",
+          "target": "firstEquippedSkill",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForSkillSelection",
+          "target": "firstEquippedSkill",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForAttackResolution"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "technik_after_attack"
+        },
+        {
+          "type": "WaitForBattleVictory",
+          "hint": "Keep attacking to defeat Technik. Other actions are now available."
+        },
+        {
+          "type": "Complete"
+        }
+      ]
+    },
+    {
+      "tutorialId": "adverb_basics",
+      "isImplemented": false,
+      "steps": []
+    },
+    {
+      "tutorialId": "adjektiv_basics",
+      "isImplemented": false,
+      "steps": []
+    },
+    {
+      "tutorialId": "modalverb_basics",
+      "isImplemented": false,
+      "steps": []
+    },
+    {
+      "tutorialId": "zukunft_basics",
+      "isImplemented": false,
+      "steps": []
+    }
+  ]
+}

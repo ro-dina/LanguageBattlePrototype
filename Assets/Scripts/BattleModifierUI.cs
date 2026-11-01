@@ -29,7 +29,7 @@ public sealed class BattleModifierUI : MonoBehaviour
         if (battle == null) return;
         var selection = battle.Selection;
         var context = battle.Context;
-        bool choose = battle.CanChoose;
+        bool choose = battle.CanChoose && battle.AllowsInput(TutorialInput.Modifier);
         bool german = context?.Player.Character.language == "de";
         futureButton.interactable = choose && german && context.PendingAttack == null;
         muessenButton.interactable = choose && german && !context.MuessenUsed;

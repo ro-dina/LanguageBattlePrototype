@@ -89,6 +89,18 @@ public sealed class UIPlayValidation : MonoBehaviour
         var canvas = button.GetComponentInParent<Canvas>().rootCanvas;
         var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
         var rect = (RectTransform)button.transform;
+        var scroll=button.GetComponentInParent<ScrollRect>();
+        if(scroll!=null && scroll.viewport!=null && scroll.content!=null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);Canvas.ForceUpdateCanvases();scroll.StopMovement();
+            var point=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center));
+            if(!RectTransformUtility.RectangleContainsScreenPoint(scroll.viewport,point,camera))
+            {
+                var bounds=RectTransformUtility.CalculateRelativeRectTransformBounds(scroll.viewport,rect);var position=scroll.content.anchoredPosition;
+                float delta=bounds.min.y<scroll.viewport.rect.yMin?scroll.viewport.rect.yMin+8-bounds.min.y:scroll.viewport.rect.yMax-8-bounds.max.y;
+                position.y=Mathf.Clamp(position.y+delta,0,Mathf.Max(0,scroll.content.rect.height-scroll.viewport.rect.height));scroll.content.anchoredPosition=position;Canvas.ForceUpdateCanvases();
+            }
+        }
         var pointer = new PointerEventData(EventSystem.current) {
             position = RectTransformUtility.WorldToScreenPoint(camera, rect.TransformPoint(rect.rect.center))
         };
@@ -411,6 +423,74 @@ public sealed class UIPlayValidation : MonoBehaviour
         Click("RetryRewardSaveButton");yield return null;yield return null;
         Check(SceneManager.GetActiveScene().name=="Result" && Find<ResultManager>().RewardSummary.Contains("Coins +100"),"Retry saves rewards then displays Result");
 
+        // Phase 10.2: stage routes, choices, dialogue and actual guided battle.
+        yield return Load("StageSelect");
+        Check(Find<StageSelectManager>()!=null && Object.FindObjectsByType<StageRowUI>().Length==6,"All six data stages are listed including Feuer practice");
+        Check(StageProgress.IsUnlocked("stage_1") && !StageProgress.IsUnlocked("stage_2"),"Initial stage locks are derived from progress");
+        var stageScroll=GameObject.Find("StageList").GetComponent<ScrollRect>();
+        Check(stageScroll.verticalScrollbar!=null,"Stage list exposes a scrollbar");
+        yield return RenderSizes("StageSelect-initial-locks");
+        stageScroll.verticalNormalizedPosition=0;yield return RenderSizes("StageSelect-practice-and-locked-bottom");stageScroll.verticalNormalizedPosition=1;
+        TutorialChoiceUI.Request("stage_1",false);yield return null;
+        yield return RenderSizes("TutorialChoice-first-visit");
+        Click("TutorialOption0");yield return null;yield return null;
+        Check(StageSession.StageId=="stage_1" && StageSession.Guided,"Take choice saves and retains the selected stage");
+        yield return RenderSizes("CharacterSelect-Technik");
+        Click("StartBattleButton");yield return null;yield return null;
+        Check(DialogueUI.IsOpen && TutorialController.Active!=null,"Technik starts shared dialogue");
+        yield return RenderSizes("Dialogue-Technik-introduction");
+        yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");
+        yield return RenderSizes("Dialogue-Technik-verbs");
+        yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return null;yield return null;
+        var guidedBattle=Find<BattleManager>();var guidedController=TutorialController.Active;
+        Check(guidedController.CurrentStep==TutorialStepType.WaitForSkillSelection,"Dialogue leads to required skill selection");
+        guidedBattle.UseSkill2();Check(guidedBattle.LastCommittedAction==null && !guidedBattle.SelectMuessen(true),"Wrong skill and modifier APIs refuse tutorial input");
+        yield return RenderSizes("Battle-Technik-highlighted-skill");
+        int guidedPlayerHP=guidedBattle.Context.Player.HP;long guidedCoins=CurrencyService.Balance;
+        Click(guidedBattle.SkillButton(guidedController.SkillId).name);
+        deadline=Time.realtimeSinceStartup+20;while(!DialogueUI.IsOpen && Time.realtimeSinceStartup<deadline)yield return null;
+        Check(DialogueUI.IsOpen && DialogueUI.Active.Current.dialogueId=="technik_after_attack" && guidedBattle.Context.Player.HP==guidedPlayerHP,"A real attack is followed by explanation before the enemy can hurt the learner");
+        yield return RenderSizes("Dialogue-Technik-attack-explanation");
+        yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");
+        deadline=Time.realtimeSinceStartup+30;
+        while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline)
+        {
+            var currentBattle=Find<BattleManager>();
+            if(currentBattle.CanChoose && currentBattle.AllowsInput(TutorialInput.Skill,currentBattle.Context.Player.Character.skillIds[0]))currentBattle.UseSkill1();
+            yield return null;
+        }
+        yield return null;yield return null;
+        Check(SceneManager.GetActiveScene().name=="Result" && CurrencyService.Balance==guidedCoins+400,"Guided victory grants normal 100 plus first-clear 300");
+        Check(StageProgress.IsUnlocked("stage_2") && TutorialPreferences.Get("technik_basics").completed,"Tutorial completion and stage unlock commit together");
+        Check(Find<ResultManager>().RewardSummary.Contains("First clear: +300"),"Result shows the saved first-clear breakdown");
+        yield return RenderSizes("Result-Technik-first-clear");
+        yield return Load("StageSelect");yield return RenderSizes("StageSelect-after-Technik");
+        TutorialChoiceUI.Request("stage_1",true);yield return null;yield return RenderSizes("TutorialChoice-review");Click("TutorialChoiceClose");
+        TutorialChoiceUI.Request("stage_2",false);yield return null;yield return RenderSizes("TutorialChoice-coming-soon");
+        Check(Field<TMP_Text>(Find<TutorialChoiceUI>(),"details").text.Contains("not available yet"),"Unimplemented guidance is clearly identified");
+        Click("TutorialOption0");yield return null;yield return null;Check(!StageSession.Guided,"Unimplemented guidance starts a normal battle");
+        Click("StartBattleButton");yield return null;yield return null;
+        var adverbBattle=Find<BattleManager>();typeof(BattleCombatant).GetProperty("HP").SetValue(adverbBattle.Context.Enemy,1);adverbBattle.UseSkill1();
+        deadline=Time.realtimeSinceStartup+20;while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline)yield return null;
+        yield return null;yield return null;
+        Check(StageProgress.IsUnlocked("stage_3") && !TutorialPreferences.Get("adverb_basics").completed,"Normal clear unlocks the next stage without false tutorial completion");
+        yield return RenderSizes("Result-Adverb-normal-clear");
+        yield return Load("StageSelect");Click("TutorialSettingsButton");yield return null;yield return RenderSizes("Settings-tutorial-prompts");
+        Click("TutorialOption1");Check(TutorialPreferences.SkipAll,"Settings save global skip");Click("TutorialChoiceClose");
+        TutorialChoiceUI.Request("stage_3",false);yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="CharacterSelect" && Find<TutorialChoiceUI>()==null && !StageSession.Guided,"Global skip bypasses future prompts");
+        yield return Load("StageSelect");TutorialChoiceUI.Request("stage_1",true);yield return null;
+        yield return RenderSizes("TutorialChoice-review-overrides-global-skip");Click("TutorialOption0");yield return null;yield return null;Check(StageSession.Guided,"Explicit review overrides global skip");
+        yield return Load("GermanyHome");Find<GermanyHomeManager>().GoSettings();yield return null;Click("TutorialOption0");Check(!TutorialPreferences.SkipAll,"Home settings restore future prompts");Click("TutorialChoiceClose");
+        StageSession.Select("stage_1",true,out _);
+        var storyLine=new DialogueLine{dialogueId="npc-preview",speakerName="Technik",speakerSide="Right",leftPortraitId="guide",rightPortraitId="feuer",text=string.Join(" ",Enumerable.Repeat("This shared dialogue can show a longer story on multiple pages.",30)),eventOnComplete="preview_finished"};
+        Check(DialogueUI.PlayLine(storyLine,_=>{},()=>{},out _),"Standalone story dialogue uses the same UI");yield return null;
+        yield return RenderSizes("Dialogue-long-right-speaker");yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return RenderSizes("Dialogue-next-page");DialogueUI.Active.Cancel();yield return null;
+        yield return Load("Battle");deadline=Time.realtimeSinceStartup+10;
+        while(DialogueUI.IsOpen && Time.realtimeSinceStartup<deadline){yield return new WaitForSecondsRealtime(.22f);DialogueUI.Active.Advance();yield return null;}
+        yield return null;TutorialController.Active.Abort("Intentional UI recovery validation");yield return null;
+        Check(!DialogueUI.IsOpen && TutorialController.NavigationAllowed && Find<BattleManager>().SelectMuessen(true),"Tutorial error releases its input guard");
+        yield return RenderSizes("Battle-tutorial-error-recovery");
+
     }
 
     private IEnumerator ScrollToLongMaterial()
@@ -482,13 +562,38 @@ public sealed class UIPlayValidation : MonoBehaviour
             Check(rect.rect.height >= 64, context + " button hit height >=64: " + button.name);
         }
         foreach (var button in Object.FindObjectsByType<Button>().Where(b => b.interactable &&
-            (b.name == "NextInstanceButton" || b.name == "PreviousInstanceButton" || b.name == "FutureButton" || b.name == "MuessenButton" || b.name.StartsWith("CraftDialog") || b.name == "CraftNextIndividual" || b.name == "CraftPreviousIndividual" || b.name == "RetryRewardSaveButton" || b.name.StartsWith("AddCoins") || b.name == "CloseCoinDialog" ||
+            (Find<TutorialChoiceUI>()==null || b.transform.IsChildOf(Find<TutorialChoiceUI>().transform)) &&
+            (Find<DialogueUI>()==null || b.transform.IsChildOf(Find<DialogueUI>().transform)) &&
+            (b.name.StartsWith("TutorialOption") || b.name == "TutorialChoiceClose" || b.name == "DialogueNext" || b.name == "NextInstanceButton" || b.name == "PreviousInstanceButton" || b.name == "FutureButton" || b.name == "MuessenButton" || b.name.StartsWith("CraftDialog") || b.name == "CraftNextIndividual" || b.name == "CraftPreviousIndividual" || b.name == "RetryRewardSaveButton" || b.name.StartsWith("AddCoins") || b.name == "CloseCoinDialog" ||
              (b.name == "CoinsPlusButton" && (Find<CurrencyHUD>() == null || !Field<GameObject>(Find<CurrencyHUD>(),"additionDialog").activeSelf)))))
         {
             var rect = (RectTransform)button.transform;
             var pointer = new PointerEventData(EventSystem.current) { position = RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center)) };
             var hits = new List<RaycastResult>(); EventSystem.current.RaycastAll(pointer,hits);
             Check(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button, context + " pointer reaches " + button.name);
+        }
+        var tutorialView = TutorialController.Active;
+        if(tutorialView!=null && !tutorialView.Failed && !tutorialView.ReadyForCommit && (tutorialView.CurrentStep==TutorialStepType.Highlight || tutorialView.CurrentStep==TutorialStepType.WaitForSkillSelection))
+        {
+            var battle=Find<BattleManager>();var target=battle.SkillButton(tutorialView.SkillId);var rect=(RectTransform)target.transform;
+            var pointer=new PointerEventData(EventSystem.current){position=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center))};var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);
+            Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()==target,context+" highlighted original skill receives pointer input");
+            foreach(var other in Field<GameObject[]>(battle,"skillButtons").Where(o=>o.activeInHierarchy && o!=target.gameObject))
+            {
+                var otherRect=(RectTransform)other.transform;pointer.position=RectTransformUtility.WorldToScreenPoint(camera,otherRect.TransformPoint(otherRect.rect.center));hits.Clear();EventSystem.current.RaycastAll(pointer,hits);
+                Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()!=other.GetComponent<Button>(),context+" shade rejects other skill buttons");
+            }
+        }
+        var dialogueView=Find<DialogueUI>();
+        if(dialogueView!=null)
+        {
+            var textBox=Field<Button>(dialogueView,"textBox");var textBounds=RectTransformUtility.CalculateRelativeRectTransformBounds(dialogueView.transform,textBox.transform);
+            foreach(var portrait in new[]{Field<Image>(dialogueView,"leftPortrait"),Field<Image>(dialogueView,"rightPortrait")})
+            {
+                var portraitBounds=RectTransformUtility.CalculateRelativeRectTransformBounds(dialogueView.transform,portrait.transform);
+                Check(portraitBounds.min.y>textBounds.max.y,context+" portrait stays above dialogue text");
+            }
+            Check(Field<TMP_Text>(dialogueView,"body").textInfo.pageCount>=1,context+" long dialogue has readable pages");
         }
         var resultView = Find<ResultManager>();
         if(resultView != null && Field<GameObject>(resultView,"rewardPanel").activeSelf)
@@ -536,7 +641,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         }
         foreach (var text in Object.FindObjectsByType<TMP_Text>())
         {
-            if (text.isTextOverflowing) warnings.Add(context + " text truncated: " + text.name + " = " + text.text);
+            if (text.isTextOverflowing && text.overflowMode != TextOverflowModes.Page) warnings.Add(context + " text truncated: " + text.name + " = " + text.text);
         }
         passes.Add(context + " rendered");
     }

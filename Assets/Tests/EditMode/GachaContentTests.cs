@@ -58,7 +58,7 @@ public class GachaContentTests
             save.characterEquipment.characters.Add(gear);
             var store = new SaveFileStore(directory); Assert.That(store.Save(save), Is.True,store.LastError);
             Assert.That(new SaveFileStore(directory).Load(out var restored), Is.EqualTo(SaveLoadStatus.Loaded));
-            Assert.That(restored.version, Is.EqualTo(5)); Assert.That(restored.inventory.items.Count, Is.EqualTo(30));
+            Assert.That(restored.version, Is.EqualTo(6)); Assert.That(restored.inventory.items.Count, Is.EqualTo(30));
             Assert.That(restored.inventory.items.Single(i => i.itemId == "letter_a").count, Is.EqualTo(54));
             Assert.That(JsonUtility.ToJson(restored), Is.EqualTo(JsonUtility.ToJson(save)));
         }

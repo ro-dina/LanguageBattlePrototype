@@ -438,6 +438,7 @@ public class CharacterDetailManager : MonoBehaviour
             Debug.LogWarning("Only owned characters can enter battle.", this);
             return;
         }
+        if(!StageSession.ValidateBattle(out string error)){TutorialChoiceUI.ShowStageError(error);return;}
         if (!ApplyEquipmentChanges()) return;
         GameManager.SelectedCharacterInstanceId = viewedInstanceId;
         hasUnsavedChanges = false;

@@ -66,11 +66,14 @@ public static class SaveDataMigration
         {
             SaveData data;
             int version = Version(json);
-            if (version == 3 || version == 4)
+            if (version == 3 || version == 4 || version == 5)
             {
-                if (version == 4) { if (!SaveDataValidator.TryDecodeVersionFour(json,out data,out error)) return false; }
+                if (version == 5) { if (!SaveDataValidator.TryDecodeVersionFive(json,out data,out error)) return false; }
+                else if (version == 4) { if (!SaveDataValidator.TryDecodeVersionFour(json,out data,out error)) return false; }
                 else { data = JsonUtility.FromJson<SaveData>(json); if (!SaveDataValidator.ValidateVersionThree(data,out error)) return false; data.wallet = new WalletState { balance = EconomySettings.Current.initialCoins }; }
-                data.battleRewards = new BattleRewardState();
+                if (version < 5) data.battleRewards = new BattleRewardState();
+                StageProgress.Upgrade(data.stageProgress);
+                data.tutorials = new TutorialProgressState();
                 data.version = SaveDataValidator.CurrentVersion;
                 if (!SaveDataValidator.Validate(data,out error)) return false;
                 if (Encoding.UTF8.GetByteCount(JsonUtility.ToJson(data,true)) > SaveFileStore.MaxBytes)
@@ -83,7 +86,7 @@ public static class SaveDataMigration
                 data = JsonUtility.FromJson<SaveData>(json);
                 if (!SaveDataValidator.ValidateVersionTwo(data,out error)) return false;
             }
-            else { error = "Only versions 1 through 4 require migration."; return false; }
+            else { error = "Only versions 1 through 5 require migration."; return false; }
             data.convertedWordItems = new List<WordItemConversion>();
             var remaining = new List<InventoryEntry>();
             var ids = new HashSet<string>();
@@ -108,6 +111,7 @@ public static class SaveDataMigration
             data.inventory.items = remaining; data.version = SaveDataValidator.CurrentVersion;
             data.wallet = new WalletState { balance = EconomySettings.Current.initialCoins };
             data.battleRewards = new BattleRewardState();
+            StageProgress.Upgrade(data.stageProgress);data.tutorials = new TutorialProgressState();
             if (!SaveDataValidator.Validate(data,out error)) return false;
             if (Encoding.UTF8.GetByteCount(JsonUtility.ToJson(data,true)) > SaveFileStore.MaxBytes)
             { error = "Converted save exceeds the existing 4 MB budget; original retained."; return false; }

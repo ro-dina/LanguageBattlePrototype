@@ -237,6 +237,7 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        if(!StageSession.ValidateBattle(out string error)){TutorialChoiceUI.ShowStageError(error);return;}
         GameManager.SelectedCharacterInstanceId = selectedId;
         SceneManager.LoadScene("Battle");
     }

@@ -115,24 +115,26 @@ public class BattleManager : MonoBehaviour
     [SerializeField] private BattleModifierUI modifierUI;
     public BattleSelection Selection { get; private set; } = new BattleSelection();
     public BattleAction LastCommittedAction { get; private set; }
+    public TutorialController Tutorial { get; internal set; }
+    public bool AllowsInput(TutorialInput input,string id=null) => !DialogueUI.IsOpen && (Tutorial==null || Tutorial.Allows(input,id));
     public bool CanChoose => !isProcessing && battleContext != null &&
         battleContext.TurnState == BattleTurnState.AwaitingPlayer && battleContext.Outcome == BattleOutcome.Ongoing;
 
     public bool SelectFuture(bool selected)
     {
-        if (!CanChoose || (selected && (battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
+        if (!AllowsInput(TutorialInput.Modifier) || !CanChoose || (selected && (battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
         Selection.Select(BattleElementKind.Tense, selected ? "futur1" : null);
         RefreshSelectionUI(); return true;
     }
     public bool SelectMuessen(bool selected)
     {
-        if (!CanChoose || (selected && (battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
+        if (!AllowsInput(TutorialInput.Modifier) || !CanChoose || (selected && (battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
         Selection.Select(BattleElementKind.Modal, selected ? "muessen" : null);
         RefreshSelectionUI(); return true;
     }
     public void ClearModifiers()
     {
-        if (!CanChoose) return;
+        if (!AllowsInput(TutorialInput.Modifier) || !CanChoose) return;
         selectedTurnAdverb = null; Selection.ClearModifiers(); RefreshSelectionUI();
     }
     private void RefreshSelectionUI()
@@ -194,6 +196,11 @@ public class BattleManager : MonoBehaviour
         }
 
 
+        if (!StageSession.ValidateBattle(out string stageError))
+        { isProcessing=true;enabled=false;if(battleLogText!=null)battleLogText.text=stageError;TutorialChoiceUI.ShowStageError(stageError);return; }
+        var selectedStage=StageSession.Stage;
+        if(StageSession.Guided && selectedStage?.battleModifiers.guidedEnemyHp>0)
+        { enemyCharacter=JsonUtility.FromJson<CharacterData>(JsonUtility.ToJson(enemyCharacter));enemyCharacter.hp=selectedStage.battleModifiers.guidedEnemyHp; }
         ownsBattleLock = CharacterInstances.TryBeginBattle(battleInstanceId);
         if (!ownsBattleLock) { isProcessing = true; enabled = false; return; }
         SetupCharacterEquipment();
@@ -229,12 +236,13 @@ public class BattleManager : MonoBehaviour
 
     private void BeginRewardTicket()
     {
-        if (!BattleRewardService.Begin(enemyCharacterId,out rewardBattleId,out string error))
+        if (!BattleRewardService.Begin(enemyCharacterId,out rewardBattleId,out string error,StageSession.StageId,StageSession.Guided))
         {
             isProcessing = true; SetAdverbCardInteraction(false);
             ShowRewardSaveFailure(error,BeginRewardTicket); return;
         }
         HideRewardSaveFailure(); isProcessing = false; SetAdverbCardInteraction(true); RefreshSelectionUI();
+        if(Tutorial==null)TutorialController.Attach(this,StageSession.Stage);
     }
     private void ShowRewardSaveFailure(string error,System.Action retry)
     {
@@ -242,6 +250,12 @@ public class BattleManager : MonoBehaviour
         rewardRetryUI.Bind(error,retry); rewardRetryUI.gameObject.SetActive(true);
     }
     private void HideRewardSaveFailure() { if (rewardRetryUI != null) { Destroy(rewardRetryUI.gameObject); rewardRetryUI = null; } }
+
+    internal void ShowTutorialSkills(){if(skillPanel!=null)skillPanel.SetActive(true);}
+    public Button SkillButton(string id)
+    {int index=System.Array.IndexOf(playerCharacter?.skillIds ?? System.Array.Empty<string>(),id);return index>=0 && index<skillButtons.Length?skillButtons[index].GetComponent<Button>():null;}
+    internal void RefreshTutorialInput(){SetAdverbCardInteraction(CanChoose && AllowsInput(TutorialInput.Adverb));RefreshSelectionUI();}
+    internal void ShowTutorialNotice(string text){if(battleLogText!=null)battleLogText.text=text;}
 
     private void SetupCharacterEquipment()
     {
@@ -329,7 +343,7 @@ public class BattleManager : MonoBehaviour
 
     public void OpenSkillPanel()
     {
-        if (isProcessing) return;
+        if (!AllowsInput(TutorialInput.OpenSkills) || isProcessing) return;
         if (skillPanel != null)
         {
             skillPanel.SetActive(true);
@@ -338,7 +352,7 @@ public class BattleManager : MonoBehaviour
 
     public void CloseSkillPanel()
     {
-        if (isProcessing) return;
+        if (!AllowsInput(TutorialInput.CloseSkills) || isProcessing) return;
         if (skillPanel != null)
         {
             skillPanel.SetActive(false);
@@ -368,7 +382,7 @@ public class BattleManager : MonoBehaviour
     private void UseSkill(SkillData skill, EquipmentData skillEquipment,
         EquipmentData enemySkillEquipment, string adverbContestLog)
     {
-        if (isProcessing) return;
+        if (!AllowsInput(TutorialInput.Skill,skill?.id) || isProcessing) return;
         BattleActionResult result = battleContext.Resolve(new BattleAction(BattleSide.Player, skill, skillEquipment,
             Selection.Tense, Selection.Modal, Selection.Commit(skill.id)));
         if (!result.CanUse)
@@ -377,6 +391,7 @@ public class BattleManager : MonoBehaviour
             return;
         }
         LastCommittedAction = result.Action;
+        Tutorial?.SkillAccepted(skill.id);
         isProcessing = true;
         SetAdverbCardInteraction(false);
         RefreshSelectionUI();
@@ -402,6 +417,7 @@ public class BattleManager : MonoBehaviour
         }
         RefreshSelectionUI();
         if (!result.IsReservation) yield return PresentPlayerHit(result.Damage);
+        if(Tutorial!=null)yield return Tutorial.AttackResolved();
         if (CompleteBattle()) yield break;
         EnemyAttack(enemySkillEquipment);
         yield return new WaitForSeconds(1f);
@@ -426,7 +442,8 @@ public class BattleManager : MonoBehaviour
         if (resultTransitioned) return true;
         isProcessing = true; SetAdverbCardInteraction(false);
         bool win = battleContext.Outcome == BattleOutcome.PlayerWin;
-        if (!BattleRewardService.Complete(rewardBattleId,win,out string error))
+        if(win && Tutorial!=null)Tutorial.PrepareVictory();
+        if (!BattleRewardService.Complete(rewardBattleId,win,out string error,tutorialCompleted:Tutorial?.ReadyForCommit==true))
         { ShowRewardSaveFailure(error,() => CompleteBattle()); return true; }
         HideRewardSaveFailure(); resultTransitioned = true;
         GameManager.IsWin = win;
@@ -581,6 +598,7 @@ public class BattleManager : MonoBehaviour
         if (index < 0 || index >= playerCharacter.skillIds.Length) return;
 
         string skillId = playerCharacter.skillIds[index];
+        if(!AllowsInput(TutorialInput.Skill,skillId))return;
         SkillData skill = GameDatabase.Instance.GetSkill(skillId);
         if (skill == null) return;
 
@@ -617,6 +635,7 @@ public class BattleManager : MonoBehaviour
 
     private void EnemyAttack(EquipmentData skillEquipment = null)
     {
+        if(Tutorial?.PassiveEnemy==true){battleContext.SkipEnemyTurn();if(battleLogText!=null)battleLogText.text="Training opponent waits. Choose your next skill.";return;}
         var usableSkills = new List<SkillData>();
         foreach (string skillId in enemyCharacter.skillIds ?? System.Array.Empty<string>())
         {
@@ -670,6 +689,7 @@ public class BattleManager : MonoBehaviour
         if (playerSprite == null)
         {
             playerRenderer.sprite = null;
+            ShowMissingPortrait(playerRenderer,playerCharacter);
             Debug.LogWarning($"Character artwork is not yet available: {playerCharacter.characterName}");
         }
         else
@@ -681,6 +701,7 @@ public class BattleManager : MonoBehaviour
         if (enemySprite == null)
         {
             enemyRenderer.sprite = null;
+            ShowMissingPortrait(enemyRenderer,enemyCharacter);
             Debug.LogWarning($"Character artwork is not yet available: {enemyCharacter.characterName}");
         }
         else
@@ -688,6 +709,18 @@ public class BattleManager : MonoBehaviour
             enemyRenderer.sprite = enemySprite;
             Debug.Log($"Enemy sprite loaded: {enemyCharacter.illustration}");
         }
+    }
+
+    private void ShowMissingPortrait(SpriteRenderer renderer,CharacterData character)
+    {
+        if(!StageCatalog.IsTutorialEnemy(character.id) || playerHPText==null || Camera.main==null)return;
+        var point=Camera.main.WorldToViewportPoint(renderer.transform.position);
+        var root=new GameObject("PortraitPlaceholder_"+character.id,typeof(RectTransform),typeof(Image));root.transform.SetParent(playerHPText.canvas.transform,false);root.transform.SetAsFirstSibling();
+        var rect=(RectTransform)root.transform;rect.anchorMin=rect.anchorMax=new Vector2(Mathf.Clamp(point.x,.24f,.76f),Mathf.Clamp(point.y,.35f,.65f));rect.sizeDelta=new Vector2(260,360);rect.anchoredPosition=Vector2.zero;
+        var image=root.GetComponent<Image>();image.color=new Color(.08f,.13f,.21f,.85f);image.raycastTarget=false;
+        var label=new GameObject("PortraitPlaceholderName",typeof(RectTransform),typeof(TextMeshProUGUI));label.transform.SetParent(root.transform,false);
+        var lr=(RectTransform)label.transform;lr.anchorMin=Vector2.zero;lr.anchorMax=Vector2.one;lr.offsetMin=new Vector2(16,16);lr.offsetMax=new Vector2(-16,-16);
+        var text=label.GetComponent<TextMeshProUGUI>();text.font=playerHPText.font;text.fontSharedMaterial=playerHPText.fontSharedMaterial;text.text=character.characterName+"\nPortrait unavailable";text.enableAutoSizing=true;text.fontSizeMin=24;text.fontSizeMax=34;text.alignment=TextAlignmentOptions.Center;text.raycastTarget=false;
     }
 
     private IEnumerator ShakeRenderer(SpriteRenderer targetRenderer)
@@ -957,7 +990,7 @@ public class BattleManager : MonoBehaviour
 
     private void SelectAdverbCard(int index)
     {
-        if (isProcessing) return;
+        if (!AllowsInput(TutorialInput.Adverb) || isProcessing) return;
         if (index < 0 || index >= currentAdverbCards.Count) return;
 
         selectedTurnAdverb = currentAdverbCards[index];
@@ -974,7 +1007,7 @@ public class BattleManager : MonoBehaviour
 
     private void SelectNoAdverb()
     {
-        if (isProcessing) return;
+        if (!AllowsInput(TutorialInput.Adverb) || isProcessing) return;
 
         selectedTurnAdverb = null;
         Selection.Select(BattleElementKind.Adverb, null);

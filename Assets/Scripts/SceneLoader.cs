@@ -5,28 +5,33 @@ public class SceneLoader : MonoBehaviour
 {
     public void LoadBattle()
     {
+        if(!TutorialController.NavigationAllowed)return;
+        if(!StageSession.Select("feuer_practice",false,out _))return;
         SceneManager.LoadScene("CharacterSelect");
     }
 
     public void LoadBattleDirect()
     {
+        if(!TutorialController.NavigationAllowed)return;
+        if(!StageSession.ValidateBattle(out string error)){TutorialChoiceUI.ShowStageError(error);return;}
         SceneManager.LoadScene("Battle");
     }
 
     public void LoadStage1()
     {
-        GameManager.EnemyCharacterId = "feuer";
-        SceneManager.LoadScene("CharacterSelect");
+        TutorialChoiceUI.Request("stage_1",false);
     }
 
     public void LoadClear()
     {
+        if(!TutorialController.NavigationAllowed)return;
         GameManager.IsWin = true;
         SceneManager.LoadScene("Result");
     }
 
     public void LoadStageSelect()
     {
+        if(!TutorialController.NavigationAllowed)return;
         SceneManager.LoadScene("StageSelect");
     }
 }

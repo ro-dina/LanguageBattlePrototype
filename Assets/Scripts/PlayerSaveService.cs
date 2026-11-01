@@ -63,6 +63,7 @@ public sealed class PlayerSaveService : MonoBehaviour
             using (PlayerStateChanges.BeginBatch())
             {
                 CurrencyService.Restore(data.wallet);
+                TutorialPreferences.Restore(data.tutorials);
                 BattleRewardService.Restore(data.battleRewards);
                 InventoryManager.RestoreState(data.inventory);
                 CharacterInstances.RestoreState(data.characterInstances);
@@ -81,7 +82,7 @@ public sealed class PlayerSaveService : MonoBehaviour
 
     public SaveData Capture() => new SaveData {
         version = SaveDataValidator.CurrentVersion,
-        wallet = CurrencyService.CaptureState(),
+        wallet = CurrencyService.CaptureState(), tutorials = TutorialPreferences.CaptureState(),
         battleRewards = BattleRewardService.CaptureState(),
         inventory = InventoryManager.CaptureState(),
         characterInstances = CharacterInstances.CaptureState(),

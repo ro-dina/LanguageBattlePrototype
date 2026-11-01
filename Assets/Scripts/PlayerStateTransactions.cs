@@ -7,7 +7,7 @@ public static class PlayerStateTransactions
 {
     private static bool committing;
     public static SaveData Capture() => PlayerSaveService.Instance != null ? PlayerSaveService.Instance.Capture() : new SaveData {
-        version = SaveDataValidator.CurrentVersion, wallet = CurrencyService.CaptureState(), battleRewards = BattleRewardService.CaptureState(), inventory = InventoryManager.CaptureState(),
+        version = SaveDataValidator.CurrentVersion, wallet = CurrencyService.CaptureState(), tutorials = TutorialPreferences.CaptureState(), battleRewards = BattleRewardService.CaptureState(), inventory = InventoryManager.CaptureState(),
         characterInstances = CharacterInstances.CaptureState(), characterEquipment = CharacterLoadoutStore.CaptureState(),
         characterCollection = CharacterCollection.CaptureState(), stageProgress = StageProgress.CaptureState()
     };
@@ -39,6 +39,7 @@ public static class PlayerStateTransactions
         using (PlayerStateChanges.BeginBatch())
         {
             CurrencyService.Restore(data.wallet);
+            TutorialPreferences.Restore(data.tutorials);
             BattleRewardService.Restore(data.battleRewards);
             CharacterInstances.RestoreState(data.characterInstances);
             CharacterCollection.RestoreState(data.characterCollection);

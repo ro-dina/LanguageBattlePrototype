@@ -3614,7 +3614,10 @@
       "attack": 5,
       "defense": 2,
       "speed": 5,
-      "skillIds": ["laufen", "beissen"]
+      "skillIds": [
+        "laufen",
+        "beissen"
+      ]
     },
     {
       "id": "feuer",
@@ -3628,7 +3631,10 @@
       "attack": 6,
       "defense": 1,
       "speed": 4,
-      "skillIds": ["brennen", "laufen"]
+      "skillIds": [
+        "brennen",
+        "laufen"
+      ]
     },
     {
       "id": "wasserpistole",
@@ -3642,7 +3648,11 @@
       "attack": 7,
       "defense": 3,
       "speed": 5,
-      "skillIds": ["sein", "haben", "werden"]
+      "skillIds": [
+        "sein",
+        "haben",
+        "werden"
+      ]
     },
     {
       "id": "pistole",
@@ -3660,6 +3670,74 @@
         "sein",
         "haben",
         "werden"
+      ]
+    },
+    {
+      "id": "technik",
+      "characterName": "Technik",
+      "language": "de",
+      "grammaticalGender": "feminine",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "technik",
+      "hp": 24,
+      "attack": 5,
+      "defense": 2,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "adverb",
+      "characterName": "Adverb",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "adverb",
+      "hp": 24,
+      "attack": 5,
+      "defense": 2,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "adjektiv",
+      "characterName": "Adjektiv",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "adjektiv",
+      "hp": 24,
+      "attack": 5,
+      "defense": 2,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben"
+      ]
+    },
+    {
+      "id": "modalverb",
+      "characterName": "Modalverb",
+      "language": "de",
+      "grammaticalGender": "neuter",
+      "grammaticalNumber": "singular",
+      "rarity": 1,
+      "illustration": "modalverb",
+      "hp": 24,
+      "attack": 5,
+      "defense": 2,
+      "speed": 4,
+      "skillIds": [
+        "sein",
+        "haben"
       ]
     }
   ]

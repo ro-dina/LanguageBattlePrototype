@@ -29,7 +29,7 @@ public class WordItemMigrationTests
         Assert.That(SaveDataMigration.TryMigrate(json,out var first,out _),Is.True);Assert.That(SaveDataMigration.TryMigrate(json,out var second,out _),Is.True);
         Assert.That(JsonUtility.ToJson(first),Is.EqualTo(JsonUtility.ToJson(second)));
         Assert.That(files.Load(out var data),Is.EqualTo(SaveLoadStatus.Migrated),files.LastError);
-        Assert.That(data.version,Is.EqualTo(5));Assert.That(data.characterInstances.instances.Count,Is.EqualTo(106));
+        Assert.That(data.version,Is.EqualTo(6));Assert.That(data.characterInstances.instances.Count,Is.EqualTo(106));
         Assert.That(data.characterInstances.instances.Count(i=>i.characterId=="nacht"),Is.EqualTo(27));
         Assert.That(data.characterInstances.instances.Count(i=>i.characterId=="wasser"),Is.EqualTo(37));
         Assert.That(data.characterInstances.instances.Count(i=>i.characterId=="pistole"),Is.EqualTo(42));
@@ -46,7 +46,7 @@ public class WordItemMigrationTests
         var v2=V2(); var v1=new LegacySaveData {version=1,inventory=v2.inventory,characterEquipment=v2.characterEquipment,stageProgress=v2.stageProgress,ownedCharacters=new OwnedCharactersState()};
         v1.ownedCharacters.characterIds.Add("nacht");v1.characterEquipment.characters[0].instanceId=null;
         File.WriteAllText(files.MainPath,JsonUtility.ToJson(v1));Assert.That(files.Load(out var data),Is.EqualTo(SaveLoadStatus.Migrated));
-        Assert.That(data.version,Is.EqualTo(5));Assert.That(data.characterInstances.instances.Count,Is.EqualTo(106));
+        Assert.That(data.version,Is.EqualTo(6));Assert.That(data.characterInstances.instances.Count,Is.EqualTo(106));
         Assert.That(data.characterEquipment.characters.Single().adjectiveId,Is.EqualTo("schwarz"));Assert.That(File.Exists(files.MainPath+".v1.bak"),Is.True);
     }
     [Test] public void BackupAndInterruptedMigrationRecoverDeterministicIdsWithoutTouchingDamagedSources()

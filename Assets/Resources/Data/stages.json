@@ -1,0 +1,114 @@
+{
+  "stages": [
+    {
+      "stageId": "stage_1",
+      "stageNumber": 1,
+      "displayName": "Technik",
+      "enemyCharacterId": "technik",
+      "prerequisiteStageIds": [],
+      "firstClearCoins": 300,
+      "repeatClearCoins": 100,
+      "tutorialId": "technik_basics",
+      "tutorialType": "Skills",
+      "stageDescription": "Choose a verb skill to attack.",
+      "enemyBehaviorProfile": "guided_passive",
+      "battleModifiers": {
+        "guidedEnemyHp": 30
+      },
+      "isEnabled": true
+    },
+    {
+      "stageId": "stage_2",
+      "stageNumber": 2,
+      "displayName": "Adverb",
+      "enemyCharacterId": "adverb",
+      "prerequisiteStageIds": [
+        "stage_1"
+      ],
+      "firstClearCoins": 300,
+      "repeatClearCoins": 100,
+      "tutorialId": "adverb_basics",
+      "tutorialType": "Adverbs",
+      "stageDescription": "Explore optional adverb cards.",
+      "enemyBehaviorProfile": "standard",
+      "battleModifiers": {
+        "guidedEnemyHp": 0
+      },
+      "isEnabled": true
+    },
+    {
+      "stageId": "stage_3",
+      "stageNumber": 3,
+      "displayName": "Adjektiv",
+      "enemyCharacterId": "adjektiv",
+      "prerequisiteStageIds": [
+        "stage_2"
+      ],
+      "firstClearCoins": 300,
+      "repeatClearCoins": 100,
+      "tutorialId": "adjektiv_basics",
+      "tutorialType": "Equipment",
+      "stageDescription": "Explore adjectives and equipment.",
+      "enemyBehaviorProfile": "standard",
+      "battleModifiers": {
+        "guidedEnemyHp": 0
+      },
+      "isEnabled": true
+    },
+    {
+      "stageId": "stage_4",
+      "stageNumber": 4,
+      "displayName": "Modalverb",
+      "enemyCharacterId": "modalverb",
+      "prerequisiteStageIds": [
+        "stage_3"
+      ],
+      "firstClearCoins": 300,
+      "repeatClearCoins": 100,
+      "tutorialId": "modalverb_basics",
+      "tutorialType": "Modal verbs",
+      "stageDescription": "Explore the once-per-battle müssen effect.",
+      "enemyBehaviorProfile": "standard",
+      "battleModifiers": {
+        "guidedEnemyHp": 0
+      },
+      "isEnabled": true
+    },
+    {
+      "stageId": "stage_5",
+      "stageNumber": 5,
+      "displayName": "Zukunft",
+      "enemyCharacterId": "zukunft",
+      "prerequisiteStageIds": [
+        "stage_4"
+      ],
+      "firstClearCoins": 300,
+      "repeatClearCoins": 100,
+      "tutorialId": "zukunft_basics",
+      "tutorialType": "Futur I",
+      "stageDescription": "Explore a reserved attack next turn.",
+      "enemyBehaviorProfile": "standard",
+      "battleModifiers": {
+        "guidedEnemyHp": 0
+      },
+      "isEnabled": true
+    },
+    {
+      "stageId": "feuer_practice",
+      "stageNumber": 0,
+      "displayName": "Feuer Practice",
+      "enemyCharacterId": "feuer",
+      "prerequisiteStageIds": [],
+      "firstClearCoins": 300,
+      "repeatClearCoins": 100,
+      "tutorialId": "",
+      "tutorialType": "Free battle",
+      "stageDescription": "The original Feuer battle remains available.",
+      "enemyBehaviorProfile": "standard",
+      "battleModifiers": {
+        "guidedEnemyHp": 0
+      },
+      "isEnabled": true
+    }
+  ]
+}
