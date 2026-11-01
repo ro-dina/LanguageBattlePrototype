@@ -22,7 +22,7 @@ public class ResultManager : MonoBehaviour
         if (rewardPanel != null) rewardPanel.SetActive(victory && completed);
         if (rewardText != null)
         {
-            rewardText.text = victory && completed ? FormatRewards(receipt) : "";
+            LocalizedText.SetProvider(rewardText,()=>victory && completed ? FormatRewards(receipt) : "");
             rewardText.rectTransform.anchoredPosition = Vector2.zero;
         }
         if (victory)
@@ -55,17 +55,17 @@ public class ResultManager : MonoBehaviour
     {
         if (receipt == null || receipt.status != BattleRewardStatus.Victory) return "";
         var text = new System.Text.StringBuilder();
-        text.Append(GameDatabase.EnsureAvailable().GetCharacter(receipt.enemyCharacterId).characterName).Append(" defeated!\n\nRewards\n");
+        text.Append(GameDatabase.EnsureAvailable().GetCharacter(receipt.enemyCharacterId).characterName).Append(Localization.Text("ui.reward.defeated"));
         if (receipt.coins > 0) text.Append(EconomySettings.Current.currencyDisplayName).Append(" +").Append(EconomySettings.Amount(receipt.coins)).Append("\n");
-        if (receipt.firstClearCoins > 0) text.Append("  Normal: ").Append(EconomySettings.Amount(receipt.coins-receipt.firstClearCoins)).Append(" | First clear: +").Append(EconomySettings.Amount(receipt.firstClearCoins)).Append("\n");
-        if (!string.IsNullOrEmpty(receipt.stageId)) text.Append(StageCatalog.Get(receipt.stageId).displayName).Append(" cleared!\n");
-        if (receipt.tutorialCompleted) text.Append("Tutorial completed!\n");
+        if (receipt.firstClearCoins > 0) text.Append(Localization.Text("ui.reward.normal")).Append(EconomySettings.Amount(receipt.coins-receipt.firstClearCoins)).Append(Localization.Text("ui.reward.first")).Append(EconomySettings.Amount(receipt.firstClearCoins)).Append("\n");
+        if (!string.IsNullOrEmpty(receipt.stageId)) text.Append(receipt.stageId=="feuer_practice"?Localization.Text("ui.practice.feuer"):StageCatalog.Get(receipt.stageId).displayName).Append(Localization.Text("ui.reward.cleared"));
+        if (receipt.tutorialCompleted) text.Append(Localization.Text("ui.reward.tutorial"));
         if (receipt.materials.Count > 0)
         {
-            text.Append("\nMaterials\n");
+            text.Append(Localization.Text("ui.reward.materials"));
             foreach (var entry in receipt.materials) text.Append(entry.text).Append(" ×").Append(entry.count).Append("\n");
         }
-        if (!string.IsNullOrEmpty(receipt.characterId)) text.Append("\nCharacter obtained!\n").Append(GameDatabase.Instance.GetCharacter(receipt.characterId).characterName).Append(" ×1\n");
+        if (!string.IsNullOrEmpty(receipt.characterId)) text.Append(Localization.Text("ui.reward.character")).Append(GameDatabase.Instance.GetCharacter(receipt.characterId).characterName).Append(" ×1\n");
         return text.ToString();
     }
 

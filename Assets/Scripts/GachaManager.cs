@@ -99,15 +99,17 @@ public class GachaManager : MonoBehaviour
         try
         {
             if (!PlayerStateTransactions.TryChange(data => CurrencyService.SpendFrom(data,Cost(tenPull)) && RewardGrantService.ApplyTo(data,rewards),out string error,operation))
-            { if (resultText != null) resultText.text = "Pull failed; Coins and rewards unchanged. " + error; return false; }
-            string result = tenPull ? "10 Pull Result\n\n" : "";
-            for (int i=0;i<draws.Length;i++)
-            {
-                var item = draws[i]; var character = WordCharacterRewards.Character(item.id);
-                string kind = character == null ? item.itemType : "Character obtained!";
-                result += (tenPull ? (i+1) + ". " : "") + $"[{item.rarity}] {ItemDisplayNames.Get(item.id)} ({kind})\n";
-            }
-            if (resultText != null) resultText.text = result;
+            { if (resultText != null) resultText.text = "Pull failed; Coins and rewards unchanged. " + Localization.Error(error); return false; }
+            LocalizedText.SetProvider(resultText,()=> {
+                string text = tenPull ? Localization.Text("ui.pull.10.result")+"\n\n" : "";
+                for(int i=0;i<draws.Length;i++)
+                {
+                    var item=draws[i]; bool character=WordCharacterRewards.Character(item.id)!=null;
+                    string kind=character?Localization.Text("ui.character.obtained"):Localization.Present(item.itemType);
+                    text+=(tenPull?(i+1)+". ":"")+ $"[{item.rarity}] {ItemDisplayNames.Get(item.id)} ({kind})\n";
+                }
+                return text;
+            });
             nextActionTime = Time.unscaledTime + ClickCooldown;
             return true;
         }

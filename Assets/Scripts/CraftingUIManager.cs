@@ -36,16 +36,15 @@ public class CraftingUIManager : MonoBehaviour
     {
         if (pendingCraft == null || !characterDialog.activeSelf) return;
         var result = CraftingManager.Preview(pendingCraft);
-        dialogTitle.text = result == null ? "Inputs unavailable" : "Craft " + result.characterName + "?";
+        LocalizedText.SetProvider(dialogTitle,()=>result==null?Localization.Text("ui.inputs.unavailable"):Localization.Text("ui.craft.confirm",result.characterName));
         var individuals = pendingCraft.Where(e => e.Kind == CraftingElementKind.CharacterInstance).ToArray();
-        dialogDetails.text = (individuals.Length == 0 ? "" : string.Join("\n\n",individuals.Select(e => Describe(e.Id))) +
-            "\n\nThese individuals and their equipment will be removed.\n") +
-            "Materials: " + string.Join(" + ",pendingCraft.Where(e => e.Kind == CraftingElementKind.Material).Select(e => ItemDisplayNames.Get(e.Id))) +
-            "\nCost: " + EconomySettings.Price(EconomySettings.Current.craftingCost) +
-            "\nCurrent: " + EconomySettings.Price(CurrencyService.Balance) +
-            "\nResult: " + (result?.characterName ?? "unavailable") + " • new individual, initial equipment";
+        LocalizedText.SetProvider(dialogDetails,()=>Localization.Text("ui.craft.confirm.details",
+            individuals.Length==0?"":string.Join("\n\n",individuals.Select(e=>Describe(e.Id)))+"\n\n"+Localization.Text("ui.consume.warning")+"\n",
+            string.Join(" + ",pendingCraft.Where(e=>e.Kind==CraftingElementKind.Material).Select(e=>ItemDisplayNames.Get(e.Id))),
+            EconomySettings.Price(EconomySettings.Current.craftingCost),EconomySettings.Price(CurrencyService.Balance),result?.characterName ?? Localization.Text("ui.unavailable"))+
+            (CurrencyService.CanSpend(EconomySettings.Current.craftingCost)?"":"\n"+Localization.Text("ui.not.enough")+" "+EconomySettings.Current.currencyDisplayName+"."));
         dialogAccept.interactable = CraftingManager.CanCraft(pendingCraft);
-        if (!CurrencyService.CanSpend(EconomySettings.Current.craftingCost)) dialogDetails.text += "\nNot enough " + EconomySettings.Current.currencyDisplayName + ".";
+
     }
     private void OnOwnershipChanged()
     {
@@ -56,6 +55,7 @@ public class CraftingUIManager : MonoBehaviour
     }
     private void Start()
     {
+        LocalizedText.Learning(selectedMaterialText); LocalizedText.Learning(combinedWordText);
         started = true;
         dialogPrevious.onClick.AddListener(() => CyclePicker(-1));
         dialogNext.onClick.AddListener(() => CyclePicker(1));
@@ -83,7 +83,7 @@ public class CraftingUIManager : MonoBehaviour
     {
         var row = Instantiate(craftingMaterialPrefab,inventoryContent); row.name = name; row.SetActive(true);
         spawnedMaterialObjects.Add(row);
-        FindChildText(row,"ItemNameText").text = label; FindChildText(row,"ItemCountText").text = count;
+        LocalizedText.Set(FindChildText(row,"ItemNameText"),name.StartsWith("Material_")?"ui.row.material":"ui.row.character",label.Substring(label.IndexOf(']')+2)); FindChildText(row,"ItemCountText").text = count;
         if (name.StartsWith("Material_" + DynamicMaterials.Prefix,System.StringComparison.Ordinal)) MaterialRowLayout.Configure(row,FindChildText(row,"ItemNameText"));
         var button = row.GetComponent<Button>(); button.onClick = new Button.ButtonClickedEvent(); button.onClick.AddListener(click);
     }
@@ -110,7 +110,7 @@ public class CraftingUIManager : MonoBehaviour
         string article = string.IsNullOrEmpty(loadout.articleId) ? "default" : GameDatabase.Instance.GetEquipment(loadout.articleId).equipmentName;
         string skills = string.Join(", ",loadout.skillSlots.Select(s => GameDatabase.Instance.GetSkill(s.skillId).skillName +
             (string.IsNullOrEmpty(s.equippedAdverbId) ? "" : " + " + GameDatabase.Instance.GetEquipment(s.equippedAdverbId).equipmentName)));
-        return CharacterInstances.DisplayName(instanceId) + $"\nAdjective: {adjective} | Article: {article}\nSkills: {skills}";
+        return Localization.Text("ui.individual.description",CharacterInstances.DisplayName(instanceId),string.IsNullOrEmpty(loadout.adjectiveId)?Localization.Text("ui.lower.none"):adjective,string.IsNullOrEmpty(loadout.articleId)?Localization.Text("ui.default"):article,skills);
     }
     public void OpenIndividualPicker(string characterId)
     {
@@ -129,7 +129,7 @@ public class CraftingUIManager : MonoBehaviour
     {
         var current = CharacterInstances.Get(pickerInstanceId);
         dialogTitle.text = current == null ? "Individual unavailable" : "Choose an individual • " + CharacterInstances.DisplayBadge(pickerInstanceId);
-        dialogDetails.text = Describe(pickerInstanceId) + "\n\nAdding it selects this individual for consumption.\nYou will confirm before crafting.";
+        string selectedPicker=pickerInstanceId;LocalizedText.SetProvider(dialogDetails,()=>Describe(selectedPicker)+"\n\n"+Localization.Text("ui.picker.warning"));
         dialogPrevious.gameObject.SetActive(true); dialogNext.gameObject.SetActive(true);
         dialogPrevious.interactable = dialogNext.interactable = current != null && CharacterInstances.Count(current.characterId) > 1;
         dialogAccept.interactable = CharacterInstances.CanConsume(pickerInstanceId) && !selection.Any(e => e.Kind == CraftingElementKind.CharacterInstance && e.Id == pickerInstanceId);
@@ -151,16 +151,16 @@ public class CraftingUIManager : MonoBehaviour
         if (pendingCraft != null) { var inputs = pendingCraft; var operation = pendingOperation; CancelDialog(); ExecuteCraft(inputs,operation); }
         else if (dialogAccept.interactable) { SelectCharacterInstance(pickerInstanceId); CancelDialog(); }
     }
-    public void CancelDialog() { characterDialog.SetActive(false); pendingCraft = null; pendingOperation = null; pickerInstanceId = null; }
+    public void CancelDialog() { dialogDetails.text=""; characterDialog.SetActive(false); pendingCraft = null; pendingOperation = null; pickerInstanceId = null; }
     private void ExecuteCraft(CraftingElement[] inputs,PlayerOperation operation)
     {
         if (crafting) return;
         crafting = true;
         bool success = CraftingManager.TryCraft(inputs,out var created,out string error,operation);
         crafting = false;
-        if (!success) { UpdateSelectionTexts(); SetResultText("Craft failed; nothing consumed. " + error); return; }
+        if (!success) { UpdateSelectionTexts(); SetResultText("Craft failed; nothing consumed. " + Localization.Error(error)); return; }
         selection.Clear(); UpdateSelectionTexts(); RefreshInventory();
-        SetResultText("Crafted: " + GameDatabase.Instance.GetCharacter(created.characterId).characterName + "\nOwned: " + CharacterInstances.Count(created.characterId));
+        LocalizedText.Set(resultText,"ui.craft.success",GameDatabase.Instance.GetCharacter(created.characterId).characterName,CharacterInstances.Count(created.characterId));
     }
     private void UpdateSelectionTexts()
     {
@@ -168,8 +168,9 @@ public class CraftingUIManager : MonoBehaviour
         var character = CraftingManager.Preview(selection);
         combinedWordText.text = character?.characterName ?? CraftingManager.CombinedWord(selection) ?? "";
         craftButton.interactable = CraftingManager.CanCraft(selection);
-        SetResultText(selection.Count == 0 ? "Select materials or individuals.\nCost: " + EconomySettings.Price(EconomySettings.Current.craftingCost) : character == null ? "No matching character." :
-            character.characterName + " (Character)\n" + (craftButton.interactable ? "Cost: " + EconomySettings.Price(EconomySettings.Current.craftingCost) : CurrencyService.CanSpend(EconomySettings.Current.craftingCost) ? "Inputs unavailable" : "Not enough " + EconomySettings.Current.currencyDisplayName + ". Need " + EconomySettings.Price(EconomySettings.Current.craftingCost)));
+        LocalizedText.SetProvider(resultText,()=> selection.Count==0 ? Localization.Text("ui.select.materials")+"\n"+Localization.Text("ui.cost.prefix")+" "+EconomySettings.Price(EconomySettings.Current.craftingCost) : character==null ? Localization.Text("ui.no.match") :
+            character.characterName+" "+Localization.Text("ui.character.kind")+"\n"+(craftButton.interactable?Localization.Text("ui.cost.prefix")+" "+EconomySettings.Price(EconomySettings.Current.craftingCost):CurrencyService.CanSpend(EconomySettings.Current.craftingCost)?Localization.Text("ui.inputs.unavailable"):Localization.Text("ui.not.enough")+" "+EconomySettings.Current.currencyDisplayName+". "+Localization.Text("ui.need")+" "+EconomySettings.Price(EconomySettings.Current.craftingCost)));
+
     }
     private static TMP_Text FindChildText(GameObject parent,string childName) => parent.GetComponentsInChildren<TMP_Text>(true).First(t => t.name == childName);
     private void SetResultText(string message) { if (resultText != null) resultText.text = message; }

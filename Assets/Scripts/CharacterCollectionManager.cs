@@ -153,7 +153,7 @@ public class CharacterCollectionManager : MonoBehaviour
             TMP_Text text = buttonObj.GetComponentInChildren<TMP_Text>();
             if (text != null)
             {
-                text.text = character.characterName + " [" + CharacterCollection.StatusLabel(character.id) + "]";
+                LocalizedText.SetProvider(text,()=>Localization.Text("ui.collection.card",character.characterName,Localization.Present(CharacterCollection.StatusLabel(character.id))));
             }
 
             Image icon = null;
@@ -196,8 +196,9 @@ public class CharacterCollectionManager : MonoBehaviour
 
         if (selectedCharacterText != null)
         {
-            selectedCharacterText.text = characterName + " [" + CharacterCollection.StatusLabel(characterId) + "]" +
-                (CharacterInstances.Owns(GameManager.SelectedCharacterInstanceId) ? "\nDetails: " + CharacterInstances.DisplayName(GameManager.SelectedCharacterInstanceId) : "\nRead only");
+            string detailId = GameManager.SelectedCharacterInstanceId;
+            LocalizedText.SetProvider(selectedCharacterText,()=>Localization.Text("ui.collection.card",characterName,Localization.Present(CharacterCollection.StatusLabel(characterId))) +
+                (CharacterInstances.Owns(detailId) ? "\n" + Localization.Text("ui.details.prefix") + " " + CharacterInstances.DisplayName(detailId) : "\n" + Localization.Text("ui.read.only.cap")));
         }
     }
 

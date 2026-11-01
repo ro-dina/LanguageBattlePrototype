@@ -62,6 +62,7 @@ public sealed class InventoryUIManager : MonoBehaviour
             }
 
             itemNameText.text = ItemDisplayNames.Get(entry.itemId);
+            LocalizedText.Learning(itemNameText);
             itemCountText.text = $"×{entry.count}";
             if (DynamicMaterials.IsId(entry.itemId)) MaterialRowLayout.Configure(itemObject,itemNameText);
         }

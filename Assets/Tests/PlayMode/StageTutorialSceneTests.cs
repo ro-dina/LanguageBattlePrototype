@@ -82,7 +82,7 @@ public class StageTutorialSceneTests
         yield return Choice(2);yield return StartBattle();var battle=Object.FindAnyObjectByType<BattleManager>();HP(battle.Context.Enemy,1);yield return AutoFinish();PlayerSaveService.Instance.Reload();Assert.That(TutorialPreferences.SkipAll,Is.True);
         yield return Load("StageSelect");TutorialChoiceUI.Request("stage_2",false);yield return null;yield return null;Assert.That(SceneManager.GetActiveScene().name,Is.EqualTo("CharacterSelect"));Assert.That(Object.FindAnyObjectByType<TutorialChoiceUI>(),Is.Null);
         yield return Choice(0,true);Assert.That(StageSession.Guided,Is.True);yield return StartBattle();Assert.That(DialogueUI.IsOpen,Is.True);HP(Object.FindAnyObjectByType<BattleManager>().Context.Enemy,1);yield return AutoFinish();Assert.That(CurrencyService.Balance,Is.EqualTo(3500));Assert.That(TutorialPreferences.SkipAll,Is.True);
-        yield return Load("GermanyHome");Object.FindAnyObjectByType<GermanyHomeManager>().GoSettings();yield return null;Button("TutorialOption0").onClick.Invoke();Assert.That(TutorialPreferences.SkipAll,Is.False);PlayerSaveService.Instance.Reload();Assert.That(TutorialPreferences.SkipAll,Is.False);
+        yield return Load("GermanyHome");Object.FindAnyObjectByType<GermanyHomeManager>().GoSettings();yield return null;Button("SettingsTutorial").onClick.Invoke();yield return null;Button("TutorialOption0").onClick.Invoke();Assert.That(TutorialPreferences.SkipAll,Is.False);PlayerSaveService.Instance.Reload();Assert.That(TutorialPreferences.SkipAll,Is.False);
     }
     [UnityTest] public IEnumerator RemainingFourStagesHaveChoicesNormalBattlesFirstRewardsAndRetryWithoutFalseCompletion()
     {

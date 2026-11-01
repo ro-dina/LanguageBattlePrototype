@@ -1,0 +1,1424 @@
+{
+  "entries": [
+    {
+      "key": "ui.home",
+      "en": "Home",
+      "ja": "ホーム"
+    },
+    {
+      "key": "ui.stage.select",
+      "en": "Stage Select",
+      "ja": "ステージ選択"
+    },
+    {
+      "key": "ui.character.select",
+      "en": "Character Select",
+      "ja": "キャラクター選択"
+    },
+    {
+      "key": "ui.inventory",
+      "en": "Inventory",
+      "ja": "インベントリ"
+    },
+    {
+      "key": "ui.gacha",
+      "en": "Gacha",
+      "ja": "ガチャ"
+    },
+    {
+      "key": "ui.crafting",
+      "en": "Crafting",
+      "ja": "合成"
+    },
+    {
+      "key": "ui.settings",
+      "en": "Settings",
+      "ja": "設定"
+    },
+    {
+      "key": "ui.battle.start",
+      "en": "Start Battle",
+      "ja": "戦闘開始"
+    },
+    {
+      "key": "ui.back",
+      "en": "Back",
+      "ja": "戻る"
+    },
+    {
+      "key": "ui.close",
+      "en": "Close",
+      "ja": "閉じる"
+    },
+    {
+      "key": "ui.next",
+      "en": "Next",
+      "ja": "次へ"
+    },
+    {
+      "key": "ui.continue",
+      "en": "Continue",
+      "ja": "続ける"
+    },
+    {
+      "key": "ui.confirm",
+      "en": "Confirm",
+      "ja": "決定"
+    },
+    {
+      "key": "ui.save",
+      "en": "Save",
+      "ja": "保存"
+    },
+    {
+      "key": "ui.cancel",
+      "en": "Cancel",
+      "ja": "キャンセル"
+    },
+    {
+      "key": "ui.discard",
+      "en": "Discard",
+      "ja": "破棄"
+    },
+    {
+      "key": "ui.details",
+      "en": "Details",
+      "ja": "詳細"
+    },
+    {
+      "key": "ui.characters",
+      "en": "Characters",
+      "ja": "キャラクター"
+    },
+    {
+      "key": "ui.dictionary",
+      "en": "Dictionary",
+      "ja": "辞書"
+    },
+    {
+      "key": "ui.missions",
+      "en": "Missions",
+      "ja": "ミッション"
+    },
+    {
+      "key": "ui.stages",
+      "en": "Stages",
+      "ja": "ステージ一覧"
+    },
+    {
+      "key": "ui.battle",
+      "en": "Battle",
+      "ja": "戦闘"
+    },
+    {
+      "key": "ui.fight",
+      "en": "Fight",
+      "ja": "技を選ぶ"
+    },
+    {
+      "key": "ui.result",
+      "en": "Result",
+      "ja": "結果"
+    },
+    {
+      "key": "ui.clear",
+      "en": "Clear",
+      "ja": "選択を解除"
+    },
+    {
+      "key": "ui.undo",
+      "en": "Undo last",
+      "ja": "ひとつ戻す"
+    },
+    {
+      "key": "ui.craft",
+      "en": "Craft",
+      "ja": "合成する"
+    },
+    {
+      "key": "ui.retry",
+      "en": "Retry",
+      "ja": "再挑戦"
+    },
+    {
+      "key": "ui.challenge",
+      "en": "Challenge",
+      "ja": "挑戦"
+    },
+    {
+      "key": "ui.locked",
+      "en": "Locked",
+      "ja": "未解放"
+    },
+    {
+      "key": "ui.ready",
+      "en": "Ready",
+      "ja": "挑戦可能"
+    },
+    {
+      "key": "ui.practice",
+      "en": "Practice",
+      "ja": "練習"
+    },
+    {
+      "key": "ui.cleared",
+      "en": "Cleared",
+      "ja": "クリア済み"
+    },
+    {
+      "key": "ui.tutorial",
+      "en": "Tutorial",
+      "ja": "チュートリアル"
+    },
+    {
+      "key": "ui.skip",
+      "en": "Skip",
+      "ja": "スキップ"
+    },
+    {
+      "key": "ui.none",
+      "en": "None",
+      "ja": "なし"
+    },
+    {
+      "key": "ui.lower.none",
+      "en": "none",
+      "ja": "なし"
+    },
+    {
+      "key": "ui.default",
+      "en": "default",
+      "ja": "標準"
+    },
+    {
+      "key": "ui.unavailable",
+      "en": "unavailable",
+      "ja": "利用できません"
+    },
+    {
+      "key": "ui.name",
+      "en": "Name",
+      "ja": "名前"
+    },
+    {
+      "key": "ui.rarity",
+      "en": "Rarity",
+      "ja": "レア度"
+    },
+    {
+      "key": "ui.all",
+      "en": "All",
+      "ja": "すべて"
+    },
+    {
+      "key": "ui.search",
+      "en": "Search...",
+      "ja": "検索…"
+    },
+    {
+      "key": "ui.gender.masculine",
+      "en": "masculine",
+      "ja": "男性"
+    },
+    {
+      "key": "ui.gender.feminine",
+      "en": "feminine",
+      "ja": "女性"
+    },
+    {
+      "key": "ui.gender.neuter",
+      "en": "neuter",
+      "ja": "中性"
+    },
+    {
+      "key": "ui.owned.items",
+      "en": "Owned items",
+      "ja": "所持アイテム"
+    },
+    {
+      "key": "ui.select.character",
+      "en": "Select a character",
+      "ja": "キャラクターを選択"
+    },
+    {
+      "key": "ui.select.materials",
+      "en": "Select materials or individuals.",
+      "ja": "素材または個体を選択してください。"
+    },
+    {
+      "key": "ui.no.characters",
+      "en": "No owned characters.",
+      "ja": "キャラクターを所持していません。"
+    },
+    {
+      "key": "ui.no.individual",
+      "en": "No individual",
+      "ja": "個体がありません"
+    },
+    {
+      "key": "ui.char.unavailable",
+      "en": "Character unavailable.",
+      "ja": "キャラクターを利用できません。"
+    },
+    {
+      "key": "ui.individual.unavailable",
+      "en": "Individual unavailable",
+      "ja": "個体を利用できません"
+    },
+    {
+      "key": "ui.unavailable.individual",
+      "en": "Unavailable individual",
+      "ja": "利用できない個体"
+    },
+    {
+      "key": "ui.read.only",
+      "en": "read only",
+      "ja": "閲覧のみ"
+    },
+    {
+      "key": "ui.read.only.cap",
+      "en": "Read only",
+      "ja": "閲覧のみ"
+    },
+    {
+      "key": "ui.not.owned",
+      "en": "Not owned",
+      "ja": "未所持"
+    },
+    {
+      "key": "ui.undiscovered",
+      "en": "Undiscovered",
+      "ja": "未発見"
+    },
+    {
+      "key": "ui.discovered.none",
+      "en": "Discovered • 0 owned",
+      "ja": "発見済み・現在未所持"
+    },
+    {
+      "key": "ui.owned",
+      "en": "Owned:",
+      "ja": "所持数："
+    },
+    {
+      "key": "ui.individual",
+      "en": "Individual",
+      "ja": "個体"
+    },
+    {
+      "key": "ui.gender",
+      "en": "Gender:",
+      "ja": "性："
+    },
+    {
+      "key": "ui.adjective",
+      "en": "Adjective:",
+      "ja": "形容詞："
+    },
+    {
+      "key": "ui.article",
+      "en": "Article:",
+      "ja": "冠詞："
+    },
+    {
+      "key": "ui.skills",
+      "en": "Skills:",
+      "ja": "技："
+    },
+    {
+      "key": "ui.skill.equipment",
+      "en": "Skill Equipments:",
+      "ja": "技の装備："
+    },
+    {
+      "key": "ui.change.article",
+      "en": "Change Article",
+      "ja": "冠詞を変更"
+    },
+    {
+      "key": "ui.change.adjective",
+      "en": "Change Adjective",
+      "ja": "形容詞を変更"
+    },
+    {
+      "key": "ui.equipment.save",
+      "en": "Save equipment changes?",
+      "ja": "装備の変更を保存しますか？"
+    },
+    {
+      "key": "ui.no.effect",
+      "en": "(no effect)",
+      "ja": "（効果なし）"
+    },
+    {
+      "key": "ui.details.prefix",
+      "en": "Details:",
+      "ja": "詳細："
+    },
+    {
+      "key": "ui.inputs.unavailable",
+      "en": "Inputs unavailable",
+      "ja": "素材・個体を利用できません"
+    },
+    {
+      "key": "ui.add.individual",
+      "en": "Add individual",
+      "ja": "この個体を追加"
+    },
+    {
+      "key": "ui.craft.consume",
+      "en": "Craft & consume",
+      "ja": "消費して合成"
+    },
+    {
+      "key": "ui.choose.individual",
+      "en": "Choose an individual •",
+      "ja": "個体を選択 •"
+    },
+    {
+      "key": "ui.craft.confirm.prefix",
+      "en": "Craft ",
+      "ja": "合成： "
+    },
+    {
+      "key": "ui.consume.warning",
+      "en": "These individuals and their equipment will be removed.",
+      "ja": "これらの個体と、その装備状態を消費します。"
+    },
+    {
+      "key": "ui.picker.warning",
+      "en": "Adding it selects this individual for consumption.\nYou will confirm before crafting.",
+      "ja": "追加すると、この個体が消費対象になります。\n合成前に確認できます。"
+    },
+    {
+      "key": "ui.materials.prefix",
+      "en": "Materials:",
+      "ja": "素材："
+    },
+    {
+      "key": "ui.cost.prefix",
+      "en": "Cost:",
+      "ja": "費用："
+    },
+    {
+      "key": "ui.current.prefix",
+      "en": "Current:",
+      "ja": "所持："
+    },
+    {
+      "key": "ui.result.prefix",
+      "en": "Result:",
+      "ja": "結果："
+    },
+    {
+      "key": "ui.initial.equipment",
+      "en": "new individual, initial equipment",
+      "ja": "新しい個体・初期装備"
+    },
+    {
+      "key": "ui.no.match.inputs",
+      "en": "No matching character, or inputs unavailable.",
+      "ja": "一致するキャラクターがないか、素材・個体が不足しています。"
+    },
+    {
+      "key": "ui.no.match",
+      "en": "No matching character.",
+      "ja": "一致するキャラクターがいません。"
+    },
+    {
+      "key": "ui.not.enough",
+      "en": "Not enough",
+      "ja": "不足："
+    },
+    {
+      "key": "ui.need",
+      "en": "Need",
+      "ja": "必要："
+    },
+    {
+      "key": "ui.craft.failed",
+      "en": "Craft failed; nothing consumed.",
+      "ja": "合成できませんでした。素材・個体・Coinsは消費していません。"
+    },
+    {
+      "key": "ui.crafted",
+      "en": "Crafted:",
+      "ja": "合成成功："
+    },
+    {
+      "key": "ui.character.kind",
+      "en": "(Character)",
+      "ja": "（キャラクター）"
+    },
+    {
+      "key": "ui.material.kind",
+      "en": "[Material]",
+      "ja": "[素材]"
+    },
+    {
+      "key": "ui.character.row",
+      "en": "[Character]",
+      "ja": "[キャラクター]"
+    },
+    {
+      "key": "ui.pull.choose",
+      "en": "Choose a pull.",
+      "ja": "回数を選んでガチャを引きましょう。"
+    },
+    {
+      "key": "ui.pull.1",
+      "en": "Pull 1",
+      "ja": "1回引く"
+    },
+    {
+      "key": "ui.pull.10",
+      "en": "Pull 10",
+      "ja": "10回引く"
+    },
+    {
+      "key": "ui.pull.10.result",
+      "en": "10 Pull Result",
+      "ja": "10連ガチャの結果"
+    },
+    {
+      "key": "ui.pull.failed",
+      "en": "Pull failed; Coins and rewards unchanged.",
+      "ja": "ガチャを実行できませんでした。Coinsと所持品は変更していません。"
+    },
+    {
+      "key": "ui.character.obtained",
+      "en": "Character obtained!",
+      "ja": "キャラクターを獲得！"
+    },
+    {
+      "key": "ui.material.type",
+      "en": "material",
+      "ja": "素材"
+    },
+    {
+      "key": "ui.verb.type",
+      "en": "verb",
+      "ja": "動詞"
+    },
+    {
+      "key": "ui.adverb.type",
+      "en": "adverb",
+      "ja": "副詞"
+    },
+    {
+      "key": "ui.adjective.type",
+      "en": "adjective",
+      "ja": "形容詞"
+    },
+    {
+      "key": "ui.article.type",
+      "en": "article",
+      "ja": "冠詞"
+    },
+    {
+      "key": "ui.word.type",
+      "en": "word",
+      "ja": "単語"
+    },
+    {
+      "key": "ui.letter.type",
+      "en": "letter",
+      "ja": "文字"
+    },
+    {
+      "key": "ui.pull.ten.insufficient",
+      "en": "for 10 pulls.",
+      "ja": "（10回分）"
+    },
+    {
+      "key": "ui.win",
+      "en": "YOU WIN!",
+      "ja": "勝利！"
+    },
+    {
+      "key": "ui.lose",
+      "en": "YOU LOSE...",
+      "ja": "敗北…"
+    },
+    {
+      "key": "ui.defeated",
+      "en": "defeated!",
+      "ja": "を倒した！"
+    },
+    {
+      "key": "ui.rewards",
+      "en": "Rewards",
+      "ja": "報酬"
+    },
+    {
+      "key": "ui.normal",
+      "en": "Normal:",
+      "ja": "通常報酬："
+    },
+    {
+      "key": "ui.first.clear",
+      "en": "First clear:",
+      "ja": "初回クリア報酬："
+    },
+    {
+      "key": "ui.stage.cleared",
+      "en": "cleared!",
+      "ja": "クリア！"
+    },
+    {
+      "key": "ui.tutorial.completed",
+      "en": "Tutorial completed!",
+      "ja": "チュートリアル完了！"
+    },
+    {
+      "key": "ui.materials.title",
+      "en": "Materials",
+      "ja": "素材"
+    },
+    {
+      "key": "ui.retry.save",
+      "en": "Retry save",
+      "ja": "保存を再試行"
+    },
+    {
+      "key": "ui.save.reward.failed",
+      "en": "Unable to save progress.\nYour Coins and items have not changed.\nRetry to continue.",
+      "ja": "進行状況を保存できませんでした。\nCoinsとアイテムは変更していません。\n再試行してください。"
+    },
+    {
+      "key": "ui.dev.funds",
+      "en": "Development funds",
+      "ja": "開発用Coins追加"
+    },
+    {
+      "key": "ui.added",
+      "en": "Added",
+      "ja": "追加："
+    },
+    {
+      "key": "ui.no.change",
+      "en": "No change.",
+      "ja": "変更していません。"
+    },
+    {
+      "key": "ui.practice.feuer",
+      "en": "Feuer Practice",
+      "ja": "Feuer 練習戦"
+    },
+    {
+      "key": "ui.stage.prefix",
+      "en": "Stage",
+      "ja": "ステージ"
+    },
+    {
+      "key": "ui.enemy.prefix",
+      "en": "Enemy:",
+      "ja": "敵："
+    },
+    {
+      "key": "ui.guidance.soon",
+      "en": "Guidance coming soon",
+      "ja": "操作ガイドは今後追加予定"
+    },
+    {
+      "key": "ui.free.battle",
+      "en": "Free battle",
+      "ja": "通常戦闘"
+    },
+    {
+      "key": "ui.skills.type",
+      "en": "Skills",
+      "ja": "技"
+    },
+    {
+      "key": "ui.adverbs.type",
+      "en": "Adverbs",
+      "ja": "副詞"
+    },
+    {
+      "key": "ui.equipment.type",
+      "en": "Equipment",
+      "ja": "装備"
+    },
+    {
+      "key": "ui.modals.type",
+      "en": "Modal verbs",
+      "ja": "助動詞"
+    },
+    {
+      "key": "ui.tut.settings",
+      "en": "Tutorial settings",
+      "ja": "チュートリアル設定"
+    },
+    {
+      "key": "ui.tut.prompt.skipped",
+      "en": "Tutorial prompts: skipped (Tutorial buttons still work)",
+      "ja": "自動案内：スキップ中（再受講は可能です）"
+    },
+    {
+      "key": "ui.tut.prompt.enabled",
+      "en": "Tutorial prompts: enabled",
+      "ja": "自動案内：有効"
+    },
+    {
+      "key": "ui.tut.replay.title",
+      "en": "Replay tutorial •",
+      "ja": "チュートリアルを再受講 •"
+    },
+    {
+      "key": "ui.tut.choice.description",
+      "en": "Choose guided practice or a normal battle. Rewards are the same.",
+      "ja": "操作ガイド付きの練習か、通常戦闘を選べます。報酬は同じです。"
+    },
+    {
+      "key": "ui.tut.not.ready",
+      "en": "Detailed guidance is not available yet. All choices currently start a normal battle; this tutorial stays incomplete.",
+      "ja": "詳細な操作ガイドは今後追加予定です。どの選択肢でも通常戦闘に進み、チュートリアル完了にはなりません。"
+    },
+    {
+      "key": "ui.tut.take.again",
+      "en": "Take the tutorial again",
+      "ja": "もう一度受講する"
+    },
+    {
+      "key": "ui.tut.take",
+      "en": "Take this tutorial",
+      "ja": "受講する"
+    },
+    {
+      "key": "ui.normal.battle",
+      "en": "Normal battle",
+      "ja": "通常戦闘"
+    },
+    {
+      "key": "ui.tut.skip.one",
+      "en": "Skip this tutorial",
+      "ja": "今回はスキップ"
+    },
+    {
+      "key": "ui.tut.skip.all",
+      "en": "Skip all future tutorials",
+      "ja": "今後すべてスキップ"
+    },
+    {
+      "key": "ui.tut.choice.failed",
+      "en": "Unable to save your choice. Please try again.",
+      "ja": "選択を保存できませんでした。もう一度お試しください。"
+    },
+    {
+      "key": "ui.tut.setting.description",
+      "en": "Change automatic tutorial prompts. You can always choose Tutorial on an unlocked stage to replay it.",
+      "ja": "チュートリアルの自動案内を変更できます。解放済みステージの「チュートリアル」から再受講できます。"
+    },
+    {
+      "key": "ui.tut.prompts.show",
+      "en": "Show future tutorial prompts",
+      "ja": "今後の自動案内を表示"
+    },
+    {
+      "key": "ui.tut.prompts.skip",
+      "en": "Skip all future tutorial prompts",
+      "ja": "今後の自動案内をスキップ"
+    },
+    {
+      "key": "ui.tut.setting.failed",
+      "en": "Unable to save settings. Please try again.",
+      "ja": "設定を保存できませんでした。もう一度お試しください。"
+    },
+    {
+      "key": "ui.tut.prompts.off",
+      "en": "Automatic prompts are skipped.",
+      "ja": "自動案内をスキップしています。"
+    },
+    {
+      "key": "ui.tut.prompts.on",
+      "en": "Automatic prompts are enabled.",
+      "ja": "自動案内は有効です。"
+    },
+    {
+      "key": "ui.stage.unavailable",
+      "en": "Stage unavailable",
+      "ja": "ステージを利用できません"
+    },
+    {
+      "key": "ui.back.stages",
+      "en": "Back to stages",
+      "ja": "ステージ一覧へ戻る"
+    },
+    {
+      "key": "ui.guide",
+      "en": "Guide",
+      "ja": "ガイド"
+    },
+    {
+      "key": "ui.portrait.missing",
+      "en": "Portrait unavailable",
+      "ja": "画像は準備中です"
+    },
+    {
+      "key": "ui.verb.fallback",
+      "en": "a verb",
+      "ja": "動詞"
+    },
+    {
+      "key": "ui.enemy.fallback",
+      "en": "the opponent",
+      "ja": "相手"
+    },
+    {
+      "key": "ui.tutorial.hint",
+      "en": "Choose the highlighted verb skill.",
+      "ja": "光っている動詞の技を選びましょう。"
+    },
+    {
+      "key": "ui.tutorial.finish.hint",
+      "en": "Continue with any skill until you win.",
+      "ja": "好きな技を選び、勝利するまで攻撃しましょう。"
+    },
+    {
+      "key": "ui.guidance.stopped",
+      "en": "Guidance stopped. You can continue this battle normally.",
+      "ja": "操作ガイドを終了しました。通常の戦闘として続けられます。"
+    },
+    {
+      "key": "ui.choose.skill",
+      "en": "Choose your skill!",
+      "ja": "技を選びましょう！"
+    },
+    {
+      "key": "ui.char.not.owned",
+      "en": "Character is not owned.",
+      "ja": "このキャラクターを所持していません。"
+    },
+    {
+      "key": "ui.training.waits",
+      "en": "Training opponent waits. Choose your next skill.",
+      "ja": "練習相手は待機中です。次の技を選びましょう。"
+    },
+    {
+      "key": "ui.enemy.no.skills",
+      "en": "Enemy has no usable skills.",
+      "ja": "敵には使用できる技がありません。"
+    },
+    {
+      "key": "ui.adverb.selected",
+      "en": "Selected adverb:",
+      "ja": "選択した副詞："
+    },
+    {
+      "key": "ui.adverb.not.selected",
+      "en": "No adverb selected.",
+      "ja": "副詞は未選択です。"
+    },
+    {
+      "key": "ui.no.adverb",
+      "en": "No adverb",
+      "ja": "副詞なし"
+    },
+    {
+      "key": "ui.default.tense",
+      "en": "Default tense",
+      "ja": "標準の時制"
+    },
+    {
+      "key": "ui.no.modal",
+      "en": "No modal",
+      "ja": "助動詞なし"
+    },
+    {
+      "key": "ui.clear.modifiers",
+      "en": "Clear modifiers",
+      "ja": "修飾をすべて解除"
+    },
+    {
+      "key": "ui.optional.modifiers",
+      "en": "Optional modifiers • choose a skill to attack",
+      "ja": "修飾は任意です。技を選ぶと攻撃します"
+    },
+    {
+      "key": "ui.optional.title",
+      "en": "Optional modifiers",
+      "ja": "任意の修飾"
+    },
+    {
+      "key": "ui.adverb.prefix",
+      "en": "Adverb:",
+      "ja": "副詞："
+    },
+    {
+      "key": "ui.tense.prefix",
+      "en": "Tense:",
+      "ja": "時制："
+    },
+    {
+      "key": "ui.modal.prefix",
+      "en": "Modal:",
+      "ja": "助動詞："
+    },
+    {
+      "key": "ui.future.none",
+      "en": "Future: no attack reserved",
+      "ja": "未来形：予約なし"
+    },
+    {
+      "key": "ui.future.prefix",
+      "en": "Future:",
+      "ja": "未来形："
+    },
+    {
+      "key": "ui.future.damage",
+      "en": "damage next turn",
+      "ja": "ダメージを次の自分のターンに発動"
+    },
+    {
+      "key": "ui.muessen.used",
+      "en": "USED (this battle)",
+      "ja": "使用済み（この戦闘）"
+    },
+    {
+      "key": "ui.muessen.available",
+      "en": "available once per battle",
+      "ja": "1戦闘に1回使用可能"
+    },
+    {
+      "key": "ui.used",
+      "en": "USED",
+      "ja": "使用済み"
+    },
+    {
+      "key": "ui.on",
+      "en": "ON",
+      "ja": "選択中"
+    },
+    {
+      "key": "ui.off",
+      "en": "OFF",
+      "ja": "未選択"
+    },
+    {
+      "key": "ui.damage.now.zero",
+      "en": "damage next turn (0 now)",
+      "ja": "ダメージを次の自分のターンに発動（今は0）"
+    },
+    {
+      "key": "ui.reserved.attack",
+      "en": "Reserved attack:",
+      "ja": "予約攻撃："
+    },
+    {
+      "key": "ui.reserved",
+      "en": "Reserved:",
+      "ja": "攻撃を予約："
+    },
+    {
+      "key": "ui.damage",
+      "en": "damage!",
+      "ja": "ダメージ！"
+    },
+    {
+      "key": "ui.enemy.used",
+      "en": "Enemy used",
+      "ja": "敵の技："
+    },
+    {
+      "key": "ui.effective",
+      "en": "Effective!",
+      "ja": "効果抜群！"
+    },
+    {
+      "key": "ui.not.effective",
+      "en": "Not effective...",
+      "ja": "効果はいまひとつ…"
+    },
+    {
+      "key": "ui.power",
+      "en": "Power",
+      "ja": "威力"
+    },
+    {
+      "key": "ui.accuracy",
+      "en": "Accuracy",
+      "ja": "命中率"
+    },
+    {
+      "key": "ui.player",
+      "en": "Player",
+      "ja": "プレイヤー"
+    },
+    {
+      "key": "ui.enemy",
+      "en": "Enemy",
+      "ja": "敵"
+    },
+    {
+      "key": "dialogue.technik_intro",
+      "en": "Here we will learn the basics of battle. First, let us choose a skill.",
+      "ja": "ここでは戦闘の基本を学びます。まずは技を選んでみましょう。"
+    },
+    {
+      "key": "dialogue.technik_verbs",
+      "en": "Skills correspond to verbs. Choose the highlighted skill to attack with {0}.",
+      "ja": "技は動詞に対応しています。光っている技を選び、{0}で攻撃しましょう。"
+    },
+    {
+      "key": "dialogue.technik_after_attack",
+      "en": "That was a real attack. Selecting a verb skill deals damage and creates a sentence. Continue attacking until Technik is defeated.",
+      "ja": "今の攻撃で実際にダメージを与えました。動詞の技を選ぶと、攻撃と同時にドイツ語の文章が作られます。Technikを倒すまで攻撃を続けましょう。"
+    },
+    {
+      "key": "stage.description.stage_1",
+      "en": "Choose a verb skill to attack.",
+      "ja": "動詞の技を選んで攻撃しましょう。"
+    },
+    {
+      "key": "stage.description.stage_2",
+      "en": "Explore optional adverb cards.",
+      "ja": "任意で選べる副詞カードを試しましょう。"
+    },
+    {
+      "key": "stage.description.stage_3",
+      "en": "Explore adjectives and equipment.",
+      "ja": "形容詞と装備を試しましょう。"
+    },
+    {
+      "key": "stage.description.stage_4",
+      "en": "Explore the once-per-battle müssen effect.",
+      "ja": "1戦闘に1回のmüssenの効果を試しましょう。"
+    },
+    {
+      "key": "stage.description.stage_5",
+      "en": "Explore a reserved attack next turn.",
+      "ja": "次の自分のターンに発動する予約攻撃を試しましょう。"
+    },
+    {
+      "key": "stage.description.feuer_practice",
+      "en": "The original Feuer battle remains available.",
+      "ja": "これまでのFeuerとの戦闘も遊べます。"
+    },
+    {
+      "key": "settings.general",
+      "en": "General",
+      "ja": "一般"
+    },
+    {
+      "key": "settings.sound",
+      "en": "Sound",
+      "ja": "サウンド"
+    },
+    {
+      "key": "settings.data",
+      "en": "Data",
+      "ja": "データ"
+    },
+    {
+      "key": "settings.language",
+      "en": "UI language",
+      "ja": "表示言語"
+    },
+    {
+      "key": "settings.learning",
+      "en": "Learning language: Deutsch • Voice: Deutsch",
+      "ja": "学習言語：ドイツ語 • 発音音声：ドイツ語"
+    },
+    {
+      "key": "settings.language.help",
+      "en": "Menus and explanations change language. German learning words and sentences stay in German.",
+      "ja": "メニューや説明の表示言語を変更します。学習用の単語・文章・発音はドイツ語のままです。"
+    },
+    {
+      "key": "settings.master",
+      "en": "Master volume",
+      "ja": "マスター音量"
+    },
+    {
+      "key": "settings.bgm",
+      "en": "BGM volume",
+      "ja": "BGM音量"
+    },
+    {
+      "key": "settings.sfx",
+      "en": "Sound effects",
+      "ja": "効果音音量"
+    },
+    {
+      "key": "settings.voice",
+      "en": "Character voice",
+      "ja": "キャラクターボイス音量"
+    },
+    {
+      "key": "settings.preview",
+      "en": "Preview voice: Feuer",
+      "ja": "ボイス試聴：Feuer"
+    },
+    {
+      "key": "settings.preview.missing",
+      "en": "Voice audio is unavailable.",
+      "ja": "試聴できる音声がありません。"
+    },
+    {
+      "key": "settings.preview.help",
+      "en": "Hear a German pronunciation. Replaying stops the previous sample.",
+      "ja": "ドイツ語の発音を試聴します。再試聴すると前の音声は止まります。"
+    },
+    {
+      "key": "settings.data.soon",
+      "en": "Data controls are coming in a future update.",
+      "ja": "データ管理機能は今後追加予定です。"
+    },
+    {
+      "key": "settings.data.help",
+      "en": "Your progress is unchanged. Language and volume are stored separately so future progress resets can keep them.",
+      "ja": "今回はゲームデータを変更しません。表示言語と音量は進行データと別に保存するため、将来の通常リセットでも維持できます。"
+    },
+    {
+      "key": "settings.saved",
+      "en": "Saved",
+      "ja": "保存しました"
+    },
+    {
+      "key": "settings.save.failed",
+      "en": "Unable to save settings. Your previous settings are unchanged. Please try again.",
+      "ja": "設定を保存できませんでした。変更前の設定を維持しています。もう一度お試しください。"
+    },
+    {
+      "key": "settings.load.failed",
+      "en": "Settings could not be read. Default settings are in use.",
+      "ja": "設定を読み込めなかったため、初期設定を使用しています。"
+    },
+    {
+      "key": "settings.future",
+      "en": "These settings belong to a newer version. They are protected from changes.",
+      "ja": "新しいバージョンの設定を検出しました。上書きを防ぐため変更できません。"
+    },
+    {
+      "key": "settings.invalid",
+      "en": "Invalid settings.",
+      "ja": "設定値が正しくありません。"
+    },
+    {
+      "key": "settings.percent",
+      "en": "{0}%",
+      "ja": "{0}%"
+    },
+    {
+      "key": "error.001",
+      "en": "This stage is locked.",
+      "ja": "このステージはまだ解放されていません。"
+    },
+    {
+      "key": "error.002",
+      "en": "Stage is locked.",
+      "ja": "このステージはまだ解放されていません。"
+    },
+    {
+      "key": "error.003",
+      "en": "Stage unavailable.",
+      "ja": "ステージを利用できません。"
+    },
+    {
+      "key": "error.004",
+      "en": "Unknown stage.",
+      "ja": "ステージ情報がありません。"
+    },
+    {
+      "key": "error.005",
+      "en": "Select a stage first.",
+      "ja": "先にステージを選択してください。"
+    },
+    {
+      "key": "error.006",
+      "en": "Selected stage is unavailable.",
+      "ja": "選択したステージを利用できません。"
+    },
+    {
+      "key": "error.007",
+      "en": "Stage enemy does not match.",
+      "ja": "選択したステージと敵が一致しません。"
+    },
+    {
+      "key": "error.008",
+      "en": "A tutorial stage must be selected first.",
+      "ja": "先にチュートリアルのステージを選択してください。"
+    },
+    {
+      "key": "error.009",
+      "en": "Saving is blocked.",
+      "ja": "保存が制限されています。"
+    },
+    {
+      "key": "error.010",
+      "en": "The inputs are no longer available or valid.",
+      "ja": "素材・個体を現在利用できません。"
+    },
+    {
+      "key": "error.011",
+      "en": "This operation is already committed.",
+      "ja": "この操作はすでに完了しています。"
+    },
+    {
+      "key": "error.012",
+      "en": "Another ownership transaction is being committed.",
+      "ja": "ほかの保存処理が進行中です。"
+    },
+    {
+      "key": "error.013",
+      "en": "An active battle instance cannot be consumed.",
+      "ja": "戦闘中の個体は消費できません。"
+    },
+    {
+      "key": "error.014",
+      "en": "Ownership changed during preparation.",
+      "ja": "準備中に所持状態が変わりました。"
+    },
+    {
+      "key": "error.015",
+      "en": "Loadout does not belong to an owned instance.",
+      "ja": "所持していない個体の装備は変更できません。"
+    },
+    {
+      "key": "error.016",
+      "en": "Unknown loadout character.",
+      "ja": "装備対象のキャラクターが見つかりません。"
+    },
+    {
+      "key": "error.017",
+      "en": "Unknown character equipment.",
+      "ja": "装備が見つかりません。"
+    },
+    {
+      "key": "error.018",
+      "en": "Invalid equipped skill count.",
+      "ja": "装備技の数が正しくありません。"
+    },
+    {
+      "key": "error.019",
+      "en": "Unknown or duplicate skill/adverb in loadout.",
+      "ja": "装備に無効または重複した技・副詞があります。"
+    },
+    {
+      "key": "error.020",
+      "en": "Missing battle action data.",
+      "ja": "戦闘行動の情報がありません。"
+    },
+    {
+      "key": "error.021",
+      "en": "Unknown actor side.",
+      "ja": "行動者の情報が正しくありません。"
+    },
+    {
+      "key": "error.022",
+      "en": "Battle has finished.",
+      "ja": "戦闘は終了しています。"
+    },
+    {
+      "key": "error.023",
+      "en": "Actor cannot act at this point in the turn.",
+      "ja": "現在は行動できません。"
+    },
+    {
+      "key": "error.024",
+      "en": "Unknown modifier.",
+      "ja": "無効な修飾が選択されています。"
+    },
+    {
+      "key": "error.025",
+      "en": "Future and müssen cannot be combined yet.",
+      "ja": "未来形とmüssenは同時に使えません。"
+    },
+    {
+      "key": "error.026",
+      "en": "Enemy modifiers are not enabled.",
+      "ja": "敵の修飾は使用できません。"
+    },
+    {
+      "key": "error.027",
+      "en": "An attack is already reserved.",
+      "ja": "すでに攻撃を予約しています。"
+    },
+    {
+      "key": "error.028",
+      "en": "Müssen has already been used in this battle.",
+      "ja": "この戦闘ではmüssenを使用済みです。"
+    },
+    {
+      "key": "ui.stage.first.reward",
+      "en": "First Clear Reward: {0} Coins",
+      "ja": "初回クリア報酬：{0} Coins"
+    },
+    {
+      "key": "ui.character.preview",
+      "en": "{0}\nOwned: {1}\nGender: {2}\nHP: {3}\nATK: {4} / DEF: {5}\nSPD: {6}\nAdjective: {7}\nArticle: {8}\nSkills:\n{9}",
+      "ja": "{0}\n所持数：{1}\n性：{2}\nHP: {3}\nATK: {4} / DEF: {5}\nSPD: {6}\n形容詞：{7}\n冠詞：{8}\n技：\n{9}"
+    },
+    {
+      "key": "ui.collection.card",
+      "en": "{0} [{1}]",
+      "ja": "{0} [{1}]"
+    },
+    {
+      "key": "ui.row.material",
+      "en": "[Material] {0}",
+      "ja": "[素材] {0}"
+    },
+    {
+      "key": "ui.row.character",
+      "en": "[Character] {0}",
+      "ja": "[キャラクター] {0}"
+    },
+    {
+      "key": "ui.stage.row",
+      "en": "{0} • {1} • {2}\nEnemy: {3} | First clear: {4}\n{5}",
+      "ja": "{0} • {1} • {2}\n敵：{3} | 初回クリア報酬：{4}\n{5}"
+    },
+    {
+      "key": "ui.reward.defeated",
+      "en": " defeated!\n\nRewards\n",
+      "ja": "を倒した！\n\n報酬\n"
+    },
+    {
+      "key": "ui.reward.normal",
+      "en": "  Normal: ",
+      "ja": "  通常報酬："
+    },
+    {
+      "key": "ui.reward.first",
+      "en": " | First clear: +",
+      "ja": " | 初回クリア報酬：+"
+    },
+    {
+      "key": "ui.reward.cleared",
+      "en": " cleared!\n",
+      "ja": " クリア！\n"
+    },
+    {
+      "key": "ui.reward.tutorial",
+      "en": "Tutorial completed!\n",
+      "ja": "チュートリアル完了！\n"
+    },
+    {
+      "key": "ui.reward.materials",
+      "en": "\nMaterials\n",
+      "ja": "\n素材\n"
+    },
+    {
+      "key": "ui.reward.character",
+      "en": "\nCharacter obtained!\n",
+      "ja": "\nキャラクターを獲得！\n"
+    },
+    {
+      "key": "ui.stage.locked.error",
+      "en": "This stage is locked or unavailable.",
+      "ja": "このステージは未解放か、現在利用できません。"
+    },
+    {
+      "key": "ui.stage.select.first",
+      "en": "Select an unlocked stage first.",
+      "ja": "先に解放済みのステージを選択してください。"
+    },
+    {
+      "key": "ui.battle.enemy.action",
+      "en": "Enemy used {0}{1}!\n{2}\n{3} damage! {4}",
+      "ja": "敵の技：{0}{1}！\n{2}\n{3}ダメージ！ {4}"
+    },
+    {
+      "key": "ui.battle.adverb.selected",
+      "en": "Selected adverb: {0}",
+      "ja": "選択した副詞：{0}"
+    },
+    {
+      "key": "ui.chunk.type",
+      "en": "chunk",
+      "ja": "文字列素材"
+    },
+    {
+      "key": "ui.suffix.type",
+      "en": "suffix",
+      "ja": "接尾辞素材"
+    },
+    {
+      "key": "ui.portrait.named",
+      "en": "{0}\nPortrait unavailable",
+      "ja": "{0}\n画像は準備中です"
+    },
+    {
+      "key": "ui.individual.description",
+      "en": "{0}\nAdjective: {1} | Article: {2}\nSkills: {3}",
+      "ja": "{0}\n形容詞：{1} | 冠詞：{2}\n技：{3}"
+    },
+    {
+      "key": "ui.craft.confirm",
+      "en": "Craft {0}?",
+      "ja": "{0}を合成しますか？"
+    },
+    {
+      "key": "ui.craft.confirm.details",
+      "en": "{0}Materials: {1}\nCost: {2}\nCurrent: {3}\nResult: {4} • new individual, initial equipment",
+      "ja": "{0}素材：{1}\n費用：{2}\n所持：{3}\n結果：{4} • 新しい個体・初期装備"
+    },
+    {
+      "key": "ui.craft.success",
+      "en": "Crafted: {0}\nOwned: {1}",
+      "ja": "合成成功：{0}\n所持数：{1}"
+    },
+    {
+      "key": "ui.no.effect.named",
+      "en": "{0} (no effect)",
+      "ja": "{0}（効果なし）"
+    },
+    {
+      "key": "ui.contest.tie",
+      "en": "Both chose {0} and tied at SPD {1}. {2} won the draw!",
+      "ja": "両者が{0}を選択。SPD {1}で並び、抽選で{2}が獲得！"
+    },
+    {
+      "key": "ui.contest.speed",
+      "en": "Both chose {0}. {1} won it (SPD {2} > {3})!",
+      "ja": "両者が{0}を選択。SPD {2} > {3}のため{1}が獲得！"
+    },
+    {
+      "key": "ui.operation.failed",
+      "en": "Unable to complete the operation. Please try again.",
+      "ja": "処理を完了できませんでした。もう一度お試しください。"
+    },
+    {
+      "key": "ui.tutorial.free.hint",
+      "en": "Keep attacking to defeat Technik. Other actions are now available.",
+      "ja": "Technikを倒すまで攻撃を続けましょう。他の操作も使えるようになりました。"
+    },
+    {
+      "key": "stat.hp",
+      "en": "HP",
+      "ja": "HP"
+    },
+    {
+      "key": "stat.attack",
+      "en": "ATK",
+      "ja": "ATK"
+    },
+    {
+      "key": "stat.defense",
+      "en": "DEF",
+      "ja": "DEF"
+    },
+    {
+      "key": "stat.speed",
+      "en": "SPD",
+      "ja": "SPD"
+    },
+    {
+      "key": "stat.level",
+      "en": "Lv.",
+      "ja": "Lv."
+    },
+    {
+      "key": "ui.error.skill.not.equipped",
+      "en": "Skill is not equipped by the actor.",
+      "ja": "この技は装備されていません。"
+    },
+    {
+      "key": "ui.error.modifier.german",
+      "en": "These modifiers require German battle data.",
+      "ja": "この修飾はドイツ語の戦闘で使用できます。"
+    }
+  ]
+}

@@ -1,6 +1,14 @@
 {
   "name": "LanguageBattle.EditModeTests",
-  "references": ["LanguageBattle.Runtime"],
-  "includePlatforms": ["Editor"],
-  "optionalUnityReferences": ["TestAssemblies"]
+  "references": [
+    "LanguageBattle.Runtime",
+    "GUID:6055be8ebefd69e48b49212b09b47b2f",
+    "GUID:43b111c4a445f446abd2c02e77750ff5"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
 }

@@ -9,7 +9,7 @@ public static class AttackAudioPlayback
         AudioClip clip = Resources.Load<AudioClip>("Audio/Sentences/" + sentence.SentenceAudioKey);
         if (clip != null)
         {
-            source.PlayOneShot(clip);
+            GameAudio.PlayOneShot(source, clip, GameAudioChannel.Voice);
             yield return new WaitForSeconds(clip.length + 0.05f);
             yield break;
         }
@@ -25,7 +25,7 @@ public static class AttackAudioPlayback
             }
             else
             {
-                source.PlayOneShot(clip);
+                GameAudio.PlayOneShot(source, clip, GameAudioChannel.Voice);
                 yield return new WaitForSeconds(clip.length + 0.05f);
             }
         }

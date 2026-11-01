@@ -22,7 +22,8 @@ public sealed class UIPlayValidation : MonoBehaviour
     private readonly HashSet<string> warnings = new HashSet<string>();
     private readonly HashSet<string> editorDiagnostics = new HashSet<string>();
     private readonly List<string> passes = new List<string>();
-    private readonly string output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../results"));
+    private readonly HashSet<string> localizedLabels = new HashSet<string>();
+    private readonly string output = "/Users/isao/Documents/ChatGPT/ゲーム/phase1025-validation/ui";
     private static readonly BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
     private void Awake()
@@ -68,6 +69,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         File.WriteAllText(Path.Combine(output, "validation.txt"),
             "PASSES\n" + string.Join("\n", passes) + "\nFAILURES\n" + string.Join("\n", failures) +
             "\nWARNINGS\n" + string.Join("\n", warnings) + "\nEDITOR_DIAGNOSTICS\n" + string.Join("\n", editorDiagnostics));
+        File.WriteAllLines(Path.Combine(output,"labels.txt"),localizedLabels.OrderBy(v=>v));
         Debug.Log($"UI_VALIDATION_COMPLETE: {passes.Count} passes, {failures.Count} failures, {warnings.Count} warning types.");
         EditorApplication.Exit(failures.Count == 0 ? 0 : 1);
     }
@@ -475,12 +477,12 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return null;yield return null;
         Check(StageProgress.IsUnlocked("stage_3") && !TutorialPreferences.Get("adverb_basics").completed,"Normal clear unlocks the next stage without false tutorial completion");
         yield return RenderSizes("Result-Adverb-normal-clear");
-        yield return Load("StageSelect");Click("TutorialSettingsButton");yield return null;yield return RenderSizes("Settings-tutorial-prompts");
+        yield return Load("StageSelect");Click("TutorialSettingsButton");yield return null;Click("SettingsTutorial");yield return null;yield return RenderSizes("Settings-tutorial-prompts");
         Click("TutorialOption1");Check(TutorialPreferences.SkipAll,"Settings save global skip");Click("TutorialChoiceClose");
         TutorialChoiceUI.Request("stage_3",false);yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="CharacterSelect" && Find<TutorialChoiceUI>()==null && !StageSession.Guided,"Global skip bypasses future prompts");
         yield return Load("StageSelect");TutorialChoiceUI.Request("stage_1",true);yield return null;
         yield return RenderSizes("TutorialChoice-review-overrides-global-skip");Click("TutorialOption0");yield return null;yield return null;Check(StageSession.Guided,"Explicit review overrides global skip");
-        yield return Load("GermanyHome");Find<GermanyHomeManager>().GoSettings();yield return null;Click("TutorialOption0");Check(!TutorialPreferences.SkipAll,"Home settings restore future prompts");Click("TutorialChoiceClose");
+        yield return Load("GermanyHome");Find<GermanyHomeManager>().GoSettings();yield return null;Click("SettingsTutorial");yield return null;Click("TutorialOption0");Check(!TutorialPreferences.SkipAll,"Home settings restore future prompts");Click("TutorialChoiceClose");
         StageSession.Select("stage_1",true,out _);
         var storyLine=new DialogueLine{dialogueId="npc-preview",speakerName="Technik",speakerSide="Right",leftPortraitId="guide",rightPortraitId="feuer",text=string.Join(" ",Enumerable.Repeat("This shared dialogue can show a longer story on multiple pages.",30)),eventOnComplete="preview_finished"};
         Check(DialogueUI.PlayLine(storyLine,_=>{},()=>{},out _),"Standalone story dialogue uses the same UI");yield return null;
@@ -490,7 +492,38 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return null;TutorialController.Active.Abort("Intentional UI recovery validation");yield return null;
         Check(!DialogueUI.IsOpen && TutorialController.NavigationAllowed && Find<BattleManager>().SelectMuessen(true),"Tutorial error releases its input guard");
         yield return RenderSizes("Battle-tutorial-error-recovery");
+        yield return ValidateSettingsAndLanguages();
 
+    }
+
+    private IEnumerator ValidateSettingsAndLanguages()
+    {
+        foreach(string language in new[]{"ja","en"})
+        {
+            var settings=UserSettings.Current;settings.uiLanguage=language;Check(UserSettings.TryUpdate(settings,out _),language+" language saved");
+            foreach(string scene in new[]{"GermanyHome","StageSelect","CharacterSelect","CharacterCollection","CharacterDetail","Inventory","Gacha","Crafting","Result"})
+            {
+                GameManager.SelectedCharacterId="nacht";GameManager.PreviousSceneName="CharacterSelect";yield return Load(scene);LocalizationUI.RefreshAll();
+                yield return RenderSizes(language+"-"+scene);
+                foreach(var label in Object.FindObjectsByType<TMP_Text>())localizedLabels.Add(language+" | "+scene+" | "+label.name+" | "+label.text.Replace("\n"," / "));
+                string before=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());Click("SettingsOpen");yield return null;
+                Check(SettingsUI.IsOpen && !SettingsUI.Show(),scene+" has one settings modal");
+                foreach(var underlying in Object.FindObjectsByType<Button>().Where(b=>b.GetComponentInParent<SettingsUI>()==null))Check(!underlying.IsInteractable(),scene+" settings blocks background "+underlying.name);
+                if(scene=="GermanyHome")
+                {
+                    yield return RenderSizes(language+"-Settings-General");Click("SettingsTab1");yield return RenderSizes(language+"-Settings-Sound");Click("SettingsPreview");Click("SettingsPreview");Click("SettingsTab2");yield return RenderSizes(language+"-Settings-Data");
+                }
+                Click("SettingsClose");yield return null;Check(JsonUtility.ToJson(PlayerSaveService.Instance.Capture())==before,scene+" settings does not change progress");
+            }
+            yield return Load("StageSelect");TutorialChoiceUI.Request("stage_1",true);yield return null;yield return RenderSizes(language+"-TutorialChoice");Click("TutorialOption0");yield return null;yield return null;
+            Find<CharacterSelectManager>().StartBattle();yield return null;yield return null;Check(!SettingsUI.Show() && GameObject.Find("SettingsLauncher")==null,language+" Battle has no settings entry");
+            Check(DialogueUI.Active.Text.Contains(language=="ja"?"戦闘の基本":"basics of battle"),language+" Technik introduction translated");yield return RenderSizes(language+"-Technik-Intro");
+            yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return RenderSizes(language+"-Technik-Verbs");
+            yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return null;yield return null;yield return RenderSizes(language+"-Technik-Highlight");
+            var battle=Find<BattleManager>();Click(battle.SkillButton(TutorialController.Active.SkillId).name);float end=Time.realtimeSinceStartup+10;while(!DialogueUI.IsOpen && Time.realtimeSinceStartup<end)yield return null;
+            Check(DialogueUI.IsOpen,language+" real attack leads to explanation");yield return RenderSizes(language+"-Technik-AfterAttack");
+            yield return Load("GermanyHome");
+        }
     }
 
     private IEnumerator ScrollToLongMaterial()
@@ -547,7 +580,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         if (detailView != null)
         {
             var identityText = Field<TMP_Text>(detailView, "characterInfoText");
-            Check(identityText.text.Contains("Individual ") || identityText.text.Contains("read only"), context + " identifies instance or read-only species");
+            Check(identityText.text.Contains("Individual ") || identityText.text.Contains("read only") || identityText.text.Contains("個体") || identityText.text.Contains("閲覧のみ"), context + " identifies instance or read-only species");
             Check(!identityText.isTextOverflowing, context + " identity and stats are not truncated");
         }
         foreach (var button in Object.FindObjectsByType<Button>())
@@ -561,7 +594,8 @@ public sealed class UIPlayValidation : MonoBehaviour
             Check(points.All(p => p.x >= -.002 && p.x <= 1.002 && p.y >= -.002 && p.y <= 1.002), context + " button inside screen: " + button.name);
             Check(rect.rect.height >= 64, context + " button hit height >=64: " + button.name);
         }
-        foreach (var button in Object.FindObjectsByType<Button>().Where(b => b.interactable &&
+        foreach (var button in Object.FindObjectsByType<Button>().Where(b => b.IsInteractable() &&
+            (SettingsUI.Active==null || b.transform.IsChildOf(SettingsUI.Active.transform)) &&
             (Find<TutorialChoiceUI>()==null || b.transform.IsChildOf(Find<TutorialChoiceUI>().transform)) &&
             (Find<DialogueUI>()==null || b.transform.IsChildOf(Find<DialogueUI>().transform)) &&
             (b.name.StartsWith("TutorialOption") || b.name == "TutorialChoiceClose" || b.name == "DialogueNext" || b.name == "NextInstanceButton" || b.name == "PreviousInstanceButton" || b.name == "FutureButton" || b.name == "MuessenButton" || b.name.StartsWith("CraftDialog") || b.name == "CraftNextIndividual" || b.name == "CraftPreviousIndividual" || b.name == "RetryRewardSaveButton" || b.name.StartsWith("AddCoins") || b.name == "CloseCoinDialog" ||
@@ -572,6 +606,14 @@ public sealed class UIPlayValidation : MonoBehaviour
             var hits = new List<RaycastResult>(); EventSystem.current.RaycastAll(pointer,hits);
             Check(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button, context + " pointer reaches " + button.name);
         }
+        foreach(var control in Object.FindObjectsByType<Selectable>().Where(c=>c.IsInteractable() && (c.name.StartsWith("Settings") || c.name=="SettingsOpen") && (SettingsUI.Active!=null?c.transform.IsChildOf(SettingsUI.Active.transform):Find<TutorialChoiceUI>()==null && !DialogueUI.IsOpen && (Find<CurrencyHUD>()==null || !Field<GameObject>(Find<CurrencyHUD>(),"additionDialog").activeSelf))))
+        {
+            var rect=(RectTransform)control.transform;var point=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center));
+            var pointer=new PointerEventData(EventSystem.current){position=point};var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);
+            Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Selectable>()==control,context+" pointer reaches settings control "+control.name);
+        }
+        foreach(var text in Object.FindObjectsByType<TMP_Text>().Where(t=>t.GetComponentInParent<SettingsUI>()!=null))
+            Check(!text.isTextOverflowing,context+" settings text fits "+text.name);
         var tutorialView = TutorialController.Active;
         if(tutorialView!=null && !tutorialView.Failed && !tutorialView.ReadyForCommit && (tutorialView.CurrentStep==TutorialStepType.Highlight || tutorialView.CurrentStep==TutorialStepType.WaitForSkillSelection))
         {

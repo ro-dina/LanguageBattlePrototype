@@ -97,7 +97,7 @@ public class CharacterSelectManager : MonoBehaviour
             TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
             if (buttonText != null)
             {
-                buttonText.text = character.characterName + " ×" + CharacterInstances.Count(character.id);
+                buttonText.text = character.characterName + " ×" + CharacterInstances.Count(character.id); LocalizedText.Learning(buttonText);
             }
             else
             {
@@ -192,10 +192,10 @@ public class CharacterSelectManager : MonoBehaviour
             string skills = string.Join("\n", loadout.skillSlots.Select(slot =>
                 GameDatabase.Instance.GetSkill(slot.skillId).skillName + (string.IsNullOrEmpty(slot.equippedAdverbId) ? "" :
                 " + " + GameDatabase.Instance.GetEquipment(slot.equippedAdverbId).equipmentName)));
-            selectedCharacterText.text =
-                $"{character.characterName}\nOwned: {CharacterInstances.Count(character.id)}\n" +
-                $"Gender: {character.grammaticalGender}\nHP: {character.hp}\nATK: {attack} / DEF: {defense}\nSPD: {speed}\n" +
-                $"Adjective: {adjective}\nArticle: {article}\nSkills:\n{skills}";
+            LocalizedText.SetProvider(selectedCharacterText, () => Localization.Text("ui.character.preview",
+                character.characterName, CharacterInstances.Count(character.id), Localization.Present(character.grammaticalGender),
+                character.hp, attack, defense, speed, string.IsNullOrEmpty(loadout.adjectiveId) ? Localization.Text("ui.lower.none") : adjective,
+                string.IsNullOrEmpty(loadout.articleId) ? Localization.Text("ui.default") : article, skills));
         }
 
         RefreshInstanceControls();

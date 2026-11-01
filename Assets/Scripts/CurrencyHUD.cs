@@ -58,7 +58,7 @@ public sealed class CurrencyHUD : MonoBehaviour
         {
             DevelopmentCurrencyAccess.Run(() => {
                 success = CurrencyService.TryAdd(EconomySettings.Current.developmentGrants[index],out string error,new PlayerOperation());
-                dialogMessage.text = success ? "Added " + EconomySettings.Price(EconomySettings.Current.developmentGrants[index]) : "No change. " + error;
+                dialogMessage.text = success ? "Added " + EconomySettings.Price(EconomySettings.Current.developmentGrants[index]) : "No change. " + Localization.Error(error);
             });
             if (success) nextGrantTime = Time.unscaledTime + .25f;
             return success;

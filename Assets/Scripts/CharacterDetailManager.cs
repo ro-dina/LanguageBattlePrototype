@@ -33,7 +33,7 @@ public class CharacterDetailManager : MonoBehaviour
     private void RefreshOwnership()
     {
         if (!started) return;
-        if (characterNameText != null) characterNameText.text = character.characterName;
+        if (characterNameText != null) characterNameText.text = character.characterName; LocalizedText.Learning(characterNameText);
         UpdateCharacterInfoText();
         foreach (var button in GetComponentsInChildren<Button>(true))
             for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
@@ -117,7 +117,7 @@ public class CharacterDetailManager : MonoBehaviour
 
         if (characterNameText != null)
         {
-            characterNameText.text = character.characterName;
+            characterNameText.text = character.characterName; LocalizedText.Learning(characterNameText);
         }
 
         Sprite sprite =
@@ -320,7 +320,9 @@ public class CharacterDetailManager : MonoBehaviour
         TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
         if (buttonText != null)
         {
-            buttonText.text = label;
+            if(string.IsNullOrEmpty(equipmentId))LocalizedText.Set(buttonText,"ui.none");
+            else if(label.EndsWith(" (no effect)"))LocalizedText.Set(buttonText,"ui.no.effect.named",label.Substring(0,label.Length-12));
+            else {buttonText.text=label;LocalizedText.Learning(buttonText);}
         }
 
         Button button = buttonObj.GetComponent<Button>();
@@ -581,7 +583,9 @@ public class CharacterDetailManager : MonoBehaviour
         TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
         if (buttonText != null)
         {
-            buttonText.text = label;
+            if(string.IsNullOrEmpty(equipmentId))LocalizedText.Set(buttonText,"ui.none");
+            else if(label.EndsWith(" (no effect)"))LocalizedText.Set(buttonText,"ui.no.effect.named",label.Substring(0,label.Length-12));
+            else {buttonText.text=label;LocalizedText.Learning(buttonText);}
         }
 
         Button button = buttonObj.GetComponent<Button>();

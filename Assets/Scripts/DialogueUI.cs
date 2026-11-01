@@ -80,12 +80,23 @@ public sealed class DialogueUI:MonoBehaviour
         var ui=Instantiate(asset).GetComponent<DialogueUI>();Active=ui;ui.completed=onComplete;ui.cancelled=onCancel;
         ui.next.onClick.AddListener(ui.Advance);ui.textBox.onClick.AddListener(ui.Advance);ui.Show(line);return true;
     }
+    private void OnEnable()=>UserSettings.Changed+=RefreshLanguage;
+    private void OnDisable()=>UserSettings.Changed-=RefreshLanguage;
+    private void RefreshLanguage()
+    {
+        if(Current==null)return; int oldPage=page; RenderBody();body.ForceMeshUpdate();page=Mathf.Min(oldPage,Mathf.Max(1,body.textInfo.pageCount));body.pageToDisplay=page;RefreshPage();
+    }
+    private void RenderBody()
+    {
+        var database=GameDatabase.EnsureAvailable();
+        string skill=database.ContainsSkill(StageSession.TutorialSkillId)?database.GetSkill(StageSession.TutorialSkillId).skillName:Localization.Text("ui.verb.fallback");
+        if(DialogueCatalog.Get(Current.dialogueId)!=null) LocalizedText.Set(body,"dialogue."+Current.dialogueId,skill,StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"));
+        else body.text=Current.text.Replace("{skill}",skill).Replace("{enemy}",StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"));
+    }
     private void Show(DialogueLine line)
     {
-        Current=line;page=1;speaker.text=line.speakerName;
-        var database=GameDatabase.EnsureAvailable();
-        string skill=database.ContainsSkill(StageSession.TutorialSkillId)?database.GetSkill(StageSession.TutorialSkillId).skillName:"a verb";
-        body.text=line.text.Replace("{skill}",skill).Replace("{enemy}",StageSession.Stage?.displayName ?? "the opponent");
+        Current=line;page=1;speaker.text=line.speakerName;if(line.speakerName!="Guide")LocalizedText.Learning(speaker);
+        RenderBody();
         body.pageToDisplay=1;body.ForceMeshUpdate();SetPortrait(leftPortrait,leftPlaceholder,line.leftPortraitId,line.speakerSide=="Left");SetPortrait(rightPortrait,rightPlaceholder,line.rightPortraitId,line.speakerSide=="Right");
         nextAdvanceTime=Time.unscaledTime+.2f;RefreshPage();
         if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(next.gameObject);
@@ -97,7 +108,7 @@ public sealed class DialogueUI:MonoBehaviour
         var sprite=string.IsNullOrEmpty(species)?null:Resources.Load<Sprite>("Images/Characters/"+(data?.illustration ?? species));
         image.sprite=sprite;image.preserveAspect=true;
         image.color=sprite!=null?new Color(1,1,1,speaking?1:.65f):new Color(.12f,.19f,.28f,speaking?.95f:.7f);
-        placeholder.text=sprite!=null?"":data?.characterName ?? (id=="guide"?"Guide":"Portrait unavailable");placeholder.gameObject.SetActive(sprite==null);
+        placeholder.text=sprite!=null?"":data?.characterName ?? (id=="guide"?"Guide":"Portrait unavailable");placeholder.gameObject.SetActive(sprite==null);if(data!=null)LocalizedText.Learning(placeholder);
     }
     private void RefreshPage(){body.ForceMeshUpdate();pageLabel.text=page+" / "+Mathf.Max(1,body.textInfo.pageCount);}
     public void Advance()

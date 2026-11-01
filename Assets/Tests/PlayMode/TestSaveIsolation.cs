@@ -17,8 +17,9 @@ public sealed class TestSaveIsolation : IPrebuildSetup, IPostBuildCleanup
     public void Setup()
     {
         SessionState.SetString(FingerprintKey, RealProfileFingerprint());
-        SessionState.SetString(PlayerSaveService.TestDirectorySessionKey,
-            Path.Combine(Path.GetTempPath(), "LanguageBattleTestBootstrap", Guid.NewGuid().ToString("N")));
+        string directory = Path.Combine(Path.GetTempPath(), "LanguageBattleTestBootstrap", Guid.NewGuid().ToString("N"));
+        SessionState.SetString(PlayerSaveService.TestDirectorySessionKey, directory);
+        new UserSettingsStore(Path.Combine(directory, "UserSettings")).Save(UserSettingsData.Defaults(SystemLanguage.English));
     }
 
     public static string RealProfileFingerprint()

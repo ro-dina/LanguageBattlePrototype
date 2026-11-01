@@ -81,7 +81,7 @@ public class BattleRewardSceneTests
             foreach(var button in Object.FindObjectsByType<Button>())
             {
                 var corners=new Vector3[4];((RectTransform)button.transform).GetWorldCorners(corners);Assert.That(corners.All(p=>p.x>=-1 && p.x<=Screen.width+1 && p.y>=-1 && p.y<=Screen.height+1),Is.True,size+" "+button.name);
-                Assert.That(corners.All(p=>p.y<((RectTransform)scroll.transform).position.y),Is.True,"Buttons stay below rewards");
+                if(button.name!="SettingsOpen")Assert.That(corners.All(p=>p.y<((RectTransform)scroll.transform).position.y),Is.True,"Result navigation buttons stay below rewards");
             }
         }
     }

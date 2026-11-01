@@ -336,7 +336,7 @@ public class BattleManager : MonoBehaviour
 
             if (skill != null)
             {
-                skillButtonTexts[i].text = skill.skillName;
+                skillButtonTexts[i].text = skill.skillName; LocalizedText.Learning(skillButtonTexts[i]);
             }
         }
     }
@@ -387,7 +387,7 @@ public class BattleManager : MonoBehaviour
             Selection.Tense, Selection.Modal, Selection.Commit(skill.id)));
         if (!result.CanUse)
         {
-            if (battleLogText != null) battleLogText.text = result.FailureReason;
+            if (battleLogText != null) battleLogText.text = Localization.Error(result.FailureReason);
             return;
         }
         LastCommittedAction = result.Action;
@@ -467,8 +467,8 @@ public class BattleManager : MonoBehaviour
         {
             string status = result.IsReservation ? $"Reserved: {result.ReservedDamage} damage next turn (0 now)" :
                 result.IsPendingAttack ? $"Reserved attack: {result.Damage} damage!" : $"{result.Damage} damage!";
-            battleLogText.text = sentence.Text + "\n→ " + sentence.Target + "\n" + status +
-                (result.Action.Modal == BattleModal.Muessen ? " (müssen ×2)" : "");
+            LocalizedText.SetProvider(battleLogText,()=>sentence.Text + "\n→ " + sentence.Target + "\n" + Localization.Present(status) +
+                (result.Action.Modal == BattleModal.Muessen ? " (müssen ×2)" : ""));
         }
         // Sentence and fallback words were captured with damage at reservation time.
         yield return AttackAudioPlayback.Play(audioSource, sentence);
@@ -560,12 +560,12 @@ public class BattleManager : MonoBehaviour
 
         if (playerHPText != null)
         {
-            playerHPText.text = $"{playerName} HP:\n{playerHP}";
+            playerHPText.text = $"{playerName} HP:\n{playerHP}"; LocalizedText.Learning(playerHPText);
         }
 
         if (enemyHPText != null)
         {
-            enemyHPText.text = $"{enemyCharacter.characterName} HP:\n{enemyHP}";
+            enemyHPText.text = $"{enemyCharacter.characterName} HP:\n{enemyHP}"; LocalizedText.Learning(enemyHPText);
         }
     }
 
@@ -624,12 +624,12 @@ public class BattleManager : MonoBehaviour
         string name = selectedTurnAdverb.equipmentName;
         string winner = contest.PlayerWon ? playerCharacter.characterName : enemyCharacter.characterName;
         if (playerSpeed == enemySpeed)
-            contestLog = $"Both chose {name} and tied at SPD {playerSpeed}. {winner} won the draw!";
+            contestLog = Localization.Text("ui.contest.tie",name,playerSpeed,Localization.Present(winner));
         else
         {
             int faster = contest.PlayerWon ? playerSpeed : enemySpeed;
             int slower = contest.PlayerWon ? enemySpeed : playerSpeed;
-            contestLog = $"Both chose {name}. {winner} won it (SPD {faster} > {slower})!";
+            contestLog = Localization.Text("ui.contest.speed",name,Localization.Present(winner),faster,slower);
         }
     }
 
@@ -662,7 +662,7 @@ public class BattleManager : MonoBehaviour
         string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
         string effectivenessText = GetEffectivenessText(enemyCharacter, playerCharacter);
         if (battleLogText != null)
-            battleLogText.text = $"Enemy used {sentence.EquippedVerb}{skillEffect}!\n{sentence.Text}\n{result.Damage} damage! {effectivenessText}";
+            LocalizedText.SetProvider(battleLogText,()=>Localization.Text("ui.battle.enemy.action",sentence.EquippedVerb,Localization.Present(skillEffect),sentence.Text,result.Damage,Localization.Present(effectivenessText)));
         StartCoroutine(ShowPlayerDamage(result.Damage));
     }
 
@@ -720,7 +720,7 @@ public class BattleManager : MonoBehaviour
         var image=root.GetComponent<Image>();image.color=new Color(.08f,.13f,.21f,.85f);image.raycastTarget=false;
         var label=new GameObject("PortraitPlaceholderName",typeof(RectTransform),typeof(TextMeshProUGUI));label.transform.SetParent(root.transform,false);
         var lr=(RectTransform)label.transform;lr.anchorMin=Vector2.zero;lr.anchorMax=Vector2.one;lr.offsetMin=new Vector2(16,16);lr.offsetMax=new Vector2(-16,-16);
-        var text=label.GetComponent<TextMeshProUGUI>();text.font=playerHPText.font;text.fontSharedMaterial=playerHPText.fontSharedMaterial;text.text=character.characterName+"\nPortrait unavailable";text.enableAutoSizing=true;text.fontSizeMin=24;text.fontSizeMax=34;text.alignment=TextAlignmentOptions.Center;text.raycastTarget=false;
+        var text=label.GetComponent<TextMeshProUGUI>();text.font=playerHPText.font;text.fontSharedMaterial=playerHPText.fontSharedMaterial;LocalizedText.Set(text,"ui.portrait.named",character.characterName);text.enableAutoSizing=true;text.fontSizeMin=24;text.fontSizeMax=34;text.alignment=TextAlignmentOptions.Center;text.raycastTarget=false;
     }
 
     private IEnumerator ShakeRenderer(SpriteRenderer targetRenderer)
@@ -776,7 +776,7 @@ public class BattleManager : MonoBehaviour
 
         if (clip != null)
         {
-            audioSource.PlayOneShot(clip);
+            GameAudio.PlayOneShot(audioSource, clip, GameAudioChannel.Sfx);
         }
         else
         {
@@ -825,7 +825,7 @@ public class BattleManager : MonoBehaviour
             currentAdverbCards.Add(picked);
 
             adverbCardButtons[i].gameObject.SetActive(true);
-            adverbCardTexts[i].text = picked.equipmentName;
+            adverbCardTexts[i].text = picked.equipmentName; LocalizedText.Learning(adverbCardTexts[i]);
 
             int index = currentAdverbCards.Count - 1;
             adverbCardButtons[i].onClick.RemoveAllListeners();
@@ -999,7 +999,7 @@ public class BattleManager : MonoBehaviour
 
         if (battleLogText != null)
         {
-            battleLogText.text = "Selected adverb: " + selectedTurnAdverb.equipmentName;
+            LocalizedText.Set(battleLogText,"ui.battle.adverb.selected",selectedTurnAdverb.equipmentName);
         }
 
         Debug.Log("Selected adverb: " + selectedTurnAdverb.equipmentName);

@@ -11,7 +11,7 @@ public sealed class StageSelectManager:MonoBehaviour
     [SerializeField] private TMP_Text tutorialStatus;
     [SerializeField] private Button settingsButton;
     [SerializeField] private Button homeButton;
-    private void Start(){StageSession.Clear();settingsButton.onClick.AddListener(TutorialChoiceUI.ShowSettings);homeButton.onClick.AddListener(()=>SceneManager.LoadScene("GermanyHome"));Refresh();}
+    private void Start(){StageSession.Clear();settingsButton.onClick.AddListener(()=>SettingsUI.Show());settingsButton.GetComponentInChildren<TMP_Text>().text="Settings";homeButton.onClick.AddListener(()=>SceneManager.LoadScene("GermanyHome"));Refresh();}
     private void OnEnable()=>PlayerStateChanges.Changed+=Refresh;
     private void OnDisable()=>PlayerStateChanges.Changed-=Refresh;
     public void Refresh()

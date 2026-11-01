@@ -41,7 +41,7 @@ public class GermanyHomeManager : MonoBehaviour
 
     public void GoSettings()
     {
-        TutorialChoiceUI.ShowSettings();
+        SettingsUI.Show();
     }
 
     public void BackToEuropeMap()
