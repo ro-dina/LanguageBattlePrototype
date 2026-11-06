@@ -21,6 +21,7 @@ public static class CharacterInstances
 {
     private static readonly List<CharacterInstance> Instances = new List<CharacterInstance>();
     private static readonly HashSet<string> BattleLocks = new HashSet<string>(StringComparer.Ordinal);
+    public static bool HasActiveBattle => BattleLocks.Count != 0;
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Reset() { Instances.Clear(); BattleLocks.Clear(); }
     public static string NewId() => "character-" + Guid.NewGuid().ToString("N");

@@ -18,5 +18,7 @@ public static class SettingsInstaller
         var asset = Resources.Load<GameObject>("UI/SettingsLauncher"); if (asset == null) return;
         var launcher = Object.Instantiate(asset); launcher.name = "SettingsLauncher"; SceneManager.MoveGameObjectToScene(launcher, scene);
         launcher.GetComponentInChildren<Button>().onClick.AddListener(() => SettingsUI.Show());
+        if (scene.name == "GermanyHome")
+        { var completed = ProgressResetService.TakeCompletion(); if (completed.HasValue) ProgressResetUI.ShowSuccess(completed.Value); }
     }
 }

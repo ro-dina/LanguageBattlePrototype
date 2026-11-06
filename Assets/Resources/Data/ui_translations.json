@@ -1419,6 +1419,116 @@
       "key": "ui.error.modifier.german",
       "en": "These modifiers require German battle data.",
       "ja": "この修飾はドイツ語の戦闘で使用できます。"
+    },
+    {
+      "key": "reset.data.title",
+      "en": "Progress data",
+      "ja": "ゲーム進行データ"
+    },
+    {
+      "key": "reset.data.explanation",
+      "en": "Start a new game at any time. UI language and all sound settings are kept.",
+      "ja": "いつでも最初からやり直せます。表示言語とすべての音量設定は維持します。"
+    },
+    {
+      "key": "reset.new.game",
+      "en": "Start a new game",
+      "ja": "最初からやり直す"
+    },
+    {
+      "key": "reset.development.title",
+      "en": "Development tools",
+      "ja": "開発用の部分初期化"
+    },
+    {
+      "key": "reset.development.explanation",
+      "en": "Editor / Development Build only. Partial resets keep Coins, characters, materials and equipment. Battle receipts and pending tickets are cleared.",
+      "ja": "Editor・Development Build限定です。部分初期化ではCoins・個体・素材・装備を維持し、報酬記録と未完了チケットを消去します。"
+    },
+    {
+      "key": "reset.tutorials",
+      "en": "Reset tutorial records",
+      "ja": "チュートリアル記録を初期化"
+    },
+    {
+      "key": "reset.stages",
+      "en": "Reset stage progress",
+      "ja": "ステージ進行を初期化"
+    },
+    {
+      "key": "reset.development.new.game",
+      "en": "Development: new game",
+      "ja": "開発用：完全初期化"
+    },
+    {
+      "key": "reset.confirm.new.game.title",
+      "en": "Start over from the beginning?",
+      "ja": "最初からやり直しますか？"
+    },
+    {
+      "key": "reset.confirm.new.game.description",
+      "en": "Your characters, equipment, Coins, materials, collection, stage progress, tutorials and battle tickets will return to the new-game state. This cannot be undone in the game. UI language and all sound settings are kept.",
+      "ja": "所持キャラクター・装備・Coins・素材・図鑑・ステージ進行・チュートリアル・戦闘チケットを新規ゲームの初期状態に戻します。ゲーム内では元に戻せません。表示言語とすべての音量設定は維持します。"
+    },
+    {
+      "key": "reset.confirm.tutorials.title",
+      "en": "Reset tutorial records?",
+      "ja": "チュートリアル記録を初期化しますか？"
+    },
+    {
+      "key": "reset.confirm.tutorials.description",
+      "en": "Clear completed/skipped tutorials and the skip-all setting. Stage progress, Coins, characters, materials and equipment stay the same. Battle receipts and pending tickets are cleared; already received rewards are kept.",
+      "ja": "受講済み・スキップ済みの記録と全スキップ設定を消去します。ステージ進行・Coins・個体・素材・装備は維持します。戦闘報酬の記録と未完了チケットは消去し、獲得済みの報酬は維持します。"
+    },
+    {
+      "key": "reset.confirm.stages.title",
+      "en": "Reset stage progress?",
+      "ja": "ステージ進行を初期化しますか？"
+    },
+    {
+      "key": "reset.confirm.stages.description",
+      "en": "Restore initial stage unlocks and clear all clear counts and first-clear records. First-clear rewards become available again. Keep tutorials, Coins, characters, materials and equipment. Clear battle receipts and pending tickets.",
+      "ja": "解放状態・クリア回数・初回クリア記録を初期化します。初回報酬を再取得できる開発用操作です。チュートリアル記録・Coins・個体・素材・装備は維持し、報酬記録と未完了チケットを消去します。"
+    },
+    {
+      "key": "reset.acknowledge",
+      "en": "I understand what will be reset.",
+      "ja": "初期化される内容を確認しました。"
+    },
+    {
+      "key": "reset.execute",
+      "en": "Reset the selected progress",
+      "ja": "この進行データを初期化"
+    },
+    {
+      "key": "reset.running",
+      "en": "Saving the reset…",
+      "ja": "初期状態を保存しています…"
+    },
+    {
+      "key": "reset.failed",
+      "en": "Reset could not be saved. Your progress and settings are unchanged. Please try again.",
+      "ja": "初期化を保存できませんでした。進行データと設定は変更していません。もう一度お試しください。"
+    },
+    {
+      "key": "reset.unavailable",
+      "en": "Reset is unavailable during battle, dialogue or saving, or while this save is protected.",
+      "ja": "戦闘・会話・保存の処理中、またはセーブが保護されている場合は初期化できません。"
+    },
+    {
+      "key": "reset.duplicate",
+      "en": "This reset has already completed.",
+      "ja": "この初期化はすでに完了しています。"
+    },
+    {
+      "key": "reset.success.title",
+      "en": "Progress reset saved",
+      "ja": "進行データを初期化しました"
+    },
+    {
+      "key": "reset.success.description",
+      "en": "The reset has been saved. UI language and sound settings are unchanged. You can continue from Home.",
+      "ja": "初期化した状態の保存が完了しました。表示言語と音量設定は維持しています。ホームからプレイを続けられます。"
     }
   ]
 }

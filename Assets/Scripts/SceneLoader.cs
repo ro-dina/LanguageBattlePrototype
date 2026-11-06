@@ -3,6 +3,8 @@ using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour
 {
+    public void LoadHome()
+    { if (TutorialController.NavigationAllowed) SceneManager.LoadScene("GermanyHome"); }
     public void LoadBattle()
     {
         if(!TutorialController.NavigationAllowed)return;

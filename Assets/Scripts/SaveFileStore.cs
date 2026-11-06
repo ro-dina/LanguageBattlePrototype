@@ -3,19 +3,23 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
-public enum SaveLoadStatus { NewGame, Loaded, Recovered, UnsupportedVersion, Migrated, MigrationFailed }
+public enum SaveLoadStatus { NewGame, Loaded, Recovered, UnsupportedVersion, Migrated, MigrationFailed, InvalidResetState }
 
 // File operations are isolated so tests can use private temporary directories.
 public sealed class SaveFileStore
 {
     public const int MaxBytes = 4 * 1024 * 1024;
-    public string MainPath { get; }
+    public string MainPath { get; private set; }
+    private readonly string rootDirectory;
     public string ActivePath { get; private set; }
     public bool WritesBlocked { get; private set; }
     public string LastError { get; private set; }
 
     public SaveFileStore(string directory)
     {
+        directory = Path.GetFullPath(directory);
+        rootDirectory = directory;
+        if (SaveGenerationStore.Resolve(directory, out string active, out _)) directory = active;
         MainPath = Path.Combine(directory, "save.json");
         ActivePath = MainPath;
     }
@@ -24,6 +28,12 @@ public sealed class SaveFileStore
     {
         LastError = null;
         WritesBlocked = false;
+        if (!SaveGenerationStore.Resolve(rootDirectory, out string directory, out string routeError))
+        {
+            WritesBlocked = true; LastError = routeError; data = NewGameDefaults.Create();
+            return SaveLoadStatus.InvalidResetState;
+        }
+        MainPath = Path.Combine(directory, "save.json");
         ActivePath = MainPath;
         if (File.Exists(MainPath) && TryRead(MainPath, out data)) return SaveLoadStatus.Loaded;
         bool migrationFailed = false;
@@ -45,19 +55,19 @@ public sealed class SaveFileStore
         SaveData recovered = null;
         try
         {
-            string directory = Path.GetDirectoryName(MainPath);
-            if (Directory.Exists(directory))
+            string recoveryDirectory = Path.GetDirectoryName(MainPath);
+            if (Directory.Exists(recoveryDirectory))
             {
-                var candidates = Directory.GetFiles(directory, "save.recovery-*.json");
+                var candidates = Directory.GetFiles(recoveryDirectory, "save.recovery-*.json");
                 Array.Sort(candidates, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
                 foreach (string candidate in candidates)
                     if (TryRead(candidate, out recovered) || (IsLegacy(candidate) && TryMigrate(candidate, out recovered))) { ActivePath = candidate; break; }
             }
             if (recovered == null && !TryRead(MainPath + ".bak", out recovered) && IsLegacy(MainPath + ".bak"))
                 TryMigrate(MainPath + ".bak", out recovered);
-            if (recovered == null && Directory.Exists(directory))
+            if (recovered == null && Directory.Exists(recoveryDirectory))
             {
-                var legacyBackups = Directory.GetFiles(directory, "save*.v*.bak*");
+                var legacyBackups = Directory.GetFiles(recoveryDirectory, "save*.v*.bak*");
                 Array.Sort(legacyBackups, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
                 foreach (string backup in legacyBackups)
                     if (!backup.Contains(".tmp-") && IsLegacy(backup) && TryMigrate(backup, out recovered)) break;
@@ -143,6 +153,8 @@ public sealed class SaveFileStore
         try
         {
             if (WritesBlocked) return false;
+            if (!SaveGenerationStore.Resolve(rootDirectory, out string directory, out string routeError) || directory != Path.GetDirectoryName(MainPath))
+            { LastError = routeError ?? "Progress generation changed; reload before saving."; return false; }
             if (!SaveDataValidator.Validate(data, out string error)) { LastError = error; return false; }
             Directory.CreateDirectory(Path.GetDirectoryName(MainPath));
             if (File.Exists(ActivePath) && !TryRead(ActivePath, out _))
@@ -187,5 +199,16 @@ public sealed class SaveFileStore
             try { if (temporary != null && File.Exists(temporary)) File.Delete(temporary); }
             catch (Exception) { /* A failed temp cleanup must not interrupt gameplay. */ }
         }
+    }
+
+    internal bool CommitReset(SaveData data)
+    {
+        if (WritesBlocked) { LastError = "Saving is blocked."; return false; }
+        if (!SaveDataValidator.Validate(data, out string error)) { LastError = error; return false; }
+        // Protect unsupported primary saves even if the caller has not performed Load yet.
+        if (IsUnsupported(MainPath)) { WritesBlocked = true; LastError = "Unsupported save version; reset refused."; return false; }
+        if (!SaveGenerationStore.Commit(rootDirectory, Path.GetDirectoryName(MainPath), data, out string directory, out error))
+        { LastError = error ?? "Progress generation changed; reload before resetting."; return false; }
+        MainPath = Path.Combine(directory, "save.json"); ActivePath = MainPath; LastError = null; return true;
     }
 }

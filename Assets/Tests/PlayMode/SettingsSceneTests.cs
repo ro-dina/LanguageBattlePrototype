@@ -46,8 +46,8 @@ public class SettingsSceneTests
         SettingsUI.Active.Close();yield return Load("StageSelect");Assert.That(GameObject.Find("StagesTitle").GetComponent<TMP_Text>().text,Is.EqualTo("ステージ一覧"));Assert.That(GameObject.Find("StageRow_stage_1").GetComponentInChildren<TMP_Text>().text,Does.Contain("Technik"));
         UserSettings.Initialize(Path.Combine(directory,"Settings"),SystemLanguage.English);Assert.That(UserSettings.Language,Is.EqualTo("ja"));SettingsUI.Show();SettingsUI.Active.SetLanguage("en");Assert.That(GameObject.Find("SettingsTitle").GetComponent<TMP_Text>().text,Is.EqualTo("Settings"));SettingsUI.Active.Close();yield return Load("GermanyHome");Assert.That(UserSettings.Language,Is.EqualTo("en"));
     }
-    [UnityTest] public IEnumerator DataTabHasOnlyFutureInformationAndSceneTransitionClosesSettings()
-    {SettingsUI.Show();Button("SettingsTab2").onClick.Invoke();yield return null;Assert.That(GameObject.Find("SettingsDataSoon").GetComponent<TMP_Text>().text,Does.Contain("future"));Assert.That(Field<GameObject>(SettingsUI.Active,"dataPage").GetComponentsInChildren<Button>().Length,Is.Zero);yield return Load("Inventory");Assert.That(SettingsUI.IsOpen,Is.False);Assert.That(Button("SettingsOpen").IsInteractable(),Is.True);}
+    [UnityTest] public IEnumerator DataTabOffersConfirmedResetWithoutChangingProgressAndSceneTransitionClosesSettings()
+    {string before=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());SettingsUI.Show();Button("SettingsTab2").onClick.Invoke();yield return null;Assert.That(Button("ResetNewGameButton"),Is.Not.Null);Assert.That(Field<GameObject>(SettingsUI.Active,"dataPage").GetComponentsInChildren<Button>().Length,Is.EqualTo(4));Assert.That(JsonUtility.ToJson(PlayerSaveService.Instance.Capture()),Is.EqualTo(before));yield return Load("Inventory");Assert.That(SettingsUI.IsOpen,Is.False);Assert.That(Button("SettingsOpen").IsInteractable(),Is.True);}
     [UnityTest] public IEnumerator SlidersImmediatelyRouteIndependentAudioMutePreviewAndRestorePersistedValues()
     {
         SettingsUI.Show();Button("SettingsTab1").onClick.Invoke();var ui=SettingsUI.Active;

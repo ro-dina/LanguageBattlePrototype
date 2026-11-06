@@ -23,7 +23,13 @@ public sealed class UIPlayValidation : MonoBehaviour
     private readonly HashSet<string> editorDiagnostics = new HashSet<string>();
     private readonly List<string> passes = new List<string>();
     private readonly HashSet<string> localizedLabels = new HashSet<string>();
-    private readonly string output = "/Users/isao/Documents/ChatGPT/ゲーム/phase1025-validation/ui";
+    private readonly string output = OutputDirectory();
+    private static string OutputDirectory()
+    {
+        string[] args=Environment.GetCommandLineArgs();
+        for(int i=0;i+1<args.Length;i++)if(args[i]=="-languageBattleUIOutput")return Path.GetFullPath(args[i+1]);
+        return Path.GetFullPath(Path.Combine(Application.dataPath,"../../results"));
+    }
     private static readonly BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
     private void Awake()
@@ -493,6 +499,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         Check(!DialogueUI.IsOpen && TutorialController.NavigationAllowed && Find<BattleManager>().SelectMuessen(true),"Tutorial error releases its input guard");
         yield return RenderSizes("Battle-tutorial-error-recovery");
         yield return ValidateSettingsAndLanguages();
+        yield return ValidateProgressReset();
 
     }
 
@@ -523,6 +530,38 @@ public sealed class UIPlayValidation : MonoBehaviour
             var battle=Find<BattleManager>();Click(battle.SkillButton(TutorialController.Active.SkillId).name);float end=Time.realtimeSinceStartup+10;while(!DialogueUI.IsOpen && Time.realtimeSinceStartup<end)yield return null;
             Check(DialogueUI.IsOpen,language+" real attack leads to explanation");yield return RenderSizes(language+"-Technik-AfterAttack");
             yield return Load("GermanyHome");
+        }
+    }
+
+    private void ClickResetAcknowledge()
+    {
+        var toggle=GameObject.Find("ResetAcknowledge").GetComponent<Toggle>();var rect=(RectTransform)toggle.transform;
+        var canvas=toggle.GetComponentInParent<Canvas>().rootCanvas;var camera=canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera;
+        var pointer=new PointerEventData(EventSystem.current){position=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center))};var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);
+        Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Toggle>()==toggle,"Reset acknowledgement receives real pointer");ExecuteEvents.Execute(toggle.gameObject,pointer,ExecuteEvents.pointerClickHandler);
+    }
+    private IEnumerator OpenResetData()
+    {Click("SettingsOpen");yield return null;Click("SettingsTab2");yield return null;}
+    private IEnumerator ValidateProgressReset()
+    {
+        foreach(string language in new[]{"ja","en"})
+        {
+            yield return Load("GermanyHome");var preference=UserSettings.Current;preference.uiLanguage=language;UserSettings.TryUpdate(preference,out _);
+            string userSettings=File.ReadAllText(UserSettings.Store.MainPath);
+            BattleRewardService.Begin("technik",out string ticket,out _,"stage_1");BattleRewardService.Complete(ticket,true,out _,()=>.9);
+            TutorialPreferences.Choose("technik_basics",TutorialChoice.SkipAll,out _);yield return Load("Gacha");yield return OpenResetData();yield return RenderSizes(language+"-Reset-Data");
+            string before=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());Click("ResetNewGameButton");yield return null;
+            Check(!ButtonNamed("ResetExecuteButton").interactable,"Unchecked reset is disabled");Check(!ButtonNamed("SettingsClose").IsInteractable(),"Reset confirmation blocks settings behind it");Check(!SettingsUI.Show(),"Reset confirmation prevents another settings window");
+            yield return RenderSizes(language+"-Reset-Confirmation-Unchecked");ClickResetAcknowledge();yield return RenderSizes(language+"-Reset-Confirmation-Checked");Click("ResetCancelButton");yield return null;Check(JsonUtility.ToJson(PlayerSaveService.Instance.Capture())==before,"Cancel leaves all progress unchanged");
+            Click("ResetTutorialsButton");yield return null;yield return RenderSizes(language+"-Reset-Tutorial-Confirmation");ClickResetAcknowledge();Click("ResetExecuteButton");yield return null;yield return null;
+            Check(SceneManager.GetActiveScene().name=="GermanyHome" && TutorialPreferences.CaptureState().records.Count==0 && !TutorialPreferences.SkipAll,"Tutorial-only reset saved and returns home");Check(StageProgress.IsCleared("stage_1"),"Tutorial-only reset preserves clear records");yield return RenderSizes(language+"-Reset-Tutorial-Success");Click("ResetExecuteButton");yield return null;
+            yield return OpenResetData();Click("ResetStagesButton");yield return null;yield return RenderSizes(language+"-Reset-Stage-Confirmation");ClickResetAcknowledge();Click("ResetExecuteButton");yield return null;yield return null;Check(!StageProgress.IsCleared("stage_1") && !StageProgress.IsUnlocked("stage_2"),"Stage-only reset restores initial unlocks");yield return RenderSizes(language+"-Reset-Stage-Success");Click("ResetExecuteButton");yield return null;
+            yield return OpenResetData();Click("ResetDevelopmentNewGameButton");yield return null;yield return RenderSizes(language+"-Reset-Development-Full-Confirmation");Click("ResetCancelButton");yield return null;
+            string root=Field<string>(PlayerSaveService.Instance.Files,"rootDirectory");string pointer=Path.Combine(root,"save-generation.json");string held=pointer+".ui-held";bool existed=File.Exists(pointer);if(existed)File.Move(pointer,held);Directory.CreateDirectory(pointer);
+            before=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());Click("ResetNewGameButton");yield return null;ClickResetAcknowledge();Click("ResetExecuteButton");yield return null;Check(SettingsUI.IsOpen && ProgressResetUI.Active!=null && JsonUtility.ToJson(PlayerSaveService.Instance.Capture())==before,"Failed reset keeps scene and progress");yield return RenderSizes(language+"-Reset-Failed");
+            Directory.Delete(pointer);if(existed)File.Move(held,pointer);Click("ResetExecuteButton");yield return null;yield return null;
+            Check(SceneManager.GetActiveScene().name=="GermanyHome" && !SettingsUI.IsOpen && ProgressResetUI.Active!=null,"Successful reset returns home with a saved confirmation");Check(CurrencyService.Balance==EconomySettings.Current.initialCoins && CharacterInstances.GetAll().Count==NewGameDefaults.StarterCharacterIds.Length,"Full reset uses initial Coins and characters");Check(BattleRewardService.Latest==null,"Full reset clears old reward tickets");Check(File.ReadAllText(UserSettings.Store.MainPath)==userSettings,"Every reset preserves settings file bytes");
+            yield return RenderSizes(language+"-Reset-Full-Success");Click("ResetExecuteButton");yield return null;
         }
     }
 
@@ -596,6 +635,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         }
         foreach (var button in Object.FindObjectsByType<Button>().Where(b => b.IsInteractable() &&
             (SettingsUI.Active==null || b.transform.IsChildOf(SettingsUI.Active.transform)) &&
+            (ProgressResetUI.Active==null || b.transform.IsChildOf(ProgressResetUI.Active.transform)) &&
             (Find<TutorialChoiceUI>()==null || b.transform.IsChildOf(Find<TutorialChoiceUI>().transform)) &&
             (Find<DialogueUI>()==null || b.transform.IsChildOf(Find<DialogueUI>().transform)) &&
             (b.name.StartsWith("TutorialOption") || b.name == "TutorialChoiceClose" || b.name == "DialogueNext" || b.name == "NextInstanceButton" || b.name == "PreviousInstanceButton" || b.name == "FutureButton" || b.name == "MuessenButton" || b.name.StartsWith("CraftDialog") || b.name == "CraftNextIndividual" || b.name == "CraftPreviousIndividual" || b.name == "RetryRewardSaveButton" || b.name.StartsWith("AddCoins") || b.name == "CloseCoinDialog" ||
@@ -606,13 +646,13 @@ public sealed class UIPlayValidation : MonoBehaviour
             var hits = new List<RaycastResult>(); EventSystem.current.RaycastAll(pointer,hits);
             Check(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button, context + " pointer reaches " + button.name);
         }
-        foreach(var control in Object.FindObjectsByType<Selectable>().Where(c=>c.IsInteractable() && (c.name.StartsWith("Settings") || c.name=="SettingsOpen") && (SettingsUI.Active!=null?c.transform.IsChildOf(SettingsUI.Active.transform):Find<TutorialChoiceUI>()==null && !DialogueUI.IsOpen && (Find<CurrencyHUD>()==null || !Field<GameObject>(Find<CurrencyHUD>(),"additionDialog").activeSelf))))
+        foreach(var control in Object.FindObjectsByType<Selectable>().Where(c=>c.IsInteractable() && (c.name.StartsWith("Settings") || c.name.StartsWith("Reset")) && (ProgressResetUI.Active!=null?c.transform.IsChildOf(ProgressResetUI.Active.transform):SettingsUI.Active!=null?c.transform.IsChildOf(SettingsUI.Active.transform):Find<TutorialChoiceUI>()==null && !DialogueUI.IsOpen && (Find<CurrencyHUD>()==null || !Field<GameObject>(Find<CurrencyHUD>(),"additionDialog").activeSelf))))
         {
             var rect=(RectTransform)control.transform;var point=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center));
             var pointer=new PointerEventData(EventSystem.current){position=point};var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);
             Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Selectable>()==control,context+" pointer reaches settings control "+control.name);
         }
-        foreach(var text in Object.FindObjectsByType<TMP_Text>().Where(t=>t.GetComponentInParent<SettingsUI>()!=null))
+        foreach(var text in Object.FindObjectsByType<TMP_Text>().Where(t=>t.GetComponentInParent<SettingsUI>()!=null || t.GetComponentInParent<ProgressResetUI>()!=null))
             Check(!text.isTextOverflowing,context+" settings text fits "+text.name);
         var tutorialView = TutorialController.Active;
         if(tutorialView!=null && !tutorialView.Failed && !tutorialView.ReadyForCommit && (tutorialView.CurrentStep==TutorialStepType.Highlight || tutorialView.CurrentStep==TutorialStepType.WaitForSkillSelection))

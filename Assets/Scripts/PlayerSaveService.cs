@@ -41,7 +41,7 @@ public sealed class PlayerSaveService : MonoBehaviour
         service.Files = new SaveFileStore(directory);
         service.Reload();
         PlayerStateChanges.Changed += service.OnStateChanged;
-        if (service.LoadStatus != SaveLoadStatus.UnsupportedVersion) service.SaveNow();
+        if (!service.Files.WritesBlocked) service.SaveNow();
         return service;
     }
 
@@ -99,6 +99,20 @@ public sealed class PlayerSaveService : MonoBehaviour
         if (!Files.Save(candidate)) { error = Files.LastError ?? "Saving is blocked."; return false; }
         restoring = true;
         try { convertedWordItems = candidate.convertedWordItems; PlayerStateTransactions.Apply(candidate); dirty = false; }
+        finally { restoring = false; }
+        return true;
+    }
+
+    internal bool CommitReset(SaveData candidate, out string error)
+    {
+        error = null;
+        if (!Files.CommitReset(candidate)) { error = Files.LastError; return false; }
+        restoring = true;
+        try
+        {
+            convertedWordItems = candidate.convertedWordItems; PlayerStateTransactions.Apply(candidate); dirty = false;
+            LoadStatus = SaveLoadStatus.Loaded;
+        }
         finally { restoring = false; }
         return true;
     }

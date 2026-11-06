@@ -6,6 +6,29 @@ using UnityEngine;
 public static class PlayerStateTransactions
 {
     private static bool committing;
+    public static bool IsCommitting => committing;
+    internal static bool TryResetProgress(ProgressResetKind kind, PlayerOperation operation, out string error)
+    {
+        error = null;
+        if (!ProgressResetService.CanReset(kind) || committing || operation == null || operation.Committed || PlayerSaveService.Instance == null)
+        { error = "Reset is unavailable or already committed."; return false; }
+        committing = true;
+        try
+        {
+            string before = JsonUtility.ToJson(Capture());
+            var candidate = kind == ProgressResetKind.NewGame || kind == ProgressResetKind.DevelopmentNewGame
+                ? NewGameDefaults.Create() : JsonUtility.FromJson<SaveData>(before);
+            if (kind == ProgressResetKind.Tutorials) candidate.tutorials = new TutorialProgressState();
+            if (kind == ProgressResetKind.Stages) candidate.stageProgress = new StageProgressState();
+            // No old pending action or receipt can be completed against a reset progress state.
+            candidate.battleRewards = new BattleRewardState();
+            if (!SaveDataValidator.Validate(candidate, out error) || !CharacterInstances.CanRestore(candidate.characterInstances)) return false;
+            if (JsonUtility.ToJson(Capture()) != before) { error = "Progress changed during reset preparation."; return false; }
+            if (!PlayerSaveService.Instance.CommitReset(candidate, out error)) return false;
+            operation.Committed = true; return true;
+        }
+        finally { committing = false; }
+    }
     public static SaveData Capture() => PlayerSaveService.Instance != null ? PlayerSaveService.Instance.Capture() : new SaveData {
         version = SaveDataValidator.CurrentVersion, wallet = CurrencyService.CaptureState(), tutorials = TutorialPreferences.CaptureState(), battleRewards = BattleRewardService.CaptureState(), inventory = InventoryManager.CaptureState(),
         characterInstances = CharacterInstances.CaptureState(), characterEquipment = CharacterLoadoutStore.CaptureState(),
