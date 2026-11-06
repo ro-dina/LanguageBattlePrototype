@@ -501,6 +501,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return ValidateSettingsAndLanguages();
         yield return ValidateProgressReset();
         yield return ValidateRemainingLessons();
+        yield return ValidateFeatureRestrictions();
 
     }
 
@@ -570,6 +571,41 @@ public sealed class UIPlayValidation : MonoBehaviour
                 yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="Result" && TutorialPreferences.Get(StageCatalog.Get("stage_"+number).tutorialId).completed && CurrencyService.Balance==coins+400,label+" actual victory completes tutorial with normal first reward");
                 yield return RenderSizes(label+"-Result");
             }
+        }
+    }
+
+
+    private IEnumerator ValidateFeatureRestrictions()
+    {
+        foreach(string language in new[]{"ja","en"})
+        {
+            var settings=UserSettings.Current;settings.uiLanguage=language;Check(UserSettings.TryUpdate(settings,out _),language+" feature notice language saved");yield return Load("GermanyHome");
+            var request=ProgressResetService.Request(ProgressResetKind.DevelopmentNewGame,out _);Check(ProgressResetService.TryExecute(request,out _),"Fresh isolated feature-policy profile");
+            for(int n=1;n<5;n++){BattleRewardService.Begin(StageCatalog.Get("stage_"+n).enemyCharacterId,out string ticket,out _,"stage_"+n);BattleRewardService.Complete(ticket,true,out _,()=>.9);}
+            for(int n=1;n<=5;n++)
+            {
+                string label=language+"-Features-Stage"+n;
+                yield return Load("StageSelect");TutorialChoiceUI.Request("stage_"+n,true);yield return null;Click("TutorialOption0");yield return null;yield return null;Click("StartBattleButton");yield return null;yield return null;
+                if(n==3)
+                {
+                    yield return LessonDialogue(label+"-PreparationIntro");yield return RenderSizes(label+"-PreparationOpen");var detail=Find<CharacterDetailManager>();Click(detail.AdjectiveButton.name);yield return RenderSizes(label+"-PreparationSelect");Click(detail.EquipmentButton("schwarz").name);yield return RenderSizes(label+"-PreparationConfirm");Click(detail.BattleButton.name);yield return null;yield return null;
+                }
+                yield return LessonDialogue(label+"-Introduction");var battle=Find<BattleManager>();var guide=battle.Tutorial;
+                Check(guide.RestrictsFeatures,label+" running guide activates stage policy");
+                Check(battle.FeatureAvailable(TutorialFeature.Adverb)==(n>=2) && battle.FeatureAvailable(TutorialFeature.Adjective)==(n>=3) && battle.FeatureAvailable(TutorialFeature.Muessen)==(n>=4) && battle.FeatureAvailable(TutorialFeature.Future)==(n>=5),label+" availability follows stage table");
+                string state=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());int round=battle.Context.Round;int hp=battle.Context.Enemy.HP;
+                if(n<4)Check(!battle.SelectMuessen(true) && !battle.SelectMuessen(false),label+" direct forbidden modal calls rejected");
+                if(n<5)Check(!battle.SelectFuture(true) && !battle.SelectFuture(false),label+" direct forbidden future calls rejected");
+                Check(JsonUtility.ToJson(PlayerSaveService.Instance.Capture())==state && battle.Context.Round==round && battle.Context.Enemy.HP==hp && !battle.Context.MuessenUsed && battle.Context.PendingAttack==null,label+" refusal leaves state intact");
+                yield return RenderSizes(label+"-Restricted");Click("TutorialStopButton");yield return null;battle.CloseSkillPanel();yield return null;
+                Check(!guide.RestrictsFeatures && GameObject.Find("TutorialFeatureNotice")==null,label+" exit removes restrictions and notice");
+                yield return RenderSizes(label+"-GuideEnded");Click("FutureButton");Click("MuessenButton");Click("ClearModifiersButton");Click(battle.FirstAdverbButton.name);
+                Check(battle.Selection.Get(BattleElementKind.Adverb)!=null && battle.Selection.Tense==BattleTense.Present && battle.Selection.Modal==BattleModal.None,label+" normal controls work after exit");
+            }
+            yield return Load("StageSelect");TutorialChoiceUI.Request("stage_1",true);yield return null;Click("TutorialOption1");yield return null;yield return null;Click("StartBattleButton");yield return null;yield return null;
+            Check(TutorialController.Active==null && GameObject.Find("TutorialFeatureNotice")==null,language+" individual skip has no restrictions");yield return RenderSizes(language+"-Features-Skipped");
+            yield return Load("GermanyHome");TutorialPreferences.SetSkipAll(true,out _);yield return Load("StageSelect");TutorialChoiceUI.Request("stage_2",false);yield return null;yield return null;Click("StartBattleButton");yield return null;yield return null;
+            Check(TutorialController.Active==null && Find<BattleManager>().SelectFuture(true),language+" global skip restores all normal features");yield return RenderSizes(language+"-Features-GlobalSkip");
         }
     }
 
@@ -733,6 +769,23 @@ public sealed class UIPlayValidation : MonoBehaviour
             foreach(var other in Object.FindObjectsByType<Button>().Where(b=>b!=target && b.GetComponentInParent<TutorialFocusUI>()==null))
                 Check(!other.IsInteractable(),context+" tutorial disables other gameplay control "+other.name);
             var hint=Field<TMP_Text>(Find<TutorialFocusUI>(),"hint");Check(!hint.isTextOverflowing,context+" tutorial hint fits");
+        }
+        var notice=GameObject.Find("TutorialFeatureNotice");
+        bool noticeExpected=tutorialView!=null && tutorialView.RestrictsFeatures && tutorialView.StageNumber<5 && !DialogueUI.IsOpen && Find<TutorialFocusUI>()!=null;
+        Check((notice!=null)==noticeExpected,context+" feature notice exists only during restricted guidance");
+        if(notice!=null)
+        {
+            var text=notice.GetComponent<TMP_Text>();Check(!text.isTextOverflowing,context+" feature notice fits");Check(!text.raycastTarget,context+" feature notice does not intercept touches");
+            Check(text.text.Contains(Localization.Text("tutorial.feature.future")) && text.text.Contains(UserSettings.Language=="ja"?"後のチュートリアル":"later tutorials"),context+" names locked features in the display language");
+            var hint=Field<TMP_Text>(Find<TutorialFocusUI>(),"hint");var a=RectTransformUtility.CalculateRelativeRectTransformBounds(Find<TutorialFocusUI>().transform,hint.transform);var b=RectTransformUtility.CalculateRelativeRectTransformBounds(Find<TutorialFocusUI>().transform,text.transform);
+            Check(b.max.y<=a.min.y+1,context+" feature notice stays below the operation hint");
+            var battle=Find<BattleManager>();
+            if(battle!=null)
+            {
+                if(!battle.FeatureAvailable(TutorialFeature.Muessen))Check(!ButtonNamed("MuessenButton").interactable,context+" modal visibly disabled");
+                if(!battle.FeatureAvailable(TutorialFeature.Future))Check(!ButtonNamed("FutureButton").interactable,context+" future visibly disabled");
+                if(!battle.FeatureAvailable(TutorialFeature.Adverb))Check(!battle.FirstAdverbButton.interactable,context+" adverb visibly disabled");
+            }
         }
         var dialogueView=Find<DialogueUI>();
         if(dialogueView!=null)

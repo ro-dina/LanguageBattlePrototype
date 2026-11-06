@@ -117,6 +117,11 @@ public class BattleManager : MonoBehaviour
     public BattleAction LastCommittedAction { get; private set; }
     public TutorialController Tutorial { get; internal set; }
     public bool AllowsInput(TutorialInput input,string id=null) => !DialogueUI.IsOpen && (Tutorial==null || Tutorial.Allows(input,id));
+    public bool FeatureAvailable(TutorialFeature feature)=>TutorialFeaturePolicy.Available(Tutorial,feature);
+    private bool SelectedFeaturesAllowed(EquipmentData actionAdverb=null)=>
+        (FeatureAvailable(TutorialFeature.Adverb) || selectedTurnAdverb==null && Selection.Get(BattleElementKind.Adverb)==null && actionAdverb==null) &&
+        (FeatureAvailable(TutorialFeature.Muessen) || Selection.Modal==BattleModal.None) &&
+        (FeatureAvailable(TutorialFeature.Future) || Selection.Tense==BattleTense.Present);
     public bool CanChoose => !isProcessing && battleContext != null &&
         battleContext.TurnState == BattleTurnState.AwaitingPlayer && battleContext.Outcome == BattleOutcome.Ongoing;
 
@@ -136,7 +141,7 @@ public class BattleManager : MonoBehaviour
     }
     public void ClearModifiers()
     {
-        if (!AllowsInput(TutorialInput.Modifier,"clear") || !CanChoose) return;
+        if (!AllowsInput(TutorialInput.Modifier,"clear") || !CanChoose || !SelectedFeaturesAllowed()) return;
         selectedTurnAdverb = null; Selection.ClearModifiers(); RefreshSelectionUI();
     }
     private void RefreshSelectionUI()
@@ -387,7 +392,7 @@ public class BattleManager : MonoBehaviour
     private void UseSkill(SkillData skill, EquipmentData skillEquipment,
         EquipmentData enemySkillEquipment, string adverbContestLog)
     {
-        if (!AllowsInput(TutorialInput.Skill,skill?.id) || isProcessing) return;
+        if (!AllowsInput(TutorialInput.Skill,skill?.id) || isProcessing || !SelectedFeaturesAllowed(skillEquipment)) return;
         BattleActionResult result = battleContext.Resolve(new BattleAction(BattleSide.Player, skill, skillEquipment,
             Selection.Tense, Selection.Modal, Selection.Commit(skill.id)));
         if (!result.CanUse)
@@ -605,7 +610,7 @@ public class BattleManager : MonoBehaviour
         if (index < 0 || index >= playerCharacter.skillIds.Length) return;
 
         string skillId = playerCharacter.skillIds[index];
-        if(!AllowsInput(TutorialInput.Skill,skillId))return;
+        if(!AllowsInput(TutorialInput.Skill,skillId) || !SelectedFeaturesAllowed())return;
         SkillData skill = GameDatabase.Instance.GetSkill(skillId);
         if (skill == null) return;
 
@@ -1000,7 +1005,7 @@ public class BattleManager : MonoBehaviour
 
     private void SelectAdverbCard(int index)
     {
-        if (!AllowsInput(TutorialInput.Adverb,index>=0 && index<currentAdverbCards.Count?currentAdverbCards[index].id:null) || isProcessing) return;
+        if (!AllowsInput(TutorialInput.Adverb,index>=0 && index<currentAdverbCards.Count?currentAdverbCards[index].id:null) || !CanChoose) return;
         if (index < 0 || index >= currentAdverbCards.Count) return;
 
         selectedTurnAdverb = currentAdverbCards[index];
@@ -1018,7 +1023,7 @@ public class BattleManager : MonoBehaviour
 
     private void SelectNoAdverb()
     {
-        if (!AllowsInput(TutorialInput.Adverb,"none") || isProcessing) return;
+        if (!AllowsInput(TutorialInput.Adverb,"none") || !CanChoose) return;
 
         selectedTurnAdverb = null;
         Selection.Select(BattleElementKind.Adverb, null);

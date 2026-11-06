@@ -171,4 +171,30 @@ public class StageTutorialTests
         Assert.That(CharacterLoadoutStore.GetLoadout(first.instanceId).adjectiveId,Is.Null.Or.Empty);Assert.That(CharacterLoadoutStore.GetLoadout(second.instanceId).adjectiveId,Is.Null.Or.Empty);
     }
 
+    [TestCase(1,false,false,false,false)]
+    [TestCase(2,true,false,false,false)]
+    [TestCase(3,true,true,false,false)]
+    [TestCase(4,true,true,true,false)]
+    [TestCase(5,true,true,true,true)]
+    public void FeatureIntroductionFollowsTheFiveStageTableWithoutPermanentUnlocks(int stage,bool adverb,bool adjective,bool muessen,bool future)
+    {
+        Assert.That(TutorialFeaturePolicy.Available(true,stage,TutorialFeature.Skill),Is.True);
+        Assert.That(TutorialFeaturePolicy.Available(true,stage,TutorialFeature.Adverb),Is.EqualTo(adverb));
+        Assert.That(TutorialFeaturePolicy.Available(true,stage,TutorialFeature.Adjective),Is.EqualTo(adjective));
+        Assert.That(TutorialFeaturePolicy.Available(true,stage,TutorialFeature.Muessen),Is.EqualTo(muessen));
+        Assert.That(TutorialFeaturePolicy.Available(true,stage,TutorialFeature.Future),Is.EqualTo(future));
+        foreach(TutorialFeature feature in Enum.GetValues(typeof(TutorialFeature)))Assert.That(TutorialFeaturePolicy.Available(false,stage,feature),Is.True);
+        Assert.That(TutorialFeaturePolicy.Available(true,stage,(TutorialFeature)99),Is.False);
+    }
+    [Test] public void SavedChoicesCompletionAndClearsAloneNeverActivateFeatureRestrictions()
+    {
+        string before=State();
+        foreach(TutorialFeature feature in Enum.GetValues(typeof(TutorialFeature)))Assert.That(TutorialFeaturePolicy.Available(null,feature),Is.True);
+        TutorialPreferences.Choose("technik_basics",TutorialChoice.Take,out _);StageSession.Select("stage_1",true,out _);
+        foreach(TutorialFeature feature in Enum.GetValues(typeof(TutorialFeature)))Assert.That(TutorialFeaturePolicy.Available(TutorialController.Active,feature),Is.True);
+        Win("stage_1",true,true);TutorialPreferences.SetSkipAll(true,out _);PlayerSaveService.Instance.Reload();
+        foreach(TutorialFeature feature in Enum.GetValues(typeof(TutorialFeature)))Assert.That(TutorialFeaturePolicy.Available(TutorialController.Active,feature),Is.True);
+        Assert.That(State(),Does.Not.Contain("TutorialFeature").And.Not.Contain("RestrictsFeatures"));Assert.That(SaveDataValidator.CurrentVersion,Is.EqualTo(6));
+    }
+
 }

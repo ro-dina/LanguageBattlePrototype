@@ -11,6 +11,26 @@ public sealed class TutorialFocusUI:MonoBehaviour
     [SerializeField] private RectTransform[] borders;
     [SerializeField] private TMP_Text hint;
     private RectTransform target;
+    private TMP_Text featureNotice;
+    private TutorialController guide;
+    public void RefreshFeatures(TutorialController value)
+    {
+        guide=value;
+        bool visible=value!=null && value.RestrictsFeatures && System.Enum.GetValues(typeof(TutorialFeature)).Cast<TutorialFeature>().Any(f=>!value.FeatureAvailable(f));
+        if(visible && featureNotice==null)
+        {
+            featureNotice=Instantiate(hint,hint.transform.parent);featureNotice.name="TutorialFeatureNotice";featureNotice.raycastTarget=false;
+            featureNotice.enableAutoSizing=false;featureNotice.fontSize=22;featureNotice.fontStyle=FontStyles.Normal;featureNotice.overflowMode=TextOverflowModes.Overflow;
+            var rect=featureNotice.rectTransform;rect.anchorMin=new Vector2(0,0);rect.anchorMax=new Vector2(1,0);rect.pivot=new Vector2(.5f,0);rect.anchoredPosition=new Vector2(0,8);rect.sizeDelta=new Vector2(-48,56);
+            LocalizedText.SetProvider(featureNotice,()=>Localization.Text("tutorial.features.later",string.Join(" / ",System.Enum.GetValues(typeof(TutorialFeature)).Cast<TutorialFeature>()
+                .Where(f=>guide!=null && !guide.FeatureAvailable(f)).Select(f=>Localization.Text("tutorial.feature."+f.ToString().ToLowerInvariant())))));
+        }
+        if(featureNotice!=null)featureNotice.gameObject.SetActive(visible);
+        var panel=(RectTransform)hint.transform.parent;panel.sizeDelta=new Vector2(panel.sizeDelta.x,visible?156:120);
+        var h=hint.rectTransform;
+        h.anchorMin=new Vector2(0,visible?1:0);h.anchorMax=Vector2.one;h.pivot=new Vector2(.5f,visible?1:.5f);
+        h.anchoredPosition=new Vector2(0,visible?-12:0);h.sizeDelta=new Vector2(-48,visible?76:-24);
+    }
     public void OfferExit(Action stop)
     {
         var template=Resources.Load<GameObject>("UI/SettingsUI").GetComponentsInChildren<Button>(true).First(b=>b.name=="SettingsClose");
@@ -20,7 +40,7 @@ public sealed class TutorialFocusUI:MonoBehaviour
     }
     public void Focus(RectTransform value,string text){target=value;hint.text=text;gameObject.SetActive(true);Reposition();}
     public void Hint(string text){target=null;hint.text=text;foreach(var s in shades)s.gameObject.SetActive(false);foreach(var b in borders)b.gameObject.SetActive(false);gameObject.SetActive(!string.IsNullOrEmpty(text));}
-    private void LateUpdate(){if(target!=null)Reposition();}
+    private void LateUpdate(){if(guide!=null)RefreshFeatures(guide);if(target!=null)Reposition();}
     private static void Place(RectTransform rect,Vector2 min,Vector2 max)
     {rect.gameObject.SetActive(true);rect.anchorMin=rect.anchorMax=Vector2.zero;rect.pivot=Vector2.zero;rect.anchoredPosition=min;rect.sizeDelta=Vector2.Max(Vector2.zero,max-min);}
     private void Reposition()

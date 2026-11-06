@@ -30,11 +30,13 @@ public sealed class BattleModifierUI : MonoBehaviour
         if (battle == null) return;
         var selection = battle.Selection;
         var context = battle.Context;
-        bool choose = battle.CanChoose && battle.AllowsInput(TutorialInput.Modifier);
+        bool choose = battle.CanChoose;
         bool german = context?.Player.Character.language == "de";
-        futureButton.interactable = choose && german && context.PendingAttack == null;
-        muessenButton.interactable = choose && german && !context.MuessenUsed;
-        noTenseButton.interactable = noModalButton.interactable = clearButton.interactable = choose;
+        futureButton.interactable = choose && battle.AllowsInput(TutorialInput.Modifier,"futur1") && german && context.PendingAttack == null;
+        muessenButton.interactable = choose && battle.AllowsInput(TutorialInput.Modifier,"muessen") && german && !context.MuessenUsed;
+        noTenseButton.interactable = choose && battle.AllowsInput(TutorialInput.Modifier,"noTense");
+        noModalButton.interactable = choose && battle.AllowsInput(TutorialInput.Modifier,"noModal");
+        clearButton.interactable = choose && battle.AllowsInput(TutorialInput.Modifier,"clear");
         Mark(futureButton, selection.Tense == BattleTense.Future);
         Mark(noTenseButton, selection.Tense == BattleTense.Present);
         Mark(muessenButton, selection.Modal == BattleModal.Muessen);

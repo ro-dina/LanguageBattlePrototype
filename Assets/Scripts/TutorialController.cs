@@ -14,6 +14,25 @@ public sealed class TutorialController:MonoBehaviour
     public bool ReadyForCommit { get; private set; }
     public bool Failed { get; private set; }
     public bool IsPreparation=>preparation;
+    public int StageNumber=>stage?.stageNumber ?? 0;
+    public bool RestrictsFeatures=>Active==this && StageSession.Guided && StageSession.StageId==stage?.stageId && isActiveAndEnabled && !exiting && !Failed && !ReadyForCommit && definition!=null &&
+        CurrentStep!=TutorialStepType.WaitForBattleVictory && CurrentStep!=TutorialStepType.Complete &&
+        (IsPreparation ? !StageSession.EquipmentConfirmed : battle?.Context.Outcome==BattleOutcome.Ongoing);
+    public bool FeatureAvailable(TutorialFeature feature)=>TutorialFeaturePolicy.Available(this,feature);
+    public bool AllowsFeature(TutorialInput input,string id=null)
+    {
+        switch(input)
+        {
+            case TutorialInput.Skill:case TutorialInput.OpenSkills:case TutorialInput.CloseSkills:return FeatureAvailable(TutorialFeature.Skill);
+            case TutorialInput.Adverb:return FeatureAvailable(TutorialFeature.Adverb);
+            case TutorialInput.EquipmentOpen:case TutorialInput.EquipmentSelect:case TutorialInput.EquipmentConfirm:return FeatureAvailable(TutorialFeature.Adjective);
+            case TutorialInput.Modifier:
+                if(id=="futur1" || id=="noTense")return FeatureAvailable(TutorialFeature.Future);
+                if(id=="muessen" || id=="noModal")return FeatureAvailable(TutorialFeature.Muessen);
+                return FeatureAvailable(TutorialFeature.Adverb) || FeatureAvailable(TutorialFeature.Muessen) || FeatureAvailable(TutorialFeature.Future);
+            default:return true;
+        }
+    }
     public bool PassiveEnemy=>!Failed && !ReadyForCommit && stage.enemyBehaviorProfile=="guided_passive" &&
         !(stage.battleModifiers.passiveUntilPractice && CurrentStep==TutorialStepType.WaitForBattleVictory);
     public string SkillId { get; private set; }
@@ -63,7 +82,8 @@ public sealed class TutorialController:MonoBehaviour
     public static bool DetailAllows(TutorialInput input,string id=null)=>Active==null || !Active.IsPreparation || Active.Allows(input,id);
     public bool Allows(TutorialInput input,string id=null)
     {
-        if(Failed || ReadyForCommit)return true;
+        if(!RestrictsFeatures)return true;
+        if(!AllowsFeature(input,id))return false;
         if(waitingDialogue || DialogueUI.IsOpen)return false;
         if(CurrentStep==TutorialStepType.WaitForBattleVictory)return true;
         if(CurrentStep==TutorialStepType.WaitForEquipmentChange)
@@ -95,7 +115,7 @@ public sealed class TutorialController:MonoBehaviour
         try
         {
             if(cursor>=definition.steps.Length){Abort("Tutorial ended without completion.");return;}
-            StageSession.TutorialCursor=cursor;CaptureButtons();FocusedButton=null;
+            StageSession.TutorialCursor=cursor;CaptureButtons();view.RefreshFeatures(this);FocusedButton=null;
             if(CurrentStep==TutorialStepType.Dialogue)
             {
                 waitingDialogue=true;view.Hint(null);RefreshButtons();
@@ -113,12 +133,23 @@ public sealed class TutorialController:MonoBehaviour
             else if(CurrentStep==TutorialStepType.WaitForFutureSelection)FocusedButton=battle.ModifierButton("futur1");
             else if(CurrentStep==TutorialStepType.Highlight || CurrentStep==TutorialStepType.WaitForSkillSelection)
             {battle.ShowTutorialSkills();FocusedButton=battle.SkillButton(SkillId);}
-            if(FocusedButton==null){Abort("Required tutorial control unavailable.");return;}
+            if(FocusedButton==null || !RequiredFeatureAvailable()){Abort("Required tutorial control unavailable or not introduced in this stage.");return;}
             Canvas.ForceUpdateCanvases();view.Focus((RectTransform)FocusedButton.transform,Step.hint);RefreshButtons();
             if(UnityEngine.EventSystems.EventSystem.current!=null)UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(FocusedButton.gameObject);
             if(CurrentStep==TutorialStepType.Highlight)StartCoroutine(HighlightFrame());
         }
         catch(Exception error){Abort(error.Message);}
+    }
+    private bool RequiredFeatureAvailable()
+    {
+        switch(CurrentStep)
+        {
+            case TutorialStepType.WaitForAdverbSelection:return FeatureAvailable(TutorialFeature.Adverb);
+            case TutorialStepType.WaitForEquipmentChange:return FeatureAvailable(TutorialFeature.Adjective);
+            case TutorialStepType.WaitForModalVerbSelection:return FeatureAvailable(TutorialFeature.Muessen);
+            case TutorialStepType.WaitForFutureSelection:return FeatureAvailable(TutorialFeature.Future);
+            default:return FeatureAvailable(TutorialFeature.Skill);
+        }
     }
     private IEnumerator HighlightFrame(){yield return null;if(CurrentStep==TutorialStepType.Highlight)Advance();}
     private void Advance(){cursor++;Enter();}
@@ -175,7 +206,8 @@ public sealed class TutorialController:MonoBehaviour
     {foreach(var button in UnityEngine.Object.FindObjectsByType<Button>(FindObjectsInactive.Include))if(!buttons.ContainsKey(button) && !button.transform.IsChildOf(view.transform) && button.GetComponentInParent<DialogueUI>()==null)buttons[button]=button.interactable;}
     public void RefreshButtons()
     {
-        if(Failed || ReadyForCommit || CurrentStep==TutorialStepType.WaitForBattleVictory)return;
+        if(view!=null)view.RefreshFeatures(this);
+        if(!RestrictsFeatures)return;
         foreach(var pair in buttons)if(pair.Key!=null)pair.Key.interactable=pair.Key==FocusedButton && !waitingDialogue && (battle==null || battle.CanChoose);
     }
     private void RestoreButtons(){foreach(var pair in buttons)if(pair.Key!=null)pair.Key.interactable=pair.Value;}

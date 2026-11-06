@@ -74,7 +74,7 @@ public class StageTutorialSceneTests
     }
     [UnityTest] public IEnumerator IndividualSkipUsesNormalBattlePreservesRewardsAndPromptsNextStage()
     {
-        yield return Choice(1);Assert.That(StageSession.Guided,Is.False);yield return StartBattle();var battle=Object.FindAnyObjectByType<BattleManager>();Assert.That(TutorialController.Active,Is.Null);Assert.That(battle.SelectMuessen(true),Is.True);battle.ClearModifiers();HP(battle.Context.Enemy,1);yield return AutoFinish();
+        yield return Choice(1);Assert.That(StageSession.Guided,Is.False);yield return StartBattle();var battle=Object.FindAnyObjectByType<BattleManager>();Assert.That(TutorialController.Active,Is.Null);foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(battle.FeatureAvailable(f),Is.True);Assert.That(battle.SelectMuessen(true),Is.True);battle.ClearModifiers();HP(battle.Context.Enemy,1);yield return AutoFinish();
         Assert.That(CurrencyService.Balance,Is.EqualTo(3400));Assert.That(TutorialPreferences.Get("technik_basics").completed,Is.False);Assert.That(TutorialPreferences.Get("technik_basics").individuallySkipped,Is.True);Assert.That(TutorialPreferences.NeedsChoice("adverb_basics"),Is.True);
     }
     [UnityTest] public IEnumerator GlobalSkipSurvivesReloadReviewOverridesItAndSettingsCanEnablePrompts()
@@ -193,7 +193,7 @@ public class StageTutorialSceneTests
             yield return DrainDialogue();yield return WaitInput(battle);Assert.That(guide.CurrentStep,Is.EqualTo(TutorialStepType.WaitForSkillSelection));battle.UseSkill1();yield return WaitDialogue("zukunft_normal");
             Assert.That(guide.LastResult.IsReservation,Is.False);Assert.That(guide.LastResult.Action.Tense,Is.EqualTo(BattleTense.Present));
         }
-        yield return DrainDialogue();yield return WaitInput(battle);Assert.That(guide.CurrentStep,Is.EqualTo(TutorialStepType.WaitForBattleVictory));Assert.That(guide.PassiveEnemy,Is.False);
+        yield return DrainDialogue();yield return WaitInput(battle);Assert.That(guide.CurrentStep,Is.EqualTo(TutorialStepType.WaitForBattleVictory));Assert.That(guide.PassiveEnemy,Is.False);Assert.That(guide.RestrictsFeatures,Is.False);Assert.That(GameObject.Find("TutorialFeatureNotice"),Is.Null);foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(battle.FeatureAvailable(f),Is.True);
         if(number==4){battle.ClearModifiers();Assert.That(battle.Context.MuessenUsed,Is.True);Assert.That(battle.SelectMuessen(true),Is.False);Assert.That(Button("MuessenButton").interactable,Is.False);}
         if(number==2){Field<Button>(battle,"noAdverbButton").onClick.Invoke();Assert.That(battle.Selection.Get(BattleElementKind.Adverb),Is.Null);}
         Assert.That(JsonUtility.ToJson(InventoryManager.CaptureState()),Is.EqualTo(inventory),"No lesson grants or consumes persistent materials.");
@@ -248,6 +248,74 @@ public class StageTutorialSceneTests
         File.Delete(directory);Directory.Move(moved,directory);Assert.That(File.ReadAllBytes(main),Is.EqualTo(original));detail.StartBattle();yield return null;yield return null;
         Assert.That(SceneManager.GetActiveScene().name,Is.EqualTo("Battle"));Assert.That(StageSession.EquipmentConfirmed,Is.True);Assert.That(Object.FindAnyObjectByType<BattleManager>().Context.Player.Equipment.id,Is.EqualTo("schwarz"));
         yield return Load("GermanyHome");PlayerSaveService.Instance.Reload();Assert.That(CharacterLoadoutStore.GetLoadout(id).adjectiveId,Is.EqualTo("schwarz"));
+    }
+
+    private string CombatState(BattleManager b)=>string.Join("|",b.Context.Round,b.Context.TurnState,b.Context.Player.HP,b.Context.Enemy.HP,b.Context.MuessenUsed,
+        b.Context.PendingAttack?.Damage,b.LastCommittedAction?.Skill.id,b.Selection.Get(BattleElementKind.Adverb),b.Selection.Tense,b.Selection.Modal,
+        Field<System.Collections.IList>(b.Selection,"history").Count,JsonUtility.ToJson(PlayerSaveService.Instance.Capture()));
+    private void AssertPolicy(BattleManager b,int stage)
+    {
+        Assert.That(b.Tutorial.RestrictsFeatures,Is.True);Assert.That(b.FeatureAvailable(TutorialFeature.Skill),Is.True);
+        Assert.That(b.FeatureAvailable(TutorialFeature.Adverb),Is.EqualTo(stage>=2));Assert.That(b.FeatureAvailable(TutorialFeature.Adjective),Is.EqualTo(stage>=3));
+        Assert.That(b.FeatureAvailable(TutorialFeature.Muessen),Is.EqualTo(stage>=4));Assert.That(b.FeatureAvailable(TutorialFeature.Future),Is.EqualTo(stage>=5));
+    }
+    private void AssertRejectedFeatures(BattleManager b,int stage)
+    {
+        string before=CombatState(b);
+        if(stage<2){b.FirstAdverbButton.onClick.Invoke();Field<Button>(b,"noAdverbButton").onClick.Invoke();Assert.That(b.FirstAdverbButton.interactable,Is.False);}
+        if(stage<4){Assert.That(b.SelectMuessen(true),Is.False);Assert.That(b.SelectMuessen(false),Is.False);Assert.That(Button("MuessenButton").interactable,Is.False);}
+        if(stage<5){Assert.That(b.SelectFuture(true),Is.False);Assert.That(b.SelectFuture(false),Is.False);Assert.That(Button("FutureButton").interactable,Is.False);}
+        Assert.That(CombatState(b),Is.EqualTo(before),"Rejected calls do not change selection history, HP, turn, use count, reservations or saved state.");
+    }
+    [UnityTest] public IEnumerator AllStagesScopeFeatureLocksKeepConfirmedEquipmentAndRestoreNormalControlsOnExit()
+    {
+        Unlock(5);string id=GameManager.SelectedCharacterInstanceId;var loadout=CharacterLoadoutStore.GetLoadout(id);loadout.adjectiveId="schwarz";CharacterLoadoutStore.Commit(loadout);
+        var second=CharacterInstances.Create("nacht");string gear=JsonUtility.ToJson(CharacterLoadoutStore.GetLoadout(id)),other=JsonUtility.ToJson(CharacterLoadoutStore.GetLoadout(second.instanceId));
+        foreach(int n in new[]{1,2,3,4,5})
+        {
+            yield return Choice(0,true,"stage_"+n);
+            if(n==3)
+            {
+                Object.FindAnyObjectByType<CharacterSelectManager>().StartBattle();yield return null;yield return null;
+                Assert.That(TutorialController.Active.RestrictsFeatures,Is.True);Assert.That(TutorialController.Active.FeatureAvailable(TutorialFeature.Adjective),Is.True);
+                yield return DrainDialogue();var detail=Object.FindAnyObjectByType<CharacterDetailManager>();detail.OpenAdjectiveEquipmentList();detail.EquipmentButton("schwarz").onClick.Invoke();detail.StartBattle();yield return null;yield return null;
+            }
+            else yield return StartBattle();
+            var battle=Object.FindAnyObjectByType<BattleManager>();AssertPolicy(battle,n);AssertRejectedFeatures(battle,n);yield return DrainDialogue();AssertPolicy(battle,n);AssertRejectedFeatures(battle,n);
+            var notice=GameObject.Find("TutorialFeatureNotice");Assert.That(notice!=null,Is.EqualTo(n<5));
+            Assert.That(battle.Context.Player.Equipment.id,Is.EqualTo("schwarz"));Assert.That(JsonUtility.ToJson(CharacterLoadoutStore.GetLoadout(id)),Is.EqualTo(gear));
+            Button("TutorialStopButton").onClick.Invoke();yield return null;
+            Assert.That(battle.Tutorial.RestrictsFeatures,Is.False);Assert.That(GameObject.Find("TutorialFeatureNotice"),Is.Null);
+            foreach(TutorialFeature feature in Enum.GetValues(typeof(TutorialFeature)))Assert.That(battle.FeatureAvailable(feature),Is.True);
+            Assert.That(battle.SelectFuture(true),Is.True);Assert.That(battle.SelectMuessen(true),Is.True);battle.ClearModifiers();battle.FirstAdverbButton.onClick.Invoke();Field<Button>(battle,"noAdverbButton").onClick.Invoke();
+            Assert.That(battle.Context.Round,Is.EqualTo(1));Assert.That(battle.Context.MuessenUsed,Is.False);Assert.That(battle.Context.PendingAttack,Is.Null);
+            Assert.That(JsonUtility.ToJson(CharacterLoadoutStore.GetLoadout(id)),Is.EqualTo(gear));Assert.That(JsonUtility.ToJson(CharacterLoadoutStore.GetLoadout(second.instanceId)),Is.EqualTo(other));
+        }
+    }
+    [UnityTest] public IEnumerator ForgedSelectionsCannotCommitUnintroducedFeaturesOrConsumeTheTurn()
+    {
+        yield return Choice(0,true,"stage_1");yield return StartBattle();yield return ReachSkill();var b=Object.FindAnyObjectByType<BattleManager>();
+        foreach(var entry in new[]{(BattleElementKind.Adverb,"sehr"),(BattleElementKind.Modal,"muessen"),(BattleElementKind.Tense,"futur1")})
+        {
+            b.Selection.Select(entry.Item1,entry.Item2);string before=CombatState(b);b.UseSkill1();Assert.That(CombatState(b),Is.EqualTo(before));Assert.That(b.LastCommittedAction,Is.Null);b.Selection.ClearModifiers();
+        }
+        b.UseSkill1();yield return WaitDialogue("technik_after_attack");Assert.That(b.LastCommittedAction,Is.Not.Null);
+    }
+    [UnityTest] public IEnumerator EndingGuidanceAfterMuessenKeepsItsSpentUseAndAfterReservationKeepsTheFrozenAttack()
+    {
+        Unlock(5);yield return Choice(0,true,"stage_4");yield return StartBattle();yield return DrainDialogue();var b=Object.FindAnyObjectByType<BattleManager>();b.SelectMuessen(true);b.UseSkill1();yield return WaitDialogue("modalverb_after");
+        Assert.That(b.Context.MuessenUsed,Is.True);b.Tutorial.Abort("test exit after valid modal attack");yield return WaitInput(b);b.ClearModifiers();Assert.That(b.Context.MuessenUsed,Is.True);Assert.That(b.SelectMuessen(true),Is.False);Assert.That(b.SelectFuture(true),Is.True);
+        yield return Choice(0,true,"stage_5");yield return StartBattle();yield return DrainDialogue();b=Object.FindAnyObjectByType<BattleManager>();HP(b.Context.Enemy,200);b.SelectFuture(true);b.UseSkill1();yield return WaitDialogue("zukunft_reserved");
+        var reserved=b.Context.PendingAttack;Assert.That(reserved,Is.Not.Null);b.Tutorial.Abort("test exit after valid reservation");b.ClearModifiers();Assert.That(b.Context.PendingAttack,Is.SameAs(reserved));
+        yield return WaitInput(b);Assert.That(b.Context.PendingAttack,Is.Null);Assert.That(b.Context.Enemy.HP,Is.EqualTo(200-reserved.Damage));Assert.That(b.Context.Round,Is.EqualTo(2));Assert.That(b.SelectMuessen(true),Is.True);
+    }
+    [UnityTest] public IEnumerator SceneExitTerminalCombatAndNormalDetailNeverLeaveFeatureRestrictionsBehind()
+    {
+        yield return Choice(0,true,"stage_1");yield return StartBattle();yield return ReachSkill();var b=Object.FindAnyObjectByType<BattleManager>();Assert.That(b.Tutorial.RestrictsFeatures,Is.True);
+        b.Context.Cancel();Assert.That(b.Tutorial.RestrictsFeatures,Is.False);b.Tutorial.RefreshButtons();yield return null;Assert.That(GameObject.Find("TutorialFeatureNotice"),Is.Null);
+        yield return Load("CharacterDetail");Assert.That(TutorialController.Active,Is.Null);var detail=Object.FindAnyObjectByType<CharacterDetailManager>();detail.OpenAdjectiveEquipmentList();Assert.That(detail.IsAdjectiveListOpen,Is.True);detail.EquipmentButton("schwarz").onClick.Invoke();Assert.That(detail.DraftAdjectiveId,Is.EqualTo("schwarz"));detail.DiscardChangesAndBack();yield return null;yield return null;
+        yield return Choice(1,true,"stage_1");yield return StartBattle();b=Object.FindAnyObjectByType<BattleManager>();foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(b.FeatureAvailable(f),Is.True);Assert.That(b.SelectFuture(true),Is.True);Assert.That(b.SelectMuessen(true),Is.True);
+        yield return Load("GermanyHome");yield return Choice(0,true,"stage_1");yield return StartBattle();Assert.That(Object.FindAnyObjectByType<BattleManager>().Tutorial.RestrictsFeatures,Is.True,"Explicit review reapplies temporary restrictions.");
     }
 
 }

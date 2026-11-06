@@ -1644,6 +1644,36 @@
       "key": "tutorial.equipment.save.failed",
       "en": "Equipment could not be saved. Try confirming again.",
       "ja": "装備を保存できませんでした。もう一度確定してください。"
+    },
+    {
+      "key": "tutorial.features.later",
+      "en": "{0}: introduced in later tutorials.",
+      "ja": "{0}：後のチュートリアルで紹介します。"
+    },
+    {
+      "key": "tutorial.feature.skill",
+      "en": "Skills",
+      "ja": "技"
+    },
+    {
+      "key": "tutorial.feature.adverb",
+      "en": "Adverbs",
+      "ja": "副詞"
+    },
+    {
+      "key": "tutorial.feature.adjective",
+      "en": "Changing adjectives",
+      "ja": "形容詞の変更"
+    },
+    {
+      "key": "tutorial.feature.muessen",
+      "en": "müssen",
+      "ja": "müssen"
+    },
+    {
+      "key": "tutorial.feature.future",
+      "en": "Futur I",
+      "ja": "Futur I"
     }
   ]
 }

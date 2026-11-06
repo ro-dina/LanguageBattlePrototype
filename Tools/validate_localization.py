@@ -14,7 +14,7 @@ for entry in entries:
     assert parameters(entry['en']) == parameters(entry['ja']), f'Parameter mismatch: {key}'
 for script in (root / 'Assets/Scripts').glob('*.cs'):
     for key in re.findall(r'"((?:ui|settings|stat|reset|tutorial)\.[a-zA-Z0-9_.]+)"', script.read_text()):
-        assert key == 'settings.json' or key in keys or any(value.startswith(key+'.') for value in keys), f'{script.name}: missing {key}'
+        assert key == 'settings.json' or key in keys or any(value.startswith(key.rstrip('.')+'.') for value in keys), f'{script.name}: missing {key}'
 for line in json.loads((root / 'Assets/Resources/Data/dialogues.json').read_text())['dialogues']:
     key = 'dialogue.' + line['dialogueId']
     assert key in keys, f'Missing dialogue translation: {key}'
