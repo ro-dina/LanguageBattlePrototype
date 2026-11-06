@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
-public enum SaveLoadStatus { NewGame, Loaded, Recovered, UnsupportedVersion, Migrated, MigrationFailed, InvalidResetState }
+public enum SaveLoadStatus { NewGame, Loaded, Recovered, UnsupportedVersion, Migrated, MigrationFailed, InvalidResetState, Corrupt, ReadFailed }
 
 // File operations are isolated so tests can use private temporary directories.
 public sealed class SaveFileStore
@@ -24,22 +24,45 @@ public sealed class SaveFileStore
         ActivePath = MainPath;
     }
 
-    public SaveLoadStatus Load(out SaveData data)
+    private bool inspecting, inspectionReadFailed;
+    public string RootDirectory => rootDirectory;
+    public SaveLoadStatus Load(out SaveData data) => LoadCore(out data, false, true);
+    // The title uses exactly the same validation/recovery order, without migrations, backups or writes.
+    public SaveLoadStatus Inspect(out SaveData data)
+    {
+        inspecting = true; inspectionReadFailed = false;
+        try
+        {
+            var status = LoadCore(out data, true, false);
+            if (data == null && inspectionReadFailed) { WritesBlocked = true; return SaveLoadStatus.ReadFailed; }
+            return status;
+        }
+        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+        { WritesBlocked = true; LastError = "Progress could not be read: " + e.Message; data = null; return SaveLoadStatus.ReadFailed; }
+        finally { inspecting = false; }
+    }
+    internal SaveLoadStatus LoadExisting(out SaveData data) => LoadCore(out data, false, false);
+    private SaveLoadStatus LoadCore(out SaveData data, bool readOnly, bool createDefaults)
     {
         LastError = null;
         WritesBlocked = false;
         if (!SaveGenerationStore.Resolve(rootDirectory, out string directory, out string routeError))
         {
-            WritesBlocked = true; LastError = routeError; data = NewGameDefaults.Create();
+            WritesBlocked = true; LastError = routeError; data = createDefaults ? NewGameDefaults.Create() : null;
             return SaveLoadStatus.InvalidResetState;
         }
         MainPath = Path.Combine(directory, "save.json");
         ActivePath = MainPath;
+        if (readOnly)
+        {
+            if (File.Exists(rootDirectory)) throw new IOException("Progress location is a file.");
+            if (Directory.Exists(directory)) Directory.GetFiles(directory); // Do not treat access errors as a missing profile.
+        }
         if (File.Exists(MainPath) && TryRead(MainPath, out data)) return SaveLoadStatus.Loaded;
         bool migrationFailed = false;
         if (File.Exists(MainPath) && IsLegacy(MainPath))
         {
-            if (TryMigrate(MainPath, out data) && Save(data)) return SaveLoadStatus.Migrated;
+            if (TryMigrate(MainPath, out data, !readOnly) && (readOnly || Save(data))) return SaveLoadStatus.Migrated;
             migrationFailed = true; // A valid backup can still recover without replacing this source.
         }
         // A newer schema may be perfectly valid. Never replace it with an older game's data.
@@ -47,7 +70,7 @@ public sealed class SaveFileStore
         {
             WritesBlocked = true;
             LastError = "Unsupported save version. Original file retained; saving is disabled for this session.";
-            data = NewGameDefaults.Create();
+            data = createDefaults ? NewGameDefaults.Create() : null;
             return SaveLoadStatus.UnsupportedVersion;
         }
         bool damaged = File.Exists(MainPath);
@@ -61,27 +84,30 @@ public sealed class SaveFileStore
                 var candidates = Directory.GetFiles(recoveryDirectory, "save.recovery-*.json");
                 Array.Sort(candidates, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
                 foreach (string candidate in candidates)
-                    if (TryRead(candidate, out recovered) || (IsLegacy(candidate) && TryMigrate(candidate, out recovered))) { ActivePath = candidate; break; }
+                    if (TryRead(candidate, out recovered) || (IsLegacy(candidate) && TryMigrate(candidate, out recovered, !readOnly))) { ActivePath = candidate; break; }
             }
             if (recovered == null && !TryRead(MainPath + ".bak", out recovered) && IsLegacy(MainPath + ".bak"))
-                TryMigrate(MainPath + ".bak", out recovered);
+                TryMigrate(MainPath + ".bak", out recovered, !readOnly);
             if (recovered == null && Directory.Exists(recoveryDirectory))
             {
                 var legacyBackups = Directory.GetFiles(recoveryDirectory, "save*.v*.bak*");
                 Array.Sort(legacyBackups, (a, b) => File.GetLastWriteTimeUtc(b).CompareTo(File.GetLastWriteTimeUtc(a)));
                 foreach (string backup in legacyBackups)
-                    if (!backup.Contains(".tmp-") && IsLegacy(backup) && TryMigrate(backup, out recovered)) break;
+                    if (!backup.Contains(".tmp-") && IsLegacy(backup) && TryMigrate(backup, out recovered, !readOnly)) break;
             }
         }
-        catch (Exception exception) { LastError = "Save recovery failed: " + exception.Message; }
+        catch (Exception exception) { RecordReadFailure(exception); LastError = "Save recovery failed: " + exception.Message; }
         if (migrationFailed && recovered == null)
         {
             WritesBlocked = true;
             LastError = "Legacy migration failed; original retained and saving disabled. " + LastError;
-            data = NewGameDefaults.Create(); return SaveLoadStatus.MigrationFailed;
+            data = createDefaults ? NewGameDefaults.Create() : null; return SaveLoadStatus.MigrationFailed;
         }
         if (damaged && ActivePath == MainPath) ActivePath = RecoveryPath();
-        data = recovered ?? NewGameDefaults.Create();
+        data = recovered ?? (createDefaults ? NewGameDefaults.Create() : null);
+        if (!createDefaults && recovered == null && (damaged || File.Exists(MainPath + ".bak") ||
+            Directory.Exists(directory) && Directory.GetFiles(directory, "save*").Length > 0))
+        { LastError = LastError ?? "No valid progress could be recovered; original files are retained."; return SaveLoadStatus.Corrupt; }
         return damaged || recovered != null ? SaveLoadStatus.Recovered : SaveLoadStatus.NewGame;
     }
 
@@ -95,19 +121,24 @@ public sealed class SaveFileStore
             data = null;
             return false;
         }
-        catch (Exception) { return false; }
+        catch (Exception e) { RecordReadFailure(e); return false; }
     }
 
+    private void RecordReadFailure(Exception error)
+    {
+        if (inspecting && (error is IOException || error is UnauthorizedAccessException))
+        { inspectionReadFailed = true; LastError = "Progress could not be read: " + error.Message; }
+    }
     private int ReadVersion(string path)
     {
         try { return File.Exists(path) && new FileInfo(path).Length <= MaxBytes ? SaveDataMigration.Version(File.ReadAllText(path)) : 0; }
-        catch (Exception) { return 0; }
+        catch (Exception e) { RecordReadFailure(e); return 0; }
     }
     private bool IsLegacy(string path) => ReadVersion(path) == 1 || ReadVersion(path) == 2 || ReadVersion(path) == 3 || ReadVersion(path) == 4 || ReadVersion(path) == 5;
     private bool IsUnsupported(string path)
     { int version = ReadVersion(path); return version != 0 && version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != SaveDataValidator.CurrentVersion; }
 
-    private bool TryMigrate(string path, out SaveData data)
+    private bool TryMigrate(string path, out SaveData data, bool preserveBackup = true)
     {
         data = null;
         try
@@ -116,10 +147,10 @@ public sealed class SaveFileStore
             string json = new UTF8Encoding(false).GetString(original).TrimStart('\uFEFF');
             if (!SaveDataMigration.TryMigrate(json, out data, out string error)) { LastError = error; return false; }
             // Recovery sources that are already protected backups are never modified.
-            if (!Path.GetFileName(path).Contains(".v1.bak") && !Path.GetFileName(path).Contains(".v2.bak") && !Path.GetFileName(path).Contains(".v3.bak") && !Path.GetFileName(path).Contains(".v4.bak") && !Path.GetFileName(path).Contains(".v5.bak")) PreserveLegacyBackup(path, original);
+            if (preserveBackup && !Path.GetFileName(path).Contains(".v1.bak") && !Path.GetFileName(path).Contains(".v2.bak") && !Path.GetFileName(path).Contains(".v3.bak") && !Path.GetFileName(path).Contains(".v4.bak") && !Path.GetFileName(path).Contains(".v5.bak")) PreserveLegacyBackup(path, original);
             return true;
         }
-        catch (Exception exception) { data = null; LastError = "Migration backup failed: " + exception.Message; return false; }
+        catch (Exception exception) { RecordReadFailure(exception); data = null; LastError = "Migration backup failed: " + exception.Message; return false; }
     }
 
     private void PreserveLegacyBackup(string path, byte[] original)

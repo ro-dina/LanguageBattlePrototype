@@ -24,6 +24,22 @@ public sealed class WebPersistentDataBuild : IPostprocessBuildWithReport
             html = html.Replace(optIn, "config.autoSyncPersistentDataPath = true;");
             File.WriteAllText(path, html, new UTF8Encoding(false));
         }
+        // Keep product/company identifiers (and save paths) unchanged; use the centralized game name for the tab.
+        html = html.Replace("<title>Unity Web Player | " + PlayerSettings.productName + "</title>", "<title>" + Localization.Source("title.game.name") + "</title>");
+        // Match the browser viewport on desktop and touch devices; the Title scene handles its own narrow layout.
+        // Keep the known Default loader structure, URLs and persistence hook for the existing Vercel packager.
+        if (!html.Contains("id=\"language-battle-viewport\""))
+        {
+            html = html.Replace("</head>", @"<meta name=""viewport"" content=""width=device-width, initial-scale=1, viewport-fit=cover"">
+    <style id=""language-battle-viewport"">
+      html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#19130e; }
+      #unity-container { position:fixed!important; inset:0!important; width:100%!important; height:100%!important; transform:none!important; }
+      #unity-canvas { display:block; width:100%!important; height:100%!important; touch-action:none; }
+      #unity-footer { display:none; }
+    </style>
+  </head>");
+            File.WriteAllText(path, html, new UTF8Encoding(false));
+        }
         // Fail visibly if a different template needs its own integration; never silently
         // produce a build that reports successful saves only in its in-memory filesystem.
         if (!Regex.IsMatch(html, @"(?m)^\s*config\.autoSyncPersistentDataPath\s*=\s*true\s*;"))

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public sealed class PlayerSaveService : MonoBehaviour
 {
@@ -13,9 +14,18 @@ public sealed class PlayerSaveService : MonoBehaviour
     private System.Collections.Generic.List<WordItemConversion> convertedWordItems = new System.Collections.Generic.List<WordItemConversion>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Bootstrap() => Initialize(DefaultDirectory());
+    private static void Bootstrap()
+    {
+        SceneManager.sceneLoaded -= InitializeGameplay;
+        SceneManager.sceneLoaded += InitializeGameplay;
+    }
+    private static void InitializeGameplay(Scene scene, LoadSceneMode mode)
+    {
+        // Direct Editor starts in existing gameplay scenes remain supported. Title never creates progress.
+        if (scene.name != GameStartService.TitleScene && Instance == null) Initialize(DefaultDirectory());
+    }
 
-    private static string DefaultDirectory()
+    public static string DefaultDirectory()
     {
 #if UNITY_EDITOR
         string[] args = Environment.GetCommandLineArgs();
@@ -34,15 +44,38 @@ public sealed class PlayerSaveService : MonoBehaviour
     public static PlayerSaveService Initialize(string directory)
     {
         if (Instance != null) return Instance;
+        var service = CreateUnloaded(directory);
+        service.Reload();
+        if (!service.Files.WritesBlocked) service.SaveNow();
+        return service;
+    }
+
+    internal static PlayerSaveService CreateUnloaded(string directory)
+    {
+        if (Instance != null) return Instance;
         GameDatabase.EnsureAvailable();
         var service = new GameObject("PlayerSaveService").AddComponent<PlayerSaveService>();
         Instance = service;
         if (Application.isPlaying) DontDestroyOnLoad(service.gameObject);
         service.Files = new SaveFileStore(directory);
-        service.Reload();
         PlayerStateChanges.Changed += service.OnStateChanged;
-        if (!service.Files.WritesBlocked) service.SaveNow();
         return service;
+    }
+
+    internal bool ContinueExisting()
+    {
+        LoadStatus = Files.LoadExisting(out var data);
+        if (data == null) return false;
+        Restore(data);
+        return Files.Save(data); // Keep ordinary migration/recovery persistence, only after explicit Continue.
+    }
+
+    internal void ReleaseUnloaded()
+    {
+        // A failed title action must not leave an autosave subscriber with uninitialized player state.
+        dirty = false; PlayerStateChanges.Changed -= OnStateChanged;
+        if (Instance == this) Instance = null;
+        if (Application.isPlaying) Destroy(gameObject); else DestroyImmediate(gameObject);
     }
 
     private void OnDestroy()
@@ -58,6 +91,16 @@ public sealed class PlayerSaveService : MonoBehaviour
         {
             LoadStatus = Files.Load(out SaveData data);
             if (Files.LastError != null) Debug.LogWarning(Files.LastError);
+            Restore(data);
+        }
+        finally { restoring = false; }
+    }
+
+    private void Restore(SaveData data)
+    {
+        restoring = true;
+        try
+        {
             if (!CharacterInstances.CanRestore(data.characterInstances))
             { Debug.LogWarning("Reload refused: it would remove an active battle instance."); return; }
             using (PlayerStateChanges.BeginBatch())

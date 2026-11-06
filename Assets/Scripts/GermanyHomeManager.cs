@@ -3,7 +3,16 @@ using UnityEngine.SceneManagement;
 
 public class GermanyHomeManager : MonoBehaviour
 {
-    private void Start()=>StageSession.Clear();
+    private void Start()
+    {
+        StageSession.Clear();
+        TitleScreenController.InstallHomeEntry(transform);
+    }
+    public void GoTitle()
+    {
+        if (SettingsUI.IsOpen || DialogueUI.IsOpen || ProgressResetUI.Active != null || CharacterInstances.HasActiveBattle) return;
+        SceneManager.LoadScene(GameStartService.TitleScene);
+    }
     public void GoStageSelect()
     {
         SceneManager.LoadScene("StageSelect");

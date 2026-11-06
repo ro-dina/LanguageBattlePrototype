@@ -13,7 +13,7 @@ public sealed class SettingsUI : MonoBehaviour
     [SerializeField] private TMP_Text masterValue, bgmValue, sfxValue, voiceValue, message;
     public static SettingsUI Active { get; private set; }
     public static bool IsOpen => Active != null;
-    public static bool CanOpen => SettingsInstaller.Supports(SceneManager.GetActiveScene().name) && !DialogueUI.IsOpen && TutorialController.Active == null && ProgressResetUI.Active == null;
+    public static bool CanOpen => SettingsInstaller.Supports(SceneManager.GetActiveScene().name) && !DialogueUI.IsOpen && TutorialController.Active == null && ProgressResetUI.Active == null && !TitleScreenController.IsModalOpen;
     private readonly List<(CanvasGroup group, bool interactable, bool added)> blocked = new List<(CanvasGroup, bool, bool)>();
     private GameObject previousSelection;
     private AudioSource preview;
@@ -46,6 +46,9 @@ public sealed class SettingsUI : MonoBehaviour
         previewButton.interactable = sample != null; previewButton.onClick.AddListener(()=>PreviewVoice());
         if (sample == null) statusKey = "settings.preview.missing";
         if (UserSettings.Store.LastError != null) statusKey = UserSettings.Store.LastError;
+        // Tutorial/reset preferences belong to progress; the first title visit has not loaded a profile yet.
+        if (SceneManager.GetActiveScene().name == GameStartService.TitleScene && PlayerSaveService.Instance == null)
+        { tutorialButton.interactable = false; statusKey = statusKey ?? "title.settings.progress.required"; }
         ProgressResetDataUI.Install(dataPage.transform);
         UserSettings.Changed += Refresh; ShowTab(0); Refresh(); LocalizationUI.RefreshAll();
     }

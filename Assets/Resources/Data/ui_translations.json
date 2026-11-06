@@ -1674,6 +1674,106 @@
       "key": "tutorial.feature.future",
       "en": "Futur I",
       "ja": "Futur I"
+    },
+    {
+      "key": "title.game.name",
+      "en": "Language Battle",
+      "ja": "Language Battle"
+    },
+    {
+      "key": "title.continue",
+      "en": "Continue",
+      "ja": "つづきから"
+    },
+    {
+      "key": "title.new",
+      "en": "New game",
+      "ja": "はじめから"
+    },
+    {
+      "key": "title.account",
+      "en": "Account / transfer",
+      "ja": "アカウント・引き継ぎ"
+    },
+    {
+      "key": "title.language",
+      "en": "Learning language",
+      "ja": "学習言語"
+    },
+    {
+      "key": "title.language.selected",
+      "en": "{0} — selected",
+      "ja": "{0} — 選択中"
+    },
+    {
+      "key": "title.version",
+      "en": "Version {0}",
+      "ja": "バージョン {0}"
+    },
+    {
+      "key": "title.progress.ready",
+      "en": "Your adventure is ready to continue.",
+      "ja": "保存した冒険のつづきから遊べます。"
+    },
+    {
+      "key": "title.progress.recovery",
+      "en": "Progress can be recovered. Choose Continue to restore it.",
+      "ja": "進行を復元できます。「つづきから」で読み込みます。"
+    },
+    {
+      "key": "title.progress.missing",
+      "en": "Start a new adventure in Deutsch.",
+      "ja": "Deutschで新しい冒険を始めましょう。"
+    },
+    {
+      "key": "title.progress.corrupt",
+      "en": "Progress could not be recovered. Original files are protected. Starting a new game requires confirmation.",
+      "ja": "進行を復元できませんでした。元のファイルは保持しています。新しく始める場合は確認が必要です。"
+    },
+    {
+      "key": "title.progress.unavailable",
+      "en": "Progress cannot be read by this version. Existing files are protected; starting or replacing progress is disabled.",
+      "ja": "このバージョンでは進行を読み込めません。ファイルを保護するため、開始・上書きを停止しています。"
+    },
+    {
+      "key": "title.new.confirm.title",
+      "en": "Start a new adventure?",
+      "ja": "新しい冒険を始めますか？"
+    },
+    {
+      "key": "title.new.confirm.first",
+      "en": "Begin in Deutsch with the current starting character and equipment. UI language and sound settings will be kept.",
+      "ja": "現在の初期キャラクターと装備で、Deutschの冒険を始めます。表示言語と音量設定は引き継ぎます。"
+    },
+    {
+      "key": "title.new.confirm.replace",
+      "en": "Your current progress will be replaced with a new Deutsch adventure. Characters, items, Coins and stage progress will restart. UI language and sound settings will be kept.",
+      "ja": "現在の進行を新しいDeutschの冒険に切り替えます。キャラクター・素材・Coins・ステージ進行は初期状態になります。表示言語と音量設定は引き継ぎます。"
+    },
+    {
+      "key": "title.start",
+      "en": "Start",
+      "ja": "開始する"
+    },
+    {
+      "key": "title.start.failed",
+      "en": "Unable to start safely. Existing progress has been retained. Please check storage and try again.",
+      "ja": "安全に開始できませんでした。既存の進行は保持しています。保存先を確認して再試行してください。"
+    },
+    {
+      "key": "title.account.soon",
+      "en": "Account linking and save transfer are planned for a future update. They are not available yet.",
+      "ja": "アカウント連携・セーブデータの引き継ぎは今後実装予定です。現在は利用できません。"
+    },
+    {
+      "key": "title.return",
+      "en": "Title screen",
+      "ja": "タイトルへ"
+    },
+    {
+      "key": "title.settings.progress.required",
+      "en": "Start or continue an adventure to change tutorial preferences or reset progress.",
+      "ja": "チュートリアル設定や進行のリセットは、冒険を開始・再開してから行えます。"
     }
   ]
 }
