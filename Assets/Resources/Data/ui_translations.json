@@ -1529,6 +1529,121 @@
       "key": "reset.success.description",
       "en": "The reset has been saved. UI language and sound settings are unchanged. You can continue from Home.",
       "ja": "初期化した状態の保存が完了しました。表示言語と音量設定は維持しています。ホームからプレイを続けられます。"
+    },
+    {
+      "key": "dialogue.adverb_intro",
+      "en": "Adverbs describe how an action is performed. Select the highlighted adverb card, then combine it with a verb skill.",
+      "ja": "副詞は動作の様子を表します。光っている副詞カードを選び、動詞の技と組み合わせましょう。"
+    },
+    {
+      "key": "dialogue.adverb_selected",
+      "en": "You selected {2}. Now choose {0}. A skill alone is also valid in ordinary battles.",
+      "ja": "{2}を選びました。次は{0}を選びましょう。通常の戦闘では、副詞なしで技だけを使うこともできます。"
+    },
+    {
+      "key": "dialogue.adverb_after",
+      "en": "Your attack used {2} in this German sentence:\n{5}\nYou may now change or clear adverbs and fight normally.",
+      "ja": "今の攻撃では{2}がドイツ語の文章に反映されました。\n{5}\nここからは副詞の変更・解除も自由です。敵を倒しましょう。"
+    },
+    {
+      "key": "dialogue.adjektiv_intro",
+      "en": "This lesson begins before battle. Open Change Adjective and select {3}. Registered adjectives are available in the current equipment screen without consuming materials.",
+      "ja": "今回は戦闘前に装備を準備します。「形容詞を変更」を開き、{3}を選びましょう。現在の装備画面では、登録済みの形容詞を素材の消費なしで選べます。"
+    },
+    {
+      "key": "dialogue.adjektiv_ready",
+      "en": "You confirmed {3} for this individual. Its ATK and DEF bonuses are now used by the normal battle system. Choose {0} to attack.",
+      "ja": "この個体の装備に{3}を確定しました。ATK・DEFの補正が通常の戦闘へ反映されています。{0}で攻撃しましょう。"
+    },
+    {
+      "key": "dialogue.adjektiv_after",
+      "en": "That attack used your confirmed adjective equipment. Equipment belongs to this individual; another copy keeps its own loadout. Continue to victory.",
+      "ja": "確定した形容詞の補正を使って攻撃しました。装備は個体ごとに管理され、同じ種類の別個体には影響しません。勝利まで戦いましょう。"
+    },
+    {
+      "key": "dialogue.modalverb_intro",
+      "en": "Select müssen, then a verb skill. This makes an immediate attack at twice the usual damage, once per battle. It cannot be combined with Futur I.",
+      "ja": "müssenを選び、その後に動詞の技を選びましょう。通常の2倍の即時攻撃になり、1戦闘に1回だけ使えます。Futur Iとの併用はできません。"
+    },
+    {
+      "key": "dialogue.modalverb_after",
+      "en": "The müssen attack dealt {4} damage.\n{5}\nMüssen is now used. Clearing your selection will not restore its use. Finish with ordinary skills.",
+      "ja": "müssenによる攻撃で{4}ダメージを与えました。\n{5}\nmüssenは使用済みです。選択を解除しても回数は戻りません。通常の技で戦いましょう。"
+    },
+    {
+      "key": "dialogue.zukunft_intro",
+      "en": "Select Futur I and a verb skill to reserve an attack. It deals no damage now. At the start of your next turn it fires at 1.5 times the usual damage, before your ordinary action.",
+      "ja": "Futur Iと動詞の技を選ぶと攻撃を予約できます。今のダメージは0です。次の自分のターン開始時に通常の1.5倍で発動し、その後で通常行動を選べます。"
+    },
+    {
+      "key": "dialogue.zukunft_reserved",
+      "en": "The attack is reserved; no damage has been dealt yet. One reservation is allowed. After the enemy turn, it will fire before your next input.",
+      "ja": "攻撃を予約しました。まだダメージは与えていません。予約は1件までです。敵のターンが終わると、次の入力より先に予約攻撃が発動します。"
+    },
+    {
+      "key": "dialogue.zukunft_fired",
+      "en": "The frozen reservation fired for {4} damage.\n{5}\nNow choose an ordinary skill in this same turn.",
+      "ja": "予約時の内容のまま攻撃が発動し、{4}ダメージを与えました。\n{5}\n続けて、同じターンに通常の技を選びましょう。"
+    },
+    {
+      "key": "dialogue.zukunft_normal",
+      "en": "You used an ordinary skill after the reserved attack. The reservation was consumed once. You can now fight freely, using either Futur I or müssen when available.",
+      "ja": "予約攻撃の後に通常の技を使えました。予約は1回の発動で消費されています。ここからは、使用可能なFutur Iやmüssenも自由に使って戦いましょう。"
+    },
+    {
+      "key": "tutorial.hint.0",
+      "en": "Select the highlighted adverb card.",
+      "ja": "光っている副詞カードを選びましょう。"
+    },
+    {
+      "key": "tutorial.hint.1",
+      "en": "Open Change Adjective before battle.",
+      "ja": "戦闘前に「形容詞を変更」を開きましょう。"
+    },
+    {
+      "key": "tutorial.hint.2",
+      "en": "Choose schwarz; no material is consumed.",
+      "ja": "schwarzを選びましょう。素材は消費しません。"
+    },
+    {
+      "key": "tutorial.hint.3",
+      "en": "Confirm this individual’s equipment and start battle.",
+      "ja": "この個体の装備を確定して戦闘を始めましょう。"
+    },
+    {
+      "key": "tutorial.hint.4",
+      "en": "Select müssen for this battle.",
+      "ja": "müssenを選びましょう。"
+    },
+    {
+      "key": "tutorial.hint.5",
+      "en": "Select Futur I to reserve an attack.",
+      "ja": "Futur Iを選んで攻撃を予約しましょう。"
+    },
+    {
+      "key": "tutorial.hint.6",
+      "en": "Waiting for the existing next-turn reservation…",
+      "ja": "次の自分のターン開始時の発動を待っています…"
+    },
+    {
+      "key": "tutorial.hint.7",
+      "en": "Use any skills and win the battle.",
+      "ja": "好きな技を使い、敵に勝利しましょう。"
+    },
+    {
+      "key": "tutorial.stop",
+      "en": "Stop guide",
+      "ja": "ガイドを終了"
+    },
+    {
+      "key": "tutorial.equipment.required",
+      "en": "Complete adjective preparation before this guided battle.",
+      "ja": "操作ガイド付き戦闘の前に、形容詞の装備を確定してください。"
+    },
+    {
+      "key": "tutorial.equipment.save.failed",
+      "en": "Equipment could not be saved. Try confirming again.",
+      "ja": "装備を保存できませんでした。もう一度確定してください。"
     }
   ]
 }

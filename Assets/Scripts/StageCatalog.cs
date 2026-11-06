@@ -3,7 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[Serializable] public sealed class StageBattleModifiers { public int guidedEnemyHp; }
+[Serializable] public sealed class StageBattleModifiers
+{
+    public int guidedEnemyHp;
+    public bool surviveRequiredAttack;
+    public bool passiveUntilPractice;
+    public bool noEnemyAdverbDuringLesson;
+    public string tutorialAdjectiveId;
+}
 [Serializable] public sealed class StageDefinition
 {
     public string stageId;
@@ -70,23 +77,42 @@ public static class StageSession
     public static bool Guided { get; private set; }
     public static int TutorialCursor { get; internal set; }
     public static string TutorialSkillId { get; internal set; }
+    public static string TutorialAdverbId { get; internal set; }
+    public static string EquipmentInstanceId { get; private set; }
+    public static bool EquipmentChosen { get; internal set; }
+    public static bool EquipmentConfirmed { get; internal set; }
+    public static bool EquipmentLesson => Guided && !string.IsNullOrEmpty(Stage?.battleModifiers.tutorialAdjectiveId);
+    public static bool NeedsEquipmentPreparation(string instanceId)
+    {
+        if (!EquipmentLesson) return false;
+        if (EquipmentInstanceId != instanceId)
+        { EquipmentInstanceId = instanceId; EquipmentChosen = EquipmentConfirmed = false; TutorialCursor = 0; }
+        if (EquipmentConfirmed && CharacterLoadoutStore.GetLoadout(instanceId)?.adjectiveId != Stage.battleModifiers.tutorialAdjectiveId)
+        { EquipmentChosen = EquipmentConfirmed = false; TutorialCursor = 0; }
+        return !EquipmentConfirmed;
+    }
+    public static void StopPreparation() { Guided = false; TutorialCursor = 0; EquipmentChosen = EquipmentConfirmed = false; EquipmentInstanceId = null; }
     public static StageDefinition Stage=>StageCatalog.Get(StageId);
     public static bool Select(string id,bool guided,out string error)
     {
         error=null;var stage=StageCatalog.Get(id);
         if(stage==null || !StageProgress.IsUnlocked(id)){error="This stage is locked or unavailable.";return false;}
-        StageId=id;Guided=guided && TutorialCatalog.IsImplemented(stage.tutorialId);TutorialCursor=0;TutorialSkillId=null;
+        StageId=id;Guided=guided && TutorialCatalog.IsImplemented(stage.tutorialId);TutorialCursor=0;TutorialSkillId=TutorialAdverbId=null;
+        EquipmentInstanceId=null;EquipmentChosen=EquipmentConfirmed=false;
         GameManager.EnemyCharacterId=stage.enemyCharacterId;return true;
     }
-    public static bool ValidateBattle(out string error)
+    public static bool ValidateBattle(out string error, bool requireEquipment = true)
     {
         error=null;
         if(string.IsNullOrEmpty(StageId))
         {if(StageCatalog.IsTutorialEnemy(GameManager.EnemyCharacterId)){error="Select an unlocked stage first.";return false;}return true;}
         var s=Stage;
         if(s==null || !StageProgress.IsUnlocked(StageId) || s.enemyCharacterId!=GameManager.EnemyCharacterId)
-        {error="This stage is locked or unavailable.";return false;}return true;
+        {error="This stage is locked or unavailable.";return false;}
+        if(requireEquipment && EquipmentLesson && (NeedsEquipmentPreparation(GameManager.SelectedCharacterInstanceId)))
+        {error=Localization.Text("tutorial.equipment.required");return false;}
+        return true;
     }
-    public static void Clear(){StageId=null;Guided=false;TutorialCursor=0;TutorialSkillId=null;}
+    public static void Clear(){StageId=null;Guided=false;TutorialCursor=0;TutorialSkillId=TutorialAdverbId=null;EquipmentInstanceId=null;EquipmentChosen=EquipmentConfirmed=false;}
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void Reset()=>Clear();
 }

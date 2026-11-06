@@ -122,19 +122,21 @@ public class BattleManager : MonoBehaviour
 
     public bool SelectFuture(bool selected)
     {
-        if (!AllowsInput(TutorialInput.Modifier) || !CanChoose || (selected && (battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
+        if (!AllowsInput(TutorialInput.Modifier,selected?"futur1":"noTense") || !CanChoose || (selected && (battleContext.PendingAttack != null || playerCharacter.language != "de"))) return false;
         Selection.Select(BattleElementKind.Tense, selected ? "futur1" : null);
+        Tutorial?.SelectionChanged();
         RefreshSelectionUI(); return true;
     }
     public bool SelectMuessen(bool selected)
     {
-        if (!AllowsInput(TutorialInput.Modifier) || !CanChoose || (selected && (battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
+        if (!AllowsInput(TutorialInput.Modifier,selected?"muessen":"noModal") || !CanChoose || (selected && (battleContext.MuessenUsed || playerCharacter.language != "de"))) return false;
         Selection.Select(BattleElementKind.Modal, selected ? "muessen" : null);
+        Tutorial?.SelectionChanged();
         RefreshSelectionUI(); return true;
     }
     public void ClearModifiers()
     {
-        if (!AllowsInput(TutorialInput.Modifier) || !CanChoose) return;
+        if (!AllowsInput(TutorialInput.Modifier,"clear") || !CanChoose) return;
         selectedTurnAdverb = null; Selection.ClearModifiers(); RefreshSelectionUI();
     }
     private void RefreshSelectionUI()
@@ -146,6 +148,7 @@ public class BattleManager : MonoBehaviour
                     adverbCardButtons[i].image.color = selectedTurnAdverb != null && currentAdverbCards[i].id == selectedTurnAdverb.id
                         ? new Color(0.65f, 0.84f, 1f) : Color.white;
         if (noAdverbButton != null) noAdverbButton.image.color = selectedTurnAdverb == null ? new Color(0.65f, 0.84f, 1f) : Color.white;
+        Tutorial?.RefreshButtons();
     }
     private string battleInstanceId;
     private bool ownsBattleLock;
@@ -199,8 +202,7 @@ public class BattleManager : MonoBehaviour
         if (!StageSession.ValidateBattle(out string stageError))
         { isProcessing=true;enabled=false;if(battleLogText!=null)battleLogText.text=stageError;TutorialChoiceUI.ShowStageError(stageError);return; }
         var selectedStage=StageSession.Stage;
-        if(StageSession.Guided && selectedStage?.battleModifiers.guidedEnemyHp>0)
-        { enemyCharacter=JsonUtility.FromJson<CharacterData>(JsonUtility.ToJson(enemyCharacter));enemyCharacter.hp=selectedStage.battleModifiers.guidedEnemyHp; }
+        enemyCharacter=TutorialBattleSetup.Enemy(selectedStage,playerCharacter,enemyCharacter);
         ownsBattleLock = CharacterInstances.TryBeginBattle(battleInstanceId);
         if (!ownsBattleLock) { isProcessing = true; enabled = false; return; }
         SetupCharacterEquipment();
@@ -252,6 +254,9 @@ public class BattleManager : MonoBehaviour
     private void HideRewardSaveFailure() { if (rewardRetryUI != null) { Destroy(rewardRetryUI.gameObject); rewardRetryUI = null; } }
 
     internal void ShowTutorialSkills(){if(skillPanel!=null)skillPanel.SetActive(true);}
+    public string FirstAdverbId=>currentAdverbCards.FirstOrDefault()?.id;
+    public Button FirstAdverbButton=>currentAdverbCards.Count>0?adverbCardButtons[0]:null;
+    public Button ModifierButton(string id)=>modifierUI==null?null:modifierUI.ButtonFor(id);
     public Button SkillButton(string id)
     {int index=System.Array.IndexOf(playerCharacter?.skillIds ?? System.Array.Empty<string>(),id);return index>=0 && index<skillButtons.Length?skillButtons[index].GetComponent<Button>():null;}
     internal void RefreshTutorialInput(){SetAdverbCardInteraction(CanChoose && AllowsInput(TutorialInput.Adverb));RefreshSelectionUI();}
@@ -417,7 +422,7 @@ public class BattleManager : MonoBehaviour
         }
         RefreshSelectionUI();
         if (!result.IsReservation) yield return PresentPlayerHit(result.Damage);
-        if(Tutorial!=null)yield return Tutorial.AttackResolved();
+        if(Tutorial!=null)yield return Tutorial.AttackResolved(result);
         if (CompleteBattle()) yield break;
         EnemyAttack(enemySkillEquipment);
         yield return new WaitForSeconds(1f);
@@ -430,10 +435,12 @@ public class BattleManager : MonoBehaviour
             yield return PresentPlayerAttack(pending);
             if (battleContext.Apply(pending)) yield return PresentPlayerHit(pending.Damage);
             RefreshSelectionUI();
+            if(Tutorial!=null)yield return Tutorial.AttackResolved(pending);
             if (CompleteBattle()) yield break;
         }
         isProcessing = false;
         GenerateAdverbCards();
+        Tutorial?.RefreshButtons();
     }
 
     private bool CompleteBattle()
@@ -959,6 +966,9 @@ public class BattleManager : MonoBehaviour
 
     private void ChooseEnemyAdverb()
     {
+        if(StageSession.Guided && StageSession.Stage?.battleModifiers.noEnemyAdverbDuringLesson==true && Tutorial?.Failed!=true && Tutorial?.CurrentStep!=TutorialStepType.WaitForBattleVictory)
+        {enemySelectedTurnAdverb=null;return;}
+
         if (currentAdverbCards.Count == 0)
         {
             return;
@@ -990,11 +1000,12 @@ public class BattleManager : MonoBehaviour
 
     private void SelectAdverbCard(int index)
     {
-        if (!AllowsInput(TutorialInput.Adverb) || isProcessing) return;
+        if (!AllowsInput(TutorialInput.Adverb,index>=0 && index<currentAdverbCards.Count?currentAdverbCards[index].id:null) || isProcessing) return;
         if (index < 0 || index >= currentAdverbCards.Count) return;
 
         selectedTurnAdverb = currentAdverbCards[index];
         Selection.Select(BattleElementKind.Adverb, selectedTurnAdverb.id);
+        Tutorial?.SelectionChanged();
         RefreshSelectionUI();
 
         if (battleLogText != null)
@@ -1007,7 +1018,7 @@ public class BattleManager : MonoBehaviour
 
     private void SelectNoAdverb()
     {
-        if (!AllowsInput(TutorialInput.Adverb) || isProcessing) return;
+        if (!AllowsInput(TutorialInput.Adverb,"none") || isProcessing) return;
 
         selectedTurnAdverb = null;
         Selection.Select(BattleElementKind.Adverb, null);

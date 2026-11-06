@@ -29,6 +29,126 @@
       "text": "That was a real attack. Selecting a verb skill deals damage and creates a sentence. Continue attacking until Technik is defeated.",
       "nextDialogueId": "",
       "eventOnComplete": "technik_attack_explained"
+    },
+    {
+      "dialogueId": "adverb_intro",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "Adverbs describe how an action is performed. Select the highlighted adverb card, then combine it with a verb skill.",
+      "nextDialogueId": "",
+      "eventOnComplete": "adverb_intro_finished"
+    },
+    {
+      "dialogueId": "adverb_selected",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "You selected {adverb}. Now choose {skill}. A skill alone is also valid in ordinary battles.",
+      "nextDialogueId": "",
+      "eventOnComplete": "adverb_selected_finished"
+    },
+    {
+      "dialogueId": "adverb_after",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "Your attack used {adverb} in this German sentence:\n{sentence}\nYou may now change or clear adverbs and fight normally.",
+      "nextDialogueId": "",
+      "eventOnComplete": "adverb_after_finished"
+    },
+    {
+      "dialogueId": "adjektiv_intro",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "This lesson begins before battle. Open Change Adjective and select {adjective}. Registered adjectives are available in the current equipment screen without consuming materials.",
+      "nextDialogueId": "",
+      "eventOnComplete": "adjektiv_intro_finished"
+    },
+    {
+      "dialogueId": "adjektiv_ready",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "You confirmed {adjective} for this individual. Its ATK and DEF bonuses are now used by the normal battle system. Choose {skill} to attack.",
+      "nextDialogueId": "",
+      "eventOnComplete": "adjektiv_ready_finished"
+    },
+    {
+      "dialogueId": "adjektiv_after",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "That attack used your confirmed adjective equipment. Equipment belongs to this individual; another copy keeps its own loadout. Continue to victory.",
+      "nextDialogueId": "",
+      "eventOnComplete": "adjektiv_after_finished"
+    },
+    {
+      "dialogueId": "modalverb_intro",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "Select müssen, then a verb skill. This makes an immediate attack at twice the usual damage, once per battle. It cannot be combined with Futur I.",
+      "nextDialogueId": "",
+      "eventOnComplete": "modalverb_intro_finished"
+    },
+    {
+      "dialogueId": "modalverb_after",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "The müssen attack dealt {damage} damage.\n{sentence}\nMüssen is now used. Clearing your selection will not restore its use. Finish with ordinary skills.",
+      "nextDialogueId": "",
+      "eventOnComplete": "modalverb_after_finished"
+    },
+    {
+      "dialogueId": "zukunft_intro",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "Select Futur I and a verb skill to reserve an attack. It deals no damage now. At the start of your next turn it fires at 1.5 times the usual damage, before your ordinary action.",
+      "nextDialogueId": "",
+      "eventOnComplete": "zukunft_intro_finished"
+    },
+    {
+      "dialogueId": "zukunft_reserved",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "The attack is reserved; no damage has been dealt yet. One reservation is allowed. After the enemy turn, it will fire before your next input.",
+      "nextDialogueId": "",
+      "eventOnComplete": "zukunft_reserved_finished"
+    },
+    {
+      "dialogueId": "zukunft_fired",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "The frozen reservation fired for {damage} damage.\n{sentence}\nNow choose an ordinary skill in this same turn.",
+      "nextDialogueId": "",
+      "eventOnComplete": "zukunft_fired_finished"
+    },
+    {
+      "dialogueId": "zukunft_normal",
+      "speakerName": "Guide",
+      "speakerSide": "Left",
+      "leftPortraitId": "guide",
+      "rightPortraitId": "stage_enemy",
+      "text": "You used an ordinary skill after the reserved attack. The reservation was consumed once. You can now fight freely, using either Futur I or müssen when available.",
+      "nextDialogueId": "",
+      "eventOnComplete": "zukunft_normal_finished"
     }
   ]
 }

@@ -90,7 +90,14 @@ public sealed class DialogueUI:MonoBehaviour
     {
         var database=GameDatabase.EnsureAvailable();
         string skill=database.ContainsSkill(StageSession.TutorialSkillId)?database.GetSkill(StageSession.TutorialSkillId).skillName:Localization.Text("ui.verb.fallback");
-        if(DialogueCatalog.Get(Current.dialogueId)!=null) LocalizedText.Set(body,"dialogue."+Current.dialogueId,skill,StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"));
+        if(DialogueCatalog.Get(Current.dialogueId)!=null)
+        {
+            string adverb=database.ContainsEquipment(StageSession.TutorialAdverbId)?database.GetEquipment(StageSession.TutorialAdverbId).equipmentName:"";
+            string adjective=StageSession.Stage?.battleModifiers.tutorialAdjectiveId;
+            var observed=TutorialController.Active?.LastResult;
+            LocalizedText.Set(body,"dialogue."+Current.dialogueId,skill,StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"),adverb,
+                database.ContainsEquipment(adjective)?database.GetEquipment(adjective).equipmentName:"",observed?.Damage ?? 0,observed?.Sentence?.Text ?? "");
+        }
         else body.text=Current.text.Replace("{skill}",skill).Replace("{enemy}",StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"));
     }
     private void Show(DialogueLine line)

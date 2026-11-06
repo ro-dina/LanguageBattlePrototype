@@ -91,16 +91,18 @@ public class StageTutorialTests
         Assert.That(StageSession.Select("stage_1",true,out _),Is.True);Assert.That(StageSession.Guided,Is.True);TutorialPreferences.Choose("technik_basics",TutorialChoice.Take,out _);Win("stage_1",true,true);Assert.That(CurrencyService.Balance,Is.EqualTo(3500));Assert.That(TutorialPreferences.SkipAll,Is.True);
         Assert.That(TutorialPreferences.SetSkipAll(false,out _),Is.True);PlayerSaveService.Instance.Reload();Assert.That(TutorialPreferences.SkipAll,Is.False);Assert.That(TutorialPreferences.NeedsChoice("adverb_basics"),Is.True);
     }
-    [Test] public void UnimplementedTutorialsHaveChoicesButCannotBeMarkedCompleted()
+    [Test] public void RemainingTutorialsAreImplementedAndUnknownCompletionIsRejected()
     {
-        Win("stage_1");TutorialPreferences.Choose("adverb_basics",TutorialChoice.Take,out _);Assert.That(StageSession.Select("stage_2",true,out _),Is.True);Assert.That(StageSession.Guided,Is.False);
-        Win("stage_2",true,true);Assert.That(TutorialPreferences.Get("adverb_basics").completed,Is.False);
-        var invalid=PlayerSaveService.Instance.Capture();invalid.tutorials.records.Single(t=>t.tutorialId=="adverb_basics").completed=true;Assert.That(SaveDataValidator.Validate(invalid,out _),Is.False);
+        Win("stage_1");TutorialPreferences.Choose("adverb_basics",TutorialChoice.Take,out _);Assert.That(StageSession.Select("stage_2",true,out _),Is.True);Assert.That(StageSession.Guided,Is.True);
+        Win("stage_2",true,true);Assert.That(TutorialPreferences.Get("adverb_basics").completed,Is.True);
+        var invalid=PlayerSaveService.Instance.Capture();invalid.tutorials.records.Add(new TutorialRecord{tutorialId="missing_basics",completed=true});Assert.That(SaveDataValidator.Validate(invalid,out _),Is.False);
     }
     [TestCase(TutorialStepType.WaitForAdverbSelection)][TestCase(TutorialStepType.WaitForEquipmentChange)][TestCase(TutorialStepType.WaitForModalVerbSelection)][TestCase(TutorialStepType.WaitForFutureSelection)]
-    public void UnsupportedStepsAreExplicitlyRejected(TutorialStepType type)
+    public void SelectionStepTargetsMustBeExplicitAndCorrect(TutorialStepType type)
     {
-        var definition=new TutorialDefinition{tutorialId="future",isImplemented=true,steps=new[]{new TutorialStep{type=type.ToString()},new TutorialStep{type="Complete"}}};Assert.That(TutorialCatalog.Supported(definition,out string error),Is.False);Assert.That(error,Does.Contain("Unsupported"));
+        var definition=new TutorialDefinition{tutorialId="future",isImplemented=true,steps=new[]{new TutorialStep{type=type.ToString(),target="invalid"},new TutorialStep{type="Complete"}}};Assert.That(TutorialCatalog.Supported(definition,out string error),Is.False);Assert.That(error,Is.Not.Null);
+        definition.steps[0].target=type==TutorialStepType.WaitForAdverbSelection?"firstAdverb":type==TutorialStepType.WaitForEquipmentChange?"openAdjective":type==TutorialStepType.WaitForModalVerbSelection?"muessen":"futur1";
+        Assert.That(TutorialCatalog.Supported(definition,out _),Is.True);
         Assert.That(TutorialCatalog.Supported(TutorialCatalog.Get("technik_basics"),out _),Is.True);
     }
     [Test] public void VersionFiveMigrationPreservesExistingStateAndReceiptAndNeverRegrantsLegacyFirstClear()
@@ -126,4 +128,47 @@ public class StageTutorialTests
         data=PlayerSaveService.Instance.Capture();data.tutorials=null;Assert.That(SaveDataValidator.Validate(data,out _),Is.False);
         data=PlayerSaveService.Instance.Capture();data.tutorials.records.Add(new TutorialRecord{tutorialId="technik_basics",lastChoice=(TutorialChoice)99});Assert.That(SaveDataValidator.Validate(data,out _),Is.False);
     }
+    [TestCase(2)][TestCase(3)][TestCase(4)][TestCase(5)]
+    public void GuidedOpponentIsASafeCopyWhileSkippedOpponentAndMasterStayUnchanged(int number)
+    {
+        for(int n=1;n<number;n++)Win("stage_"+n);
+        var stage=StageCatalog.Get("stage_"+number);var master=GameDatabase.Instance.GetCharacter(stage.enemyCharacterId);
+        string original=JsonUtility.ToJson(master);var player=CharacterLoadoutStore.GetCharacterForBattle(CharacterInstances.GetByCharacterId("nacht")[0].instanceId);
+        StageSession.Select(stage.stageId,false,out _);Assert.That(TutorialBattleSetup.Enemy(stage,player,master),Is.SameAs(master));
+        StageSession.Select(stage.stageId,true,out _);var opponent=TutorialBattleSetup.Enemy(stage,player,master);
+        Assert.That(opponent,Is.Not.SameAs(master));Assert.That(JsonUtility.ToJson(master),Is.EqualTo(original));
+        var action=new BattleAction(BattleSide.Player,GameDatabase.Instance.GetSkill(player.skillIds[0]),modal:BattleModal.Muessen);
+        var result=new BattleContext(player,opponent).Resolve(action);Assert.That(opponent.hp,Is.GreaterThan(result.Damage));
+        Assert.That(opponent.attack,Is.EqualTo(master.attack));Assert.That(opponent.defense,Is.EqualTo(master.defense));
+    }
+    [Test] public void AllLessonsHaveValidDialogueTranslationsAndExplicitGameplayObservations()
+    {
+        foreach(int n in new[]{1,2,3,4,5})
+        {
+            var definition=TutorialCatalog.Get(StageCatalog.Get("stage_"+n).tutorialId);Assert.That(TutorialCatalog.Supported(definition,out string error),Is.True,error);
+            Assert.That(definition.steps.Any(s=>s.Kind==TutorialStepType.WaitForAttackResolution),Is.True);
+            Assert.That(definition.steps.Any(s=>s.Kind==TutorialStepType.WaitForBattleVictory),Is.True);
+            foreach(var step in definition.steps.Where(s=>s.Kind==TutorialStepType.Dialogue))
+            {
+                Assert.That(DialogueCatalog.ValidateChain(step.dialogueId,out error),Is.True,error);
+                foreach(string lang in new[]{"ja","en"})Assert.That(Localization.TextFor(lang,"dialogue."+step.dialogueId,"sein","Nacht","schnell","schwarz",21,"Die Nacht wird sein."),Does.Not.Contain("{sentence}").And.Not.Contain("{0}"));
+            }
+        }
+        Assert.That(Localization.Validate(new TranslationTable{entries=Localization.All}),Is.Empty);
+    }
+    [Test] public void UnknownEffectRequirementsAndFutureStepNamesFailInsteadOfSilentlyCompleting()
+    {
+        foreach(var step in new[]{new TutorialStep{type="WaitForAttackResolution",target="unknown"},new TutorialStep{type="WaitForSkillSelection",target="firstEquippedSkill",requirement="unknown"},new TutorialStep{type="NotImplemented"}})
+            Assert.That(TutorialCatalog.Supported(new TutorialDefinition{isImplemented=true,steps=new[]{step,new TutorialStep{type="Complete"}}},out _),Is.False);
+    }
+    [Test] public void EquipmentPreparationBindsOneInstanceAndRequiresActualConfirmedLoadout()
+    {
+        Win("stage_1");Win("stage_2");StageSession.Select("stage_3",true,out _);
+        var first=CharacterInstances.GetByCharacterId("nacht")[0];var second=CharacterInstances.Create("nacht");
+        Assert.That(StageSession.NeedsEquipmentPreparation(first.instanceId),Is.True);Assert.That(StageSession.ValidateBattle(out _),Is.False);
+        Assert.That(StageSession.NeedsEquipmentPreparation(second.instanceId),Is.True);Assert.That(StageSession.EquipmentInstanceId,Is.EqualTo(second.instanceId));
+        StageSession.StopPreparation();Assert.That(StageSession.Guided,Is.False);Assert.That(StageSession.ValidateBattle(out _),Is.True);
+        Assert.That(CharacterLoadoutStore.GetLoadout(first.instanceId).adjectiveId,Is.Null.Or.Empty);Assert.That(CharacterLoadoutStore.GetLoadout(second.instanceId).adjectiveId,Is.Null.Or.Empty);
+    }
+
 }

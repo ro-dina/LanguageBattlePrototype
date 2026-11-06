@@ -474,9 +474,9 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return RenderSizes("Result-Technik-first-clear");
         yield return Load("StageSelect");yield return RenderSizes("StageSelect-after-Technik");
         TutorialChoiceUI.Request("stage_1",true);yield return null;yield return RenderSizes("TutorialChoice-review");Click("TutorialChoiceClose");
-        TutorialChoiceUI.Request("stage_2",false);yield return null;yield return RenderSizes("TutorialChoice-coming-soon");
-        Check(Field<TMP_Text>(Find<TutorialChoiceUI>(),"details").text.Contains("not available yet"),"Unimplemented guidance is clearly identified");
-        Click("TutorialOption0");yield return null;yield return null;Check(!StageSession.Guided,"Unimplemented guidance starts a normal battle");
+        TutorialChoiceUI.Request("stage_2",false);yield return null;yield return RenderSizes("TutorialChoice-Adverb");
+        Check(Field<TMP_Text>(Find<TutorialChoiceUI>(),"details").text.Contains("guided practice"),"Adverb guidance is available");
+        Click("TutorialOption1");yield return null;yield return null;Check(!StageSession.Guided,"Individual skip starts a normal battle");
         Click("StartBattleButton");yield return null;yield return null;
         var adverbBattle=Find<BattleManager>();typeof(BattleCombatant).GetProperty("HP").SetValue(adverbBattle.Context.Enemy,1);adverbBattle.UseSkill1();
         deadline=Time.realtimeSinceStartup+20;while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline)yield return null;
@@ -500,7 +500,77 @@ public sealed class UIPlayValidation : MonoBehaviour
         yield return RenderSizes("Battle-tutorial-error-recovery");
         yield return ValidateSettingsAndLanguages();
         yield return ValidateProgressReset();
+        yield return ValidateRemainingLessons();
 
+    }
+
+
+    private IEnumerator LessonDialogue(string label)
+    {
+        Check(DialogueUI.IsOpen,label+" dialogue opens");yield return RenderSizes(label);
+        foreach(var text in Object.FindObjectsByType<TMP_Text>().Where(t=>t.GetComponentInParent<DialogueUI>()!=null))
+            localizedLabels.Add(UserSettings.Language+" | "+label+" | "+text.name+" | "+text.text.Replace("\n"," / "));
+        float end=Time.realtimeSinceStartup+25;int page=1;
+        while(DialogueUI.IsOpen && Time.realtimeSinceStartup<end)
+        {
+            yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return null;
+            if(DialogueUI.IsOpen && Field<TMP_Text>(DialogueUI.Active,"body").pageToDisplay>page)
+            {page=Field<TMP_Text>(DialogueUI.Active,"body").pageToDisplay;yield return RenderSizes(label+"-Page"+page);}
+        }
+        Check(!DialogueUI.IsOpen,label+" dialogue finishes");yield return null;
+    }
+    private IEnumerator WaitLessonDialogue(string expected)
+    {float end=Time.realtimeSinceStartup+20;while(!DialogueUI.IsOpen && Time.realtimeSinceStartup<end)yield return null;Check(DialogueUI.Active?.Current.dialogueId==expected,"Actual attack reached "+expected);}
+    private IEnumerator ValidateRemainingLessons()
+    {
+        foreach(string language in new[]{"ja","en"})
+        {
+            var settings=UserSettings.Current;settings.uiLanguage=language;Check(UserSettings.TryUpdate(settings,out _),language+" lessons language saved");
+            yield return Load("GermanyHome");
+            var request=ProgressResetService.Request(ProgressResetKind.DevelopmentNewGame,out _);Check(ProgressResetService.TryExecute(request,out _),"Fresh isolated tutorial profile");
+            BattleRewardService.Begin("technik",out string first,out _,"stage_1");BattleRewardService.Complete(first,true,out _,()=>.9);
+            for(int number=2;number<=5;number++)
+            {
+                string label=language+"-Lesson"+number;
+                yield return Load("StageSelect");TutorialChoiceUI.Request("stage_"+number,true);yield return null;yield return RenderSizes(label+"-Choice");Click("TutorialOption0");yield return null;yield return null;
+                Click("StartBattleButton");yield return null;yield return null;
+                if(number==3)
+                {
+                    Check(SceneManager.GetActiveScene().name=="CharacterDetail","Equipment lesson opens existing detail scene");
+                    yield return LessonDialogue(label+"-PreparationIntro");yield return RenderSizes(label+"-OpenAdjectiveHighlight");
+                    var detail=Find<CharacterDetailManager>();Click(detail.AdjectiveButton.name);yield return null;yield return RenderSizes(label+"-ChooseAdjectiveHighlight");
+                    Click(detail.EquipmentButton("schwarz").name);yield return null;yield return RenderSizes(label+"-ConfirmEquipmentHighlight");
+                    Click(detail.BattleButton.name);yield return null;yield return null;Check(StageSession.EquipmentConfirmed,"Normal equipment commit retained across scene change");
+                }
+                var battle=Find<BattleManager>();Check(battle!=null && TutorialController.Active!=null,label+" guided battle starts");
+                yield return LessonDialogue(label+"-BattleIntro");
+                if(number==2)
+                {
+                    yield return RenderSizes(label+"-AdverbHighlight");Click(battle.FirstAdverbButton.name);yield return null;yield return LessonDialogue(label+"-AdverbSelected");
+                }
+                if(number==4 || number==5)
+                {
+                    yield return RenderSizes(label+"-ModifierHighlight");Click(number==4?"MuessenButton":"FutureButton");yield return null;
+                }
+                yield return RenderSizes(label+"-SkillHighlight");Click(battle.SkillButton(TutorialController.Active.SkillId).name);
+                yield return WaitLessonDialogue(number==2?"adverb_after":number==3?"adjektiv_after":number==4?"modalverb_after":"zukunft_reserved");
+                if(number==5)
+                {
+                    Check(battle.Context.PendingAttack!=null && TutorialController.Active.LastResult.Damage==0,"Future reservation is real and initially deals zero");
+                    yield return LessonDialogue(label+"-ReservationExplained");yield return WaitLessonDialogue("zukunft_fired");
+                    Check(battle.Context.PendingAttack==null && TutorialController.Active.LastResult.IsPendingAttack,"Frozen future attack fired once");
+                    Check(GameObject.Find("ModifierStatus").GetComponent<TMP_Text>().text.StartsWith(Localization.Present("Future: no attack reserved")),"Consumed reservation updates status before dialogue");
+                    yield return LessonDialogue(label+"-FutureFired");float end=Time.realtimeSinceStartup+10;while(!battle.CanChoose && Time.realtimeSinceStartup<end)yield return null;
+                    yield return RenderSizes(label+"-NormalSkillSameTurnHighlight");Click(battle.SkillButton(TutorialController.Active.SkillId).name);yield return WaitLessonDialogue("zukunft_normal");
+                }
+                yield return LessonDialogue(label+"-AttackExplained");float ready=Time.realtimeSinceStartup+10;while(!battle.CanChoose && Time.realtimeSinceStartup<ready)yield return null;
+                Check(TutorialController.Active.CurrentStep==TutorialStepType.WaitForBattleVictory && !TutorialController.Active.Failed,"Actual effect releases normal practice controls");
+                yield return RenderSizes(label+"-FreePractice");long coins=CurrencyService.Balance;float deadline=Time.realtimeSinceStartup+40;
+                while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline){var b=Find<BattleManager>();if(b.CanChoose)b.UseSkill1();yield return null;}
+                yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="Result" && TutorialPreferences.Get(StageCatalog.Get("stage_"+number).tutorialId).completed && CurrencyService.Balance==coins+400,label+" actual victory completes tutorial with normal first reward");
+                yield return RenderSizes(label+"-Result");
+            }
+        }
     }
 
     private IEnumerator ValidateSettingsAndLanguages()
@@ -655,16 +725,14 @@ public sealed class UIPlayValidation : MonoBehaviour
         foreach(var text in Object.FindObjectsByType<TMP_Text>().Where(t=>t.GetComponentInParent<SettingsUI>()!=null || t.GetComponentInParent<ProgressResetUI>()!=null))
             Check(!text.isTextOverflowing,context+" settings text fits "+text.name);
         var tutorialView = TutorialController.Active;
-        if(tutorialView!=null && !tutorialView.Failed && !tutorialView.ReadyForCommit && (tutorialView.CurrentStep==TutorialStepType.Highlight || tutorialView.CurrentStep==TutorialStepType.WaitForSkillSelection))
+        if(tutorialView!=null && !tutorialView.Failed && !tutorialView.ReadyForCommit && !DialogueUI.IsOpen && tutorialView.FocusedButton!=null)
         {
-            var battle=Find<BattleManager>();var target=battle.SkillButton(tutorialView.SkillId);var rect=(RectTransform)target.transform;
+            var target=tutorialView.FocusedButton;var rect=(RectTransform)target.transform;
             var pointer=new PointerEventData(EventSystem.current){position=RectTransformUtility.WorldToScreenPoint(camera,rect.TransformPoint(rect.rect.center))};var hits=new List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);
-            Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()==target,context+" highlighted original skill receives pointer input");
-            foreach(var other in Field<GameObject[]>(battle,"skillButtons").Where(o=>o.activeInHierarchy && o!=target.gameObject))
-            {
-                var otherRect=(RectTransform)other.transform;pointer.position=RectTransformUtility.WorldToScreenPoint(camera,otherRect.TransformPoint(otherRect.rect.center));hits.Clear();EventSystem.current.RaycastAll(pointer,hits);
-                Check(hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()!=other.GetComponent<Button>(),context+" shade rejects other skill buttons");
-            }
+            Check(target.interactable && hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()==target,context+" highlighted original control receives pointer input: "+target.name);
+            foreach(var other in Object.FindObjectsByType<Button>().Where(b=>b!=target && b.GetComponentInParent<TutorialFocusUI>()==null))
+                Check(!other.IsInteractable(),context+" tutorial disables other gameplay control "+other.name);
+            var hint=Field<TMP_Text>(Find<TutorialFocusUI>(),"hint");Check(!hint.isTextOverflowing,context+" tutorial hint fits");
         }
         var dialogueView=Find<DialogueUI>();
         if(dialogueView!=null)

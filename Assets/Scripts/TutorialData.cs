@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public enum TutorialStepType { Dialogue, Highlight, WaitForSkillSelection, WaitForAdverbSelection, WaitForEquipmentChange, WaitForModalVerbSelection, WaitForFutureSelection, WaitForAttackResolution, WaitForBattleVictory, Complete }
-[Serializable] public sealed class TutorialStep { public string type; public TutorialStepType Kind=>Enum.TryParse(type,out TutorialStepType value)?value:(TutorialStepType)(-1); public string dialogueId; public string target; public string hint; }
+public enum TutorialStepType { Dialogue, Highlight, WaitForSkillSelection, WaitForAdverbSelection, WaitForEquipmentChange, WaitForModalVerbSelection, WaitForFutureSelection, WaitForAttackResolution, WaitForBattleVictory, Complete, WaitForFutureResolution }
+[Serializable] public sealed class TutorialStep { public string type; public TutorialStepType Kind=>Enum.TryParse(type,out TutorialStepType value)?value:(TutorialStepType)(-1); public string dialogueId; public string target; public string hint; public string requirement; }
 [Serializable] public sealed class TutorialDefinition { public string tutorialId; public bool isImplemented; public TutorialStep[] steps; }
 [Serializable] public sealed class TutorialDatabase { public TutorialDefinition[] tutorials; }
 public static class TutorialCatalog
@@ -27,9 +27,22 @@ public static class TutorialCatalog
             switch(step.Kind)
             {
                 case TutorialStepType.Dialogue:case TutorialStepType.Highlight:case TutorialStepType.WaitForSkillSelection:
-                case TutorialStepType.WaitForAttackResolution:case TutorialStepType.WaitForBattleVictory:case TutorialStepType.Complete:break;
+                case TutorialStepType.WaitForAttackResolution:case TutorialStepType.WaitForBattleVictory:case TutorialStepType.Complete:
+                case TutorialStepType.WaitForAdverbSelection:case TutorialStepType.WaitForEquipmentChange:case TutorialStepType.WaitForModalVerbSelection:
+                case TutorialStepType.WaitForFutureSelection:case TutorialStepType.WaitForFutureResolution:break;
                 default:error="Unsupported tutorial step: "+step.type;return false;
             }
+            if(step.Kind==TutorialStepType.WaitForEquipmentChange && step.target!="openAdjective" && step.target!="chooseAdjective" && step.target!="confirmEquipment")
+            {error="Unknown equipment tutorial target.";return false;}
+            if(step.Kind==TutorialStepType.WaitForSkillSelection && step.target!="firstEquippedSkill")
+            {error="Unknown skill tutorial target.";return false;}
+            if(step.Kind==TutorialStepType.WaitForAdverbSelection && step.target!="firstAdverb" ||
+                step.Kind==TutorialStepType.WaitForModalVerbSelection && step.target!="muessen" ||
+                step.Kind==TutorialStepType.WaitForFutureSelection && step.target!="futur1")
+            {error="Unknown selection tutorial target.";return false;}
+            if(step.Kind==TutorialStepType.WaitForAttackResolution && !new[]{null,"","adverb","adjective","muessen","reservation","normalAfterFuture"}.Contains(step.target) ||
+                step.Kind==TutorialStepType.WaitForSkillSelection && !new[]{null,"","adverb","adjective","muessen","future","normal"}.Contains(step.requirement))
+            {error="Unknown tutorial battle requirement.";return false;}
         }
         if(tutorial.steps.Last().Kind!=TutorialStepType.Complete){error="Tutorial has no completion step.";return false;}
         return true;

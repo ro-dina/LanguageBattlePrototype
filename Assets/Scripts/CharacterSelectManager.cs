@@ -237,6 +237,8 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        if(StageSession.NeedsEquipmentPreparation(selectedId))
+        {GameManager.SelectedCharacterInstanceId=selectedId;GameManager.PreviousSceneName="CharacterSelect";SceneManager.LoadScene("CharacterDetail");return;}
         if(!StageSession.ValidateBattle(out string error)){TutorialChoiceUI.ShowStageError(error);return;}
         GameManager.SelectedCharacterInstanceId = selectedId;
         SceneManager.LoadScene("Battle");
@@ -249,6 +251,7 @@ public class CharacterSelectManager : MonoBehaviour
             return;
         }
 
+        StageSession.NeedsEquipmentPreparation(selectedId);
         GameManager.SelectedCharacterInstanceId = selectedId;
         GameManager.PreviousSceneName = "CharacterSelect";
         SceneManager.LoadScene("CharacterDetail");

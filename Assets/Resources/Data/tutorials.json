@@ -36,23 +36,187 @@
     },
     {
       "tutorialId": "adverb_basics",
-      "isImplemented": false,
-      "steps": []
+      "isImplemented": true,
+      "steps": [
+        {
+          "type": "Dialogue",
+          "dialogueId": "adverb_intro"
+        },
+        {
+          "type": "WaitForAdverbSelection",
+          "target": "firstAdverb",
+          "hint": "Select the highlighted adverb card."
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "adverb_selected"
+        },
+        {
+          "type": "WaitForSkillSelection",
+          "target": "firstEquippedSkill",
+          "requirement": "adverb",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForAttackResolution",
+          "target": "adverb"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "adverb_after"
+        },
+        {
+          "type": "WaitForBattleVictory",
+          "hint": "Use any skills and win the battle."
+        },
+        {
+          "type": "Complete"
+        }
+      ]
     },
     {
       "tutorialId": "adjektiv_basics",
-      "isImplemented": false,
-      "steps": []
+      "isImplemented": true,
+      "steps": [
+        {
+          "type": "Dialogue",
+          "dialogueId": "adjektiv_intro"
+        },
+        {
+          "type": "WaitForEquipmentChange",
+          "target": "openAdjective",
+          "hint": "Open Change Adjective before battle."
+        },
+        {
+          "type": "WaitForEquipmentChange",
+          "target": "chooseAdjective",
+          "hint": "Choose schwarz; no material is consumed."
+        },
+        {
+          "type": "WaitForEquipmentChange",
+          "target": "confirmEquipment",
+          "hint": "Confirm this individual’s equipment and start battle."
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "adjektiv_ready"
+        },
+        {
+          "type": "WaitForSkillSelection",
+          "target": "firstEquippedSkill",
+          "requirement": "adjective",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForAttackResolution",
+          "target": "adjective"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "adjektiv_after"
+        },
+        {
+          "type": "WaitForBattleVictory",
+          "hint": "Use any skills and win the battle."
+        },
+        {
+          "type": "Complete"
+        }
+      ]
     },
     {
       "tutorialId": "modalverb_basics",
-      "isImplemented": false,
-      "steps": []
+      "isImplemented": true,
+      "steps": [
+        {
+          "type": "Dialogue",
+          "dialogueId": "modalverb_intro"
+        },
+        {
+          "type": "WaitForModalVerbSelection",
+          "target": "muessen",
+          "hint": "Select müssen for this battle."
+        },
+        {
+          "type": "WaitForSkillSelection",
+          "target": "firstEquippedSkill",
+          "requirement": "muessen",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForAttackResolution",
+          "target": "muessen"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "modalverb_after"
+        },
+        {
+          "type": "WaitForBattleVictory",
+          "hint": "Use any skills and win the battle."
+        },
+        {
+          "type": "Complete"
+        }
+      ]
     },
     {
       "tutorialId": "zukunft_basics",
-      "isImplemented": false,
-      "steps": []
+      "isImplemented": true,
+      "steps": [
+        {
+          "type": "Dialogue",
+          "dialogueId": "zukunft_intro"
+        },
+        {
+          "type": "WaitForFutureSelection",
+          "target": "futur1",
+          "hint": "Select Futur I to reserve an attack."
+        },
+        {
+          "type": "WaitForSkillSelection",
+          "target": "firstEquippedSkill",
+          "requirement": "future",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForAttackResolution",
+          "target": "reservation"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "zukunft_reserved"
+        },
+        {
+          "type": "WaitForFutureResolution",
+          "hint": "Waiting for the existing next-turn reservation…"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "zukunft_fired"
+        },
+        {
+          "type": "WaitForSkillSelection",
+          "target": "firstEquippedSkill",
+          "requirement": "normal",
+          "hint": "Choose the highlighted verb skill."
+        },
+        {
+          "type": "WaitForAttackResolution",
+          "target": "normalAfterFuture"
+        },
+        {
+          "type": "Dialogue",
+          "dialogueId": "zukunft_normal"
+        },
+        {
+          "type": "WaitForBattleVictory",
+          "hint": "Use any skills and win the battle."
+        },
+        {
+          "type": "Complete"
+        }
+      ]
     }
   ]
 }

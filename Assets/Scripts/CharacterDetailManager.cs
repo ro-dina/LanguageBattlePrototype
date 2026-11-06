@@ -1,4 +1,5 @@
 using TMPro;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -24,6 +25,12 @@ public class CharacterDetailManager : MonoBehaviour
     [SerializeField] private Transform skillEquipmentButtonParent;
     [SerializeField] private GameObject battleButton;
 
+    public string ViewedInstanceId=>viewedInstanceId;
+    public string DraftAdjectiveId=>tempCharacterEquipmentId;
+    public bool IsAdjectiveListOpen=>characterEquipmentPanel!=null && characterEquipmentPanel.activeSelf && currentCharacterEquipmentMode=="adjective";
+    public Button BattleButton=>battleButton.GetComponent<Button>();
+    public Button AdjectiveButton=>Object.FindObjectsByType<Button>(FindObjectsInactive.Include).FirstOrDefault(b=>Enumerable.Range(0,b.onClick.GetPersistentEventCount()).Any(i=>b.onClick.GetPersistentTarget(i)==this && b.onClick.GetPersistentMethodName(i)=="OpenAdjectiveEquipmentList"));
+    public Button EquipmentButton(string id)=>characterEquipmentButtonParent.GetComponentsInChildren<Button>().FirstOrDefault(b=>b.name=="CharacterEquipmentButton_"+id);
     private int selectedSkillIndex = -1;
     private string viewedInstanceId;
     private bool CanEdit => character != null && CharacterInstances.Get(viewedInstanceId)?.characterId == character.id;
@@ -99,6 +106,7 @@ public class CharacterDetailManager : MonoBehaviour
         {
             unsavedConfirmPanel.SetActive(false);
         }
+        TutorialController.AttachPreparation(this);
     }
 
     private void SetupTemporaryEquipmentState()
@@ -196,6 +204,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenAdjectiveEquipmentList()
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentOpen,"adjective"))return;
         if (!CanEdit || GameDatabase.Instance == null) return;
 
         currentCharacterEquipmentMode = "adjective";
@@ -208,10 +217,12 @@ public class CharacterDetailManager : MonoBehaviour
 
         characterEquipmentPanel.SetActive(true);
         CreateCharacterEquipmentButtons();
+        if(TutorialController.Active?.IsPreparation==true)TutorialController.Active.EquipmentOpened();
     }
 
     public void OpenArticleEquipmentList()
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentOpen,"article"))return;
         if (!CanEdit || GameDatabase.Instance == null) return;
 
         currentCharacterEquipmentMode = "article";
@@ -228,6 +239,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void CloseCharacterEquipmentList()
     {
+        if(!TutorialController.DetailAllows(TutorialInput.Navigate))return;
         if (characterEquipmentPanel != null)
         {
             characterEquipmentPanel.SetActive(false);
@@ -316,6 +328,7 @@ public class CharacterDetailManager : MonoBehaviour
     {
         GameObject buttonObj = Instantiate(equipmentButtonPrefab, characterEquipmentButtonParent);
         buttonObj.SetActive(true);
+        buttonObj.name="CharacterEquipmentButton_"+equipmentId;
 
         TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
         if (buttonText != null)
@@ -334,6 +347,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void EquipCharacterEquipment(string equipmentId)
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentSelect,equipmentId))return;
         if (!CanEdit) return;
         EquipmentData equipment = GameDatabase.Instance.GetEquipment(equipmentId);
 
@@ -352,11 +366,14 @@ public class CharacterDetailManager : MonoBehaviour
 
         UpdateCharacterInfoText();
         UpdateCharacterEquipmentText();
-        CloseCharacterEquipmentList();
+        if(TutorialController.Active?.IsPreparation==true)
+        {characterEquipmentPanel.SetActive(false);TutorialController.Active.EquipmentSelected(equipmentId);}
+        else CloseCharacterEquipmentList();
     }
 
     public void Back()
     {
+        if(TutorialController.Active?.IsPreparation==true)TutorialController.Active.Abort("Equipment preparation interrupted.");
         if (hasUnsavedChanges)
         {
             if (unsavedConfirmPanel != null)
@@ -375,8 +392,10 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void ConfirmEquipment()
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentConfirm))return;
         if (!CanEdit) { ReturnToPreviousScene(); return; }
         if (!ApplyEquipmentChanges()) return;
+        if(TutorialController.Active?.IsPreparation==true && !TutorialController.Active.EquipmentConfirmed(viewedInstanceId))return;
         hasUnsavedChanges = false;
         ReturnToPreviousScene();
     }
@@ -390,19 +409,31 @@ public class CharacterDetailManager : MonoBehaviour
                 skillId = character.skillIds[i],
                 equippedAdverbId = tempSkillEquipmentIds[i]
             };
-        bool committed = CharacterLoadoutStore.Commit(new CharacterLoadout {
+        var draft = new CharacterLoadout {
             instanceId = viewedInstanceId,
             characterId = character.id,
             adjectiveId = tempCharacterEquipmentId,
             articleId = tempArticleEquipmentId,
             skillSlots = slots
-        });
-        if (!committed) Debug.LogError("Equipment changes could not be committed.", this);
+        };
+        bool preparation = TutorialController.Active?.IsPreparation == true;
+        // Preparation crosses scenes only after the existing atomic save accepts the loadout.
+        bool committed = preparation ? PlayerStateTransactions.TryChange(data => {
+            data.characterEquipment.characters.RemoveAll(saved => saved.instanceId == viewedInstanceId);
+            data.characterEquipment.characters.Add(draft);
+            return true;
+        }, out _) : CharacterLoadoutStore.Commit(draft);
+        if (!committed)
+        {
+            if (preparation) TutorialController.Active.EquipmentSaveFailed();
+            else Debug.LogError("Equipment changes could not be committed.", this);
+        }
         return committed;
     }
 
     public void DiscardChangesAndBack()
     {
+        if(TutorialController.Active?.IsPreparation==true)TutorialController.Active.Abort("Equipment draft discarded.");
         hasUnsavedChanges = false;
 
         if (unsavedConfirmPanel != null)
@@ -435,13 +466,16 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void StartBattle()
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentConfirm))return;
         if (!CanEdit)
         {
             Debug.LogWarning("Only owned characters can enter battle.", this);
             return;
         }
-        if(!StageSession.ValidateBattle(out string error)){TutorialChoiceUI.ShowStageError(error);return;}
+        if(!StageSession.ValidateBattle(out string error,false)){TutorialChoiceUI.ShowStageError(error);return;}
         if (!ApplyEquipmentChanges()) return;
+        if(TutorialController.Active?.IsPreparation==true && !TutorialController.Active.EquipmentConfirmed(viewedInstanceId))return;
+        if(!StageSession.ValidateBattle(out error)){TutorialChoiceUI.ShowStageError(error);return;}
         GameManager.SelectedCharacterInstanceId = viewedInstanceId;
         hasUnsavedChanges = false;
         SceneManager.LoadScene("Battle");
@@ -513,6 +547,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     public void OpenSkillEquipmentList(int skillIndex)
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentOpen,"skill"))return;
         if (!CanEdit || character.skillIds == null ||
             skillIndex < 0 || skillIndex >= character.skillIds.Length ||
             tempSkillEquipmentIds == null || skillIndex >= tempSkillEquipmentIds.Length ||
@@ -597,6 +632,7 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void EquipSkillEquipment(string equipmentId)
     {
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentSelect,equipmentId))return;
         if (!CanEdit) return;
         if (selectedSkillIndex < 0) return;
 

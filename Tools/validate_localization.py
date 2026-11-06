@@ -13,12 +13,12 @@ for entry in entries:
     parameters = lambda value: sorted(re.findall(r'\{[0-9]+\}', value))
     assert parameters(entry['en']) == parameters(entry['ja']), f'Parameter mismatch: {key}'
 for script in (root / 'Assets/Scripts').glob('*.cs'):
-    for key in re.findall(r'"((?:ui|settings|stat|reset)\.[a-zA-Z0-9_.]+)"', script.read_text()):
+    for key in re.findall(r'"((?:ui|settings|stat|reset|tutorial)\.[a-zA-Z0-9_.]+)"', script.read_text()):
         assert key == 'settings.json' or key in keys or any(value.startswith(key+'.') for value in keys), f'{script.name}: missing {key}'
 for line in json.loads((root / 'Assets/Resources/Data/dialogues.json').read_text())['dialogues']:
     key = 'dialogue.' + line['dialogueId']
     assert key in keys, f'Missing dialogue translation: {key}'
     entry = next(e for e in entries if e['key'] == key)
-    expected = line['text'].replace('{skill}', '{0}').replace('{enemy}', '{1}')
+    expected = line['text'].replace('{skill}', '{0}').replace('{enemy}', '{1}').replace('{adverb}', '{2}').replace('{adjective}', '{3}').replace('{damage}', '{4}').replace('{sentence}', '{5}')
     assert entry['en'] == expected, f'Dialogue source changed without updating translations: {key}'
 print(f'PASS: {len(entries)} Japanese/English entries; keys, parameters, runtime references and dialogue sources validated.')

@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +11,13 @@ public sealed class TutorialFocusUI:MonoBehaviour
     [SerializeField] private RectTransform[] borders;
     [SerializeField] private TMP_Text hint;
     private RectTransform target;
+    public void OfferExit(Action stop)
+    {
+        var template=Resources.Load<GameObject>("UI/SettingsUI").GetComponentsInChildren<Button>(true).First(b=>b.name=="SettingsClose");
+        var button=Instantiate(template,transform);button.name="TutorialStopButton";button.onClick=new Button.ButtonClickedEvent();button.onClick.AddListener(()=>stop());
+        var r=(RectTransform)button.transform;r.anchorMin=r.anchorMax=r.pivot=Vector2.one;r.anchoredPosition=new Vector2(-32,-208);r.sizeDelta=new Vector2(320,72);
+        LocalizedText.Set(button.GetComponentInChildren<TMP_Text>(),"tutorial.stop");
+    }
     public void Focus(RectTransform value,string text){target=value;hint.text=text;gameObject.SetActive(true);Reposition();}
     public void Hint(string text){target=null;hint.text=text;foreach(var s in shades)s.gameObject.SetActive(false);foreach(var b in borders)b.gameObject.SetActive(false);gameObject.SetActive(!string.IsNullOrEmpty(text));}
     private void LateUpdate(){if(target!=null)Reposition();}

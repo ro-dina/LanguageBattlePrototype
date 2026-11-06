@@ -30,9 +30,13 @@
       "tutorialId": "adverb_basics",
       "tutorialType": "Adverbs",
       "stageDescription": "Explore optional adverb cards.",
-      "enemyBehaviorProfile": "standard",
+      "enemyBehaviorProfile": "guided_passive",
       "battleModifiers": {
-        "guidedEnemyHp": 0
+        "guidedEnemyHp": 40,
+        "surviveRequiredAttack": true,
+        "passiveUntilPractice": true,
+        "noEnemyAdverbDuringLesson": true,
+        "tutorialAdjectiveId": ""
       },
       "isEnabled": true
     },
@@ -49,9 +53,13 @@
       "tutorialId": "adjektiv_basics",
       "tutorialType": "Equipment",
       "stageDescription": "Explore adjectives and equipment.",
-      "enemyBehaviorProfile": "standard",
+      "enemyBehaviorProfile": "guided_passive",
       "battleModifiers": {
-        "guidedEnemyHp": 0
+        "guidedEnemyHp": 40,
+        "surviveRequiredAttack": true,
+        "passiveUntilPractice": true,
+        "noEnemyAdverbDuringLesson": false,
+        "tutorialAdjectiveId": "schwarz"
       },
       "isEnabled": true
     },
@@ -68,9 +76,13 @@
       "tutorialId": "modalverb_basics",
       "tutorialType": "Modal verbs",
       "stageDescription": "Explore the once-per-battle müssen effect.",
-      "enemyBehaviorProfile": "standard",
+      "enemyBehaviorProfile": "guided_passive",
       "battleModifiers": {
-        "guidedEnemyHp": 0
+        "guidedEnemyHp": 40,
+        "surviveRequiredAttack": true,
+        "passiveUntilPractice": true,
+        "noEnemyAdverbDuringLesson": false,
+        "tutorialAdjectiveId": ""
       },
       "isEnabled": true
     },
@@ -87,9 +99,13 @@
       "tutorialId": "zukunft_basics",
       "tutorialType": "Futur I",
       "stageDescription": "Explore a reserved attack next turn.",
-      "enemyBehaviorProfile": "standard",
+      "enemyBehaviorProfile": "guided_passive",
       "battleModifiers": {
-        "guidedEnemyHp": 0
+        "guidedEnemyHp": 30,
+        "surviveRequiredAttack": true,
+        "passiveUntilPractice": true,
+        "noEnemyAdverbDuringLesson": false,
+        "tutorialAdjectiveId": ""
       },
       "isEnabled": true
     },

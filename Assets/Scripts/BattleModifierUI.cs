@@ -13,6 +13,7 @@ public sealed class BattleModifierUI : MonoBehaviour
     [SerializeField] private TMP_Text selectionText;
     [SerializeField] private TMP_Text statusText;
     private BattleManager battle;
+    public Button ButtonFor(string id)=>id=="muessen"?muessenButton:id=="futur1"?futureButton:null;
     public void Bind(BattleManager manager)
     {
         if (battle != null) return;
