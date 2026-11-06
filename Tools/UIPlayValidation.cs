@@ -565,8 +565,12 @@ public sealed class UIPlayValidation : MonoBehaviour
                     yield return RenderSizes(label+"-NormalSkillSameTurnHighlight");Click(battle.SkillButton(TutorialController.Active.SkillId).name);yield return WaitLessonDialogue("zukunft_normal");
                 }
                 yield return LessonDialogue(label+"-AttackExplained");float ready=Time.realtimeSinceStartup+10;while(!battle.CanChoose && Time.realtimeSinceStartup<ready)yield return null;
-                Check(TutorialController.Active.CurrentStep==TutorialStepType.WaitForBattleVictory && !TutorialController.Active.Failed,"Actual effect releases normal practice controls");
-                yield return RenderSizes(label+"-FreePractice");long coins=CurrencyService.Balance;float deadline=Time.realtimeSinceStartup+40;
+                CheckPracticePolicy(battle,number,label);
+                yield return RenderSizes(label+"-FreePractice");long coins=CurrencyService.Balance;
+                battle.OpenSkillPanel();yield return null;yield return RenderSizes(label+"-FreePractice-Skills");Click(battle.SkillButton(TutorialController.Active.SkillId).name);
+                float turnEnd=Time.realtimeSinceStartup+15;while(SceneManager.GetActiveScene().name=="Battle" && !battle.CanChoose && Time.realtimeSinceStartup<turnEnd)yield return null;
+                if(SceneManager.GetActiveScene().name=="Battle"){CheckPracticePolicy(battle,number,label);yield return RenderSizes(label+"-FreePractice-NextTurn");}
+                float deadline=Time.realtimeSinceStartup+40;
                 while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline){var b=Find<BattleManager>();if(b.CanChoose)b.UseSkill1();yield return null;}
                 yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="Result" && TutorialPreferences.Get(StageCatalog.Get("stage_"+number).tutorialId).completed && CurrencyService.Balance==coins+400,label+" actual victory completes tutorial with normal first reward");
                 yield return RenderSizes(label+"-Result");
@@ -574,6 +578,21 @@ public sealed class UIPlayValidation : MonoBehaviour
         }
     }
 
+
+
+    private void CheckPracticePolicy(BattleManager b,int stage,string label)
+    {
+        var guide=b.Tutorial;Check(guide.CurrentStep==TutorialStepType.WaitForBattleVictory && guide.RestrictsFeatures && guide.FocusedButton==null,label+" practice keeps stage restrictions without a forced target");
+        Check(Field<RectTransform[]>(Find<TutorialFocusUI>(),"shades").All(t=>!t.gameObject.activeSelf),label+" practice removes mandatory-input shades");
+        Check(b.FeatureAvailable(TutorialFeature.Adverb)==(stage>=2) && b.FeatureAvailable(TutorialFeature.Muessen)==(stage>=4) && b.FeatureAvailable(TutorialFeature.Future)==(stage>=5),label+" practice follows stage table");
+        string before=JsonUtility.ToJson(PlayerSaveService.Instance.Capture());int hp=b.Context.Enemy.HP,round=b.Context.Round;bool used=b.Context.MuessenUsed;var pending=b.Context.PendingAttack;int history=Field<System.Collections.IList>(b.Selection,"history").Count;
+        if(stage==1){b.FirstAdverbButton.onClick.Invoke();Field<Button>(b,"noAdverbButton").onClick.Invoke();}
+        if(stage<4)Check(!b.SelectMuessen(true) && !b.SelectMuessen(false),label+" practice rejects modal API");
+        if(stage<5)Check(!b.SelectFuture(true) && !b.SelectFuture(false),label+" practice rejects future API");
+        Check(b.Context.Round==round && b.Context.Enemy.HP==hp && b.Context.MuessenUsed==used && b.Context.PendingAttack==pending && Field<System.Collections.IList>(b.Selection,"history").Count==history && JsonUtility.ToJson(PlayerSaveService.Instance.Capture())==before,label+" refused calls leave combat, selection history and rewards unchanged");
+        if(stage>=2){Click(b.FirstAdverbButton.name);Check(b.Selection.Get(BattleElementKind.Adverb)!=null,label+" practice accepts adverb");var noAdverb=Field<Button>(b,"noAdverbButton");Click(noAdverb.name);Check(b.Selection.Get(BattleElementKind.Adverb)==null,label+" practice accepts clearing adverb");}
+        var hint=Field<TMP_Text>(Find<TutorialFocusUI>(),"hint");Check(!hint.text.Contains("他の操作も") && !hint.text.Contains("Other actions are now available"),label+" practice never promises unintroduced actions");
+    }
 
     private IEnumerator ValidateFeatureRestrictions()
     {
@@ -635,6 +654,14 @@ public sealed class UIPlayValidation : MonoBehaviour
             yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return null;yield return null;yield return RenderSizes(language+"-Technik-Highlight");
             var battle=Find<BattleManager>();Click(battle.SkillButton(TutorialController.Active.SkillId).name);float end=Time.realtimeSinceStartup+10;while(!DialogueUI.IsOpen && Time.realtimeSinceStartup<end)yield return null;
             Check(DialogueUI.IsOpen,language+" real attack leads to explanation");yield return RenderSizes(language+"-Technik-AfterAttack");
+            float dialogueEnd=Time.realtimeSinceStartup+10;while(DialogueUI.IsOpen && Time.realtimeSinceStartup<dialogueEnd){yield return new WaitForSecondsRealtime(.22f);Click("DialogueNext");yield return null;}
+            float ready=Time.realtimeSinceStartup+15;while(!battle.CanChoose && Time.realtimeSinceStartup<ready)yield return null;
+            CheckPracticePolicy(battle,1,language+" Technik");yield return RenderSizes(language+"-Technik-FreePractice");long practiceCoins=CurrencyService.Balance;
+            battle.OpenSkillPanel();yield return null;yield return RenderSizes(language+"-Technik-FreePractice-Skills");Click(battle.SkillButton(TutorialController.Active.SkillId).name);
+            ready=Time.realtimeSinceStartup+15;while(SceneManager.GetActiveScene().name=="Battle" && !battle.CanChoose && Time.realtimeSinceStartup<ready)yield return null;
+            if(SceneManager.GetActiveScene().name=="Battle"){CheckPracticePolicy(battle,1,language+" Technik next turn");yield return RenderSizes(language+"-Technik-FreePractice-NextTurn");}
+            float victoryEnd=Time.realtimeSinceStartup+30;while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<victoryEnd){var b=Find<BattleManager>();if(b.CanChoose)b.UseSkill1();yield return null;}
+            yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="Result" && TutorialController.Active==null && GameObject.Find("TutorialFeatureNotice")==null && CurrencyService.Balance==practiceCoins+100,language+" Technik practice victory releases locks and grants repeat reward once");yield return RenderSizes(language+"-Technik-PracticeVictory");
             yield return Load("GermanyHome");
         }
     }

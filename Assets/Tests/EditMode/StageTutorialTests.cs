@@ -197,4 +197,13 @@ public class StageTutorialTests
         Assert.That(State(),Does.Not.Contain("TutorialFeature").And.Not.Contain("RestrictsFeatures"));Assert.That(SaveDataValidator.CurrentVersion,Is.EqualTo(6));
     }
 
+    [Test] public void PracticeHintsDescribeLearnedFeaturesWithoutPromisingAllActions()
+    {
+        foreach(int n in new[]{1,2,3,4,5})
+        {
+            var step=TutorialCatalog.Get(StageCatalog.Get("stage_"+n).tutorialId).steps.Single(s=>s.Kind==TutorialStepType.WaitForBattleVictory);
+            var entry=Localization.All.Single(e=>e.en==step.hint);Assert.That(entry.en,Does.Contain("learned").And.Not.Contain("Other actions"));Assert.That(entry.ja,Does.Contain("習った").And.Not.Contain("他の操作も"));
+        }
+    }
+
 }

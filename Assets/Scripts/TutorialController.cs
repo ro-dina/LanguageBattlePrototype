@@ -16,7 +16,7 @@ public sealed class TutorialController:MonoBehaviour
     public bool IsPreparation=>preparation;
     public int StageNumber=>stage?.stageNumber ?? 0;
     public bool RestrictsFeatures=>Active==this && StageSession.Guided && StageSession.StageId==stage?.stageId && isActiveAndEnabled && !exiting && !Failed && !ReadyForCommit && definition!=null &&
-        CurrentStep!=TutorialStepType.WaitForBattleVictory && CurrentStep!=TutorialStepType.Complete &&
+        CurrentStep!=TutorialStepType.Complete &&
         (IsPreparation ? !StageSession.EquipmentConfirmed : battle?.Context.Outcome==BattleOutcome.Ongoing);
     public bool FeatureAvailable(TutorialFeature feature)=>TutorialFeaturePolicy.Available(this,feature);
     public bool AllowsFeature(TutorialInput input,string id=null)
@@ -207,7 +207,7 @@ public sealed class TutorialController:MonoBehaviour
     public void RefreshButtons()
     {
         if(view!=null)view.RefreshFeatures(this);
-        if(!RestrictsFeatures)return;
+        if(!RestrictsFeatures || CurrentStep==TutorialStepType.WaitForBattleVictory)return;
         foreach(var pair in buttons)if(pair.Key!=null)pair.Key.interactable=pair.Key==FocusedButton && !waitingDialogue && (battle==null || battle.CanChoose);
     }
     private void RestoreButtons(){foreach(var pair in buttons)if(pair.Key!=null)pair.Key.interactable=pair.Value;}

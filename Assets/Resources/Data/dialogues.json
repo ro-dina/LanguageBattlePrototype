@@ -56,7 +56,7 @@
       "speakerSide": "Left",
       "leftPortraitId": "guide",
       "rightPortraitId": "stage_enemy",
-      "text": "Your attack used {adverb} in this German sentence:\n{sentence}\nYou may now change or clear adverbs and fight normally.",
+      "text": "Your attack used {adverb} in this German sentence:\n{sentence}\nYou may now change or clear adverbs and keep using the features you've learned.",
       "nextDialogueId": "",
       "eventOnComplete": "adverb_after_finished"
     },

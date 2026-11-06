@@ -69,7 +69,8 @@ public class StageTutorialSceneTests
         var target=battle.SkillButton(controller.SkillId);var pointer=new PointerEventData(EventSystem.current){position=((RectTransform)target.transform).TransformPoint(((RectTransform)target.transform).rect.center)};var hits=new System.Collections.Generic.List<RaycastResult>();EventSystem.current.RaycastAll(pointer,hits);Assert.That(hits[0].gameObject.GetComponentInParent<Button>(),Is.EqualTo(target));
         int hp=battle.Context.Player.HP;target.onClick.Invoke();Assert.That(battle.LastCommittedAction,Is.Not.Null);Assert.That(controller.CurrentStep,Is.EqualTo(TutorialStepType.WaitForAttackResolution));
         float end=Time.realtimeSinceStartup+10;while(!DialogueUI.IsOpen && Time.realtimeSinceStartup<end)yield return null;
-        Assert.That(DialogueUI.Active.Current.dialogueId,Is.EqualTo("technik_after_attack"));Assert.That(battle.Context.Player.HP,Is.EqualTo(hp));yield return AutoFinish();
+        Assert.That(DialogueUI.Active.Current.dialogueId,Is.EqualTo("technik_after_attack"));Assert.That(battle.Context.Player.HP,Is.EqualTo(hp));yield return DrainDialogue();yield return WaitInput(battle);AssertPracticePolicy(battle,1);
+        battle.UseSkill1();yield return WaitInput(battle);AssertPracticePolicy(battle,1);yield return AutoFinish();
         Assert.That(StageProgress.IsUnlocked("stage_2"),Is.True);Assert.That(StageProgress.ClearCount("stage_1"),Is.EqualTo(1));Assert.That(TutorialPreferences.Get("technik_basics").completed,Is.True);Assert.That(CurrencyService.Balance,Is.EqualTo(3400));Assert.That(BattleRewardService.Latest.tutorialCompleted,Is.True);Assert.That(Object.FindAnyObjectByType<ResultManager>().RewardSummary,Does.Contain("First clear: +300"));
     }
     [UnityTest] public IEnumerator IndividualSkipUsesNormalBattlePreservesRewardsAndPromptsNextStage()
@@ -193,11 +194,11 @@ public class StageTutorialSceneTests
             yield return DrainDialogue();yield return WaitInput(battle);Assert.That(guide.CurrentStep,Is.EqualTo(TutorialStepType.WaitForSkillSelection));battle.UseSkill1();yield return WaitDialogue("zukunft_normal");
             Assert.That(guide.LastResult.IsReservation,Is.False);Assert.That(guide.LastResult.Action.Tense,Is.EqualTo(BattleTense.Present));
         }
-        yield return DrainDialogue();yield return WaitInput(battle);Assert.That(guide.CurrentStep,Is.EqualTo(TutorialStepType.WaitForBattleVictory));Assert.That(guide.PassiveEnemy,Is.False);Assert.That(guide.RestrictsFeatures,Is.False);Assert.That(GameObject.Find("TutorialFeatureNotice"),Is.Null);foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(battle.FeatureAvailable(f),Is.True);
+        yield return DrainDialogue();yield return WaitInput(battle);Assert.That(guide.CurrentStep,Is.EqualTo(TutorialStepType.WaitForBattleVictory));Assert.That(guide.PassiveEnemy,Is.False);AssertPracticePolicy(battle,number);
         if(number==4){battle.ClearModifiers();Assert.That(battle.Context.MuessenUsed,Is.True);Assert.That(battle.SelectMuessen(true),Is.False);Assert.That(Button("MuessenButton").interactable,Is.False);}
         if(number==2){Field<Button>(battle,"noAdverbButton").onClick.Invoke();Assert.That(battle.Selection.Get(BattleElementKind.Adverb),Is.Null);}
         Assert.That(JsonUtility.ToJson(InventoryManager.CaptureState()),Is.EqualTo(inventory),"No lesson grants or consumes persistent materials.");
-        yield return AutoFinish();Assert.That(TutorialPreferences.Get(StageCatalog.Get("stage_"+number).tutorialId).completed,Is.True);Assert.That(CurrencyService.Balance,Is.EqualTo(balance+400));
+        yield return AutoFinish();Assert.That(TutorialPreferences.Get(StageCatalog.Get("stage_"+number).tutorialId).completed,Is.True);Assert.That(CurrencyService.Balance,Is.EqualTo(balance+400));Assert.That(TutorialController.Active,Is.Null);foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(TutorialFeaturePolicy.Available(null,f),Is.True);
         yield return Load("GermanyHome");Assert.That(TutorialController.Active,Is.Null);Assert.That(Object.FindAnyObjectByType<TutorialFocusUI>(),Is.Null);
         settings=UserSettings.Current;settings.uiLanguage="en";UserSettings.TryUpdate(settings,out _);
     }
@@ -316,6 +317,37 @@ public class StageTutorialSceneTests
         yield return Load("CharacterDetail");Assert.That(TutorialController.Active,Is.Null);var detail=Object.FindAnyObjectByType<CharacterDetailManager>();detail.OpenAdjectiveEquipmentList();Assert.That(detail.IsAdjectiveListOpen,Is.True);detail.EquipmentButton("schwarz").onClick.Invoke();Assert.That(detail.DraftAdjectiveId,Is.EqualTo("schwarz"));detail.DiscardChangesAndBack();yield return null;yield return null;
         yield return Choice(1,true,"stage_1");yield return StartBattle();b=Object.FindAnyObjectByType<BattleManager>();foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(b.FeatureAvailable(f),Is.True);Assert.That(b.SelectFuture(true),Is.True);Assert.That(b.SelectMuessen(true),Is.True);
         yield return Load("GermanyHome");yield return Choice(0,true,"stage_1");yield return StartBattle();Assert.That(Object.FindAnyObjectByType<BattleManager>().Tutorial.RestrictsFeatures,Is.True,"Explicit review reapplies temporary restrictions.");
+    }
+
+    private void AssertPracticePolicy(BattleManager b,int stage)
+    {
+        Assert.That(b.Tutorial.CurrentStep,Is.EqualTo(TutorialStepType.WaitForBattleVictory));Assert.That(b.Tutorial.FocusedButton,Is.Null);AssertPolicy(b,stage);AssertRejectedFeatures(b,stage);
+        var view=Object.FindAnyObjectByType<TutorialFocusUI>();Assert.That(Field<RectTransform[]>(view,"shades").All(t=>!t.gameObject.activeSelf),Is.True,"Practice removes the mandatory-input shades.");
+        Assert.That(GameObject.Find("TutorialFeatureNotice")!=null,Is.EqualTo(stage<5));
+        b.OpenSkillPanel();foreach(string id in b.Context.Player.Character.skillIds)Assert.That(b.SkillButton(id).interactable,Is.True,"All learned skills are usable in practice.");b.CloseSkillPanel();
+        if(stage>=2)
+        {
+            var cards=Field<System.Collections.Generic.List<EquipmentData>>(b,"currentAdverbCards");var buttons=Field<Button[]>(b,"adverbCardButtons");buttons[0].onClick.Invoke();Assert.That(b.Selection.Get(BattleElementKind.Adverb),Is.EqualTo(cards[0].id));
+            int other=cards.FindIndex(c=>c.id!=cards[0].id);Assert.That(other,Is.GreaterThanOrEqualTo(0));buttons[other].onClick.Invoke();Assert.That(b.Selection.Get(BattleElementKind.Adverb),Is.EqualTo(cards[other].id));
+            Field<Button>(b,"noAdverbButton").onClick.Invoke();Assert.That(b.Selection.Get(BattleElementKind.Adverb),Is.Null);
+        }
+        foreach(var item in new[]{(BattleElementKind.Adverb,"sehr",stage<2),(BattleElementKind.Modal,"muessen",stage<4),(BattleElementKind.Tense,"futur1",stage<5)})
+        {
+            if(!item.Item3)continue;b.Selection.Select(item.Item1,item.Item2);string before=CombatState(b);b.UseSkill1();Assert.That(CombatState(b),Is.EqualTo(before),"Practice rejects forged unintroduced modifiers before committing an action.");b.Selection.ClearModifiers();
+        }
+    }
+    [UnityTest] public IEnumerator JapaneseTechnikPracticeKeepsLocksUntilGuideExitAndExitVictoryIsOrdinary()
+    {
+        var settings=UserSettings.Current;settings.uiLanguage="ja";UserSettings.TryUpdate(settings,out _);yield return Choice();yield return StartBattle();yield return ReachSkill();var b=Object.FindAnyObjectByType<BattleManager>();b.UseSkill1();yield return WaitDialogue("technik_after_attack");yield return DrainDialogue();yield return WaitInput(b);AssertPracticePolicy(b,1);
+        string hint=Field<TMP_Text>(Object.FindAnyObjectByType<TutorialFocusUI>(),"hint").text;Assert.That(hint,Does.Contain("習った技").And.Not.Contain("他の操作も"));
+        Button("TutorialStopButton").onClick.Invoke();yield return null;foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(b.FeatureAvailable(f),Is.True);Assert.That(b.SelectFuture(true),Is.True);Assert.That(b.SelectMuessen(true),Is.True);b.ClearModifiers();HP(b.Context.Enemy,1);yield return AutoFinish();
+        Assert.That(CurrencyService.Balance,Is.EqualTo(3400));Assert.That(TutorialPreferences.Get("technik_basics").completed,Is.False);Assert.That(BattleRewardService.Latest.tutorialCompleted,Is.False);Assert.That(TutorialController.Active,Is.Null);
+    }
+    [UnityTest] public IEnumerator DefeatDuringAdverbPracticeReleasesLocksWithoutCompletingOrRewardingTheLesson()
+    {
+        Unlock(2);yield return Choice(0,true,"stage_2");yield return StartBattle();yield return DrainDialogue();var b=Object.FindAnyObjectByType<BattleManager>();b.FirstAdverbButton.onClick.Invoke();yield return DrainDialogue();b.UseSkill1();yield return WaitDialogue("adverb_after");yield return DrainDialogue();yield return WaitInput(b);AssertPracticePolicy(b,2);
+        long coins=CurrencyService.Balance;HP(b.Context.Player,1);HP(b.Context.Enemy,1000);yield return AutoFinish();Assert.That(GameManager.IsWin,Is.False);Assert.That(CurrencyService.Balance,Is.EqualTo(coins));Assert.That(StageProgress.IsCleared("stage_2"),Is.False);Assert.That(TutorialPreferences.Get("adverb_basics").completed,Is.False);Assert.That(TutorialController.Active,Is.Null);
+        foreach(TutorialFeature f in Enum.GetValues(typeof(TutorialFeature)))Assert.That(TutorialFeaturePolicy.Available(null,f),Is.True);
     }
 
 }

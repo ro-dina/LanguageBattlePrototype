@@ -27,7 +27,7 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Keep attacking to defeat Technik. Other actions are now available."
+          "hint": "Keep using the skills you've learned until you defeat Technik."
         },
         {
           "type": "Complete"
@@ -67,7 +67,7 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use any skills and win the battle."
+          "hint": "Use the skills and features you've learned to win the battle."
         },
         {
           "type": "Complete"
@@ -117,7 +117,7 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use any skills and win the battle."
+          "hint": "Use the skills and features you've learned to win the battle."
         },
         {
           "type": "Complete"
@@ -153,7 +153,7 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use any skills and win the battle."
+          "hint": "Use the skills and features you've learned to win the battle."
         },
         {
           "type": "Complete"
@@ -211,7 +211,7 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use any skills and win the battle."
+          "hint": "Use the skills and features you've learned to win the battle."
         },
         {
           "type": "Complete"

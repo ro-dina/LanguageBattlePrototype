@@ -146,6 +146,7 @@ public class BattleManager : MonoBehaviour
     }
     private void RefreshSelectionUI()
     {
+        SetAdverbCardInteraction(CanChoose && AllowsInput(TutorialInput.Adverb));
         if (modifierUI != null) modifierUI.Refresh();
         if (adverbCardButtons != null)
             for (int i = 0; i < adverbCardButtons.Length; i++)

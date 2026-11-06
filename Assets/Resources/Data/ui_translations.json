@@ -1382,8 +1382,8 @@
     },
     {
       "key": "ui.tutorial.free.hint",
-      "en": "Keep attacking to defeat Technik. Other actions are now available.",
-      "ja": "Technikを倒すまで攻撃を続けましょう。他の操作も使えるようになりました。"
+      "en": "Keep using the skills you've learned until you defeat Technik.",
+      "ja": "Technikを倒すまで、習った技を使って攻撃を続けましょう。"
     },
     {
       "key": "stat.hp",
@@ -1542,8 +1542,8 @@
     },
     {
       "key": "dialogue.adverb_after",
-      "en": "Your attack used {2} in this German sentence:\n{5}\nYou may now change or clear adverbs and fight normally.",
-      "ja": "今の攻撃では{2}がドイツ語の文章に反映されました。\n{5}\nここからは副詞の変更・解除も自由です。敵を倒しましょう。"
+      "en": "Your attack used {2} in this German sentence:\n{5}\nYou may now change or clear adverbs and keep using the features you've learned.",
+      "ja": "今の攻撃では{2}がドイツ語の文章に反映されました。\n{5}\nここからは副詞の変更・解除ができます。習った操作を使い、敵を倒しましょう。"
     },
     {
       "key": "dialogue.adjektiv_intro",
@@ -1627,8 +1627,8 @@
     },
     {
       "key": "tutorial.hint.7",
-      "en": "Use any skills and win the battle.",
-      "ja": "好きな技を使い、敵に勝利しましょう。"
+      "en": "Use the skills and features you've learned to win the battle.",
+      "ja": "習った技や操作を使い、敵に勝利しましょう。"
     },
     {
       "key": "tutorial.stop",
