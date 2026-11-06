@@ -1,0 +1,5 @@
+# Only the verified runtime payload and delivery configuration may be uploaded.
+/*
+!public
+!public/**
+!vercel.json

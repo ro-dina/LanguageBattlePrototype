@@ -1,0 +1,6 @@
+# Generated build and account-specific link data stay out of the Unity source repo.
+/public/
+/.vercel/
+/release-manifest.json
+/.package-*/
+/.previous-public/
