@@ -67,7 +67,7 @@ public class LoadoutSceneTests
         var detail = Object.FindAnyObjectByType<CharacterDetailManager>();
         Call(detail, "EquipCharacterEquipment", "schwarz");
         detail.OpenSkillEquipmentList(0);
-        Call(detail, "EquipSkillEquipment", "sehr");
+        Call(detail, "EquipSkill", "brennen");
         detail.Back();
         GameObject.Find("SaveButton").GetComponent<Button>().onClick.Invoke();
         yield return null;
@@ -77,7 +77,7 @@ public class LoadoutSceneTests
             yield return Detail("nacht", route);
             detail = Object.FindAnyObjectByType<CharacterDetailManager>();
             Assert.That(Field<string>(detail, "tempCharacterEquipmentId"), Is.EqualTo("schwarz"));
-            Assert.That(Field<string[]>(detail, "tempSkillEquipmentIds")[0], Is.EqualTo("sehr"));
+            Assert.That(Field<CharacterData>(detail,"character").skillIds[0],Is.EqualTo("brennen"));
         }
         yield return Detail("hund", "CharacterSelect");
         detail = Object.FindAnyObjectByType<CharacterDetailManager>();
@@ -119,7 +119,7 @@ public class LoadoutSceneTests
         var battle = Object.FindAnyObjectByType<BattleManager>();
         Assert.That(Field<EquipmentData>(battle, "playerCharacterEquipment").id, Is.EqualTo("schwarz"));
         Assert.That(Field<CharacterData>(battle, "playerCharacter").skillIds, Is.EqualTo(new[] { "brennen" }));
-        Assert.That(Field<EquipmentData[]>(battle, "playerSkillEquipments")[0].id, Is.EqualTo("sehr"));
+        Assert.That(Field<EquipmentData[]>(battle, "playerSkillEquipments")[0], Is.Null);
         Assert.That(Field<GameObject[]>(battle, "skillButtons")[1].activeSelf, Is.False);
     }
 }

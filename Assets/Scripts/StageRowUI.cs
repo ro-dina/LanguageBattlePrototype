@@ -17,9 +17,9 @@ public sealed class StageRowUI:MonoBehaviour
         LocalizedText.SetProvider(information,()=>Localization.Text("ui.stage.row",
             Localization.Present(stage.stageNumber==0?"Practice":"Stage "+stage.stageNumber), Localization.Present(stage.displayName), Localization.Present(state),
             GameDatabase.Instance.GetCharacter(stage.enemyCharacterId).characterName, EconomySettings.Price(stage.firstClearCoins), Localization.Present(guidance)));
-        challenge.interactable=unlocked;challenge.GetComponentInChildren<TMP_Text>().text=unlocked?(cleared?"Retry":"Challenge"):"Locked";
+        challenge.interactable=unlocked;LocalizedText.Set(challenge.GetComponentInChildren<TMP_Text>(),unlocked?(cleared?"ui.retry":"ui.challenge"):"ui.locked");
         challenge.onClick.AddListener(()=>TutorialChoiceUI.Request(stage.stageId,false));
         review.gameObject.SetActive(!string.IsNullOrEmpty(stage.tutorialId));review.interactable=unlocked;
-        review.GetComponentInChildren<TMP_Text>().text="Tutorial";review.onClick.AddListener(()=>TutorialChoiceUI.Request(stage.stageId,true));
+        LocalizedText.Set(review.GetComponentInChildren<TMP_Text>(),"ui.tutorial");review.onClick.AddListener(()=>TutorialChoiceUI.Request(stage.stageId,true));
     }
 }

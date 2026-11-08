@@ -9,6 +9,7 @@ using UnityEngine.EventSystems;
 [Serializable] public sealed class DialogueLine
 {
     public string dialogueId;
+    public string localizationKey;
     public string speakerName;
     public string speakerSide;
     public string leftPortraitId;
@@ -95,14 +96,14 @@ public sealed class DialogueUI:MonoBehaviour
             string adverb=database.ContainsEquipment(StageSession.TutorialAdverbId)?database.GetEquipment(StageSession.TutorialAdverbId).equipmentName:"";
             string adjective=StageSession.Stage?.battleModifiers.tutorialAdjectiveId;
             var observed=TutorialController.Active?.LastResult;
-            LocalizedText.Set(body,"dialogue."+Current.dialogueId,skill,StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"),adverb,
+            LocalizedText.Set(body,Current.localizationKey ?? "dialogue."+Current.dialogueId,skill,StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"),adverb,
                 database.ContainsEquipment(adjective)?database.GetEquipment(adjective).equipmentName:"",observed?.Damage ?? 0,observed?.Sentence?.Text ?? "");
         }
         else body.text=Current.text.Replace("{skill}",skill).Replace("{enemy}",StageSession.Stage?.displayName ?? Localization.Text("ui.enemy.fallback"));
     }
     private void Show(DialogueLine line)
     {
-        Current=line;page=1;speaker.text=line.speakerName;if(line.speakerName!="Guide")LocalizedText.Learning(speaker);
+        Current=line;page=1;LocalizedText.Set(next.GetComponentInChildren<TMP_Text>(),"ui.next");speaker.text=line.speakerName;if(line.speakerName=="Guide")LocalizedText.Set(speaker,"ui.guide");else LocalizedText.Learning(speaker);
         RenderBody();
         body.pageToDisplay=1;body.ForceMeshUpdate();SetPortrait(leftPortrait,leftPlaceholder,line.leftPortraitId,line.speakerSide=="Left");SetPortrait(rightPortrait,rightPlaceholder,line.rightPortraitId,line.speakerSide=="Right");
         nextAdvanceTime=Time.unscaledTime+.2f;RefreshPage();
@@ -115,7 +116,10 @@ public sealed class DialogueUI:MonoBehaviour
         var sprite=string.IsNullOrEmpty(species)?null:Resources.Load<Sprite>("Images/Characters/"+(data?.illustration ?? species));
         image.sprite=sprite;image.preserveAspect=true;
         image.color=sprite!=null?new Color(1,1,1,speaking?1:.65f):new Color(.12f,.19f,.28f,speaking?.95f:.7f);
-        placeholder.text=sprite!=null?"":data?.characterName ?? (id=="guide"?"Guide":"Portrait unavailable");placeholder.gameObject.SetActive(sprite==null);if(data!=null)LocalizedText.Learning(placeholder);
+        placeholder.gameObject.SetActive(sprite==null);
+        if(sprite!=null)placeholder.text="";
+        else if(data!=null){placeholder.text=data.characterName;LocalizedText.Learning(placeholder);}
+        else LocalizedText.Set(placeholder,id=="guide"?"ui.guide":"ui.portrait.missing");
     }
     private void RefreshPage(){body.ForceMeshUpdate();pageLabel.text=page+" / "+Mathf.Max(1,body.textInfo.pageCount);}
     public void Advance()

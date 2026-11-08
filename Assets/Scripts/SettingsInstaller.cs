@@ -17,6 +17,7 @@ public static class SettingsInstaller
         foreach (var root in scene.GetRootGameObjects()) if (root.name == "SettingsLauncher") return;
         var asset = Resources.Load<GameObject>("UI/SettingsLauncher"); if (asset == null) return;
         var launcher = Object.Instantiate(asset); launcher.name = "SettingsLauncher"; SceneManager.MoveGameObjectToScene(launcher, scene);
+        LocalizedText.Set(launcher.GetComponentInChildren<TMPro.TMP_Text>(),"ui.settings");
         launcher.GetComponentInChildren<Button>().onClick.AddListener(() => SettingsUI.Show());
         if (scene.name == "GermanyHome")
         { var completed = ProgressResetService.TakeCompletion(); if (completed.HasValue) ProgressResetUI.ShowSuccess(completed.Value); }

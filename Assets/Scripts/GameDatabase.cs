@@ -221,6 +221,12 @@ public class GameDatabase : MonoBehaviour
         return equipment;
     }
 
+    public SkillData[] GetAllSkills()
+    {
+        if(skills==null)return System.Array.Empty<SkillData>();
+        var result=new SkillData[skills.Count];skills.Values.CopyTo(result,0);return result;
+    }
+
     public CharacterData[] GetAllCharacters()
     {
         if (characters == null || characters.Count == 0)

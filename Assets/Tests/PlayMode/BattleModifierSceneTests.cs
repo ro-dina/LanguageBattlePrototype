@@ -52,6 +52,8 @@ public class BattleModifierSceneTests
         Button("FutureButton").onClick.Invoke();
         Assert.That(battle.Selection.Tense, Is.EqualTo(BattleTense.Future));
         Assert.That(Button("MuessenButton").interactable, Is.True);
+        int normal=DamageCalculator.CalculateDamage(context.Player.Character,context.Enemy.Character,GameDatabase.Instance.GetSkill("sein"),context.Player.Equipment);
+        int expected=BattleActionResolver.ScaleDamage(normal,1.5f);
         battle.UseSkill1();
         float end = Time.realtimeSinceStartup + 10;
         while (context.PendingAttack == null && Time.realtimeSinceStartup < end) yield return null;
@@ -60,17 +62,18 @@ public class BattleModifierSceneTests
         Assert.That(context.PendingAttack, Is.SameAs(reserved), "UI clear cannot cancel a committed reservation.");
         Assert.That(battle.SelectFuture(true), Is.False, "Cannot queue a duplicate while resolving.");
         Assert.That(battle.CanChoose, Is.False); Assert.That(Button("FutureButton").interactable, Is.False);
-        Assert.That(GameObject.Find("ModifierStatus").GetComponent<TMP_Text>().text, Does.Contain("21 damage next turn"));
+        Assert.That(GameObject.Find("ModifierStatus").GetComponent<TMP_Text>().text, Does.Contain(expected+" damage next turn"));
         yield return WaitForTurn(battle);
-        Assert.That(context.Enemy.HP, Is.EqualTo(179)); Assert.That(context.PendingAttack, Is.Null);
+        Assert.That(context.Enemy.HP, Is.EqualTo(200-expected)); Assert.That(context.PendingAttack, Is.Null);
         Assert.That(context.Round, Is.EqualTo(2)); Assert.That(battle.CanChoose, Is.True);
         Assert.That(battle.LastCommittedAction.Selection.Elements[BattleElementKind.Tense], Is.EqualTo("futur1"));
         battle.UseSkill1(); yield return WaitForTurn(battle);
-        Assert.That(context.Enemy.HP, Is.EqualTo(165)); Assert.That(context.Round, Is.EqualTo(3));
+        Assert.That(context.Enemy.HP, Is.EqualTo(200-expected-normal)); Assert.That(context.Round, Is.EqualTo(3));
     }
     [UnityTest] public IEnumerator FutureKnockoutAutomaticallyLoadsVictoryWithoutAskingForAnAction()
     {
         var battle = Object.FindAnyObjectByType<BattleManager>(); var context = battle.Context;
+        HP(context.Enemy,BattleActionResolver.ScaleDamage(DamageCalculator.CalculateDamage(context.Player.Character,context.Enemy.Character,GameDatabase.Instance.GetSkill("sein"),context.Player.Equipment),1.5f));
         battle.SelectFuture(true); battle.UseSkill1(); yield return WaitForTurn(battle);
         Assert.That(context.Outcome, Is.EqualTo(BattleOutcome.PlayerWin));
         Assert.That(context.Round, Is.EqualTo(2)); Assert.That(context.PendingAttack, Is.Null);
@@ -87,8 +90,9 @@ public class BattleModifierSceneTests
     {
         var battle = Object.FindAnyObjectByType<BattleManager>(); HP(battle.Context.Enemy, 200); HP(battle.Context.Player, 200);
         Button("MuessenButton").onClick.Invoke(); Assert.That(Button("FutureButton").interactable, Is.True);
+        int expected=2*DamageCalculator.CalculateDamage(battle.Context.Player.Character,battle.Context.Enemy.Character,GameDatabase.Instance.GetSkill("sein"),battle.Context.Player.Equipment);
         battle.UseSkill1(); yield return WaitForTurn(battle);
-        Assert.That(battle.Context.Enemy.HP, Is.EqualTo(172)); Assert.That(battle.Context.MuessenUsed, Is.True);
+        Assert.That(battle.Context.Enemy.HP, Is.EqualTo(200-expected)); Assert.That(battle.Context.MuessenUsed, Is.True);
         Assert.That(Button("MuessenButton").interactable, Is.False);
         Assert.That(Button("MuessenButton").GetComponentInChildren<TMP_Text>().text, Does.Contain("USED"));
         Assert.That(GameObject.Find("ModifierStatus").GetComponent<TMP_Text>().text, Does.Contain("USED"));

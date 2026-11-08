@@ -190,8 +190,7 @@ public class CharacterSelectManager : MonoBehaviour
             string adjective = string.IsNullOrEmpty(loadout.adjectiveId) ? "none" : GameDatabase.Instance.GetEquipment(loadout.adjectiveId).equipmentName;
             string article = string.IsNullOrEmpty(loadout.articleId) ? "default" : GameDatabase.Instance.GetEquipment(loadout.articleId).equipmentName;
             string skills = string.Join("\n", loadout.skillSlots.Select(slot =>
-                GameDatabase.Instance.GetSkill(slot.skillId).skillName + (string.IsNullOrEmpty(slot.equippedAdverbId) ? "" :
-                " + " + GameDatabase.Instance.GetEquipment(slot.equippedAdverbId).equipmentName)));
+                GameDatabase.Instance.GetSkill(slot.skillId).skillName));
             LocalizedText.SetProvider(selectedCharacterText, () => Localization.Text("ui.character.preview",
                 character.characterName, CharacterInstances.Count(character.id), Localization.Present(character.grammaticalGender),
                 character.hp, attack, defense, speed, string.IsNullOrEmpty(loadout.adjectiveId) ? Localization.Text("ui.lower.none") : adjective,

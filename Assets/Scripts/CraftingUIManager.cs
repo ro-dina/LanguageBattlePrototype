@@ -108,8 +108,7 @@ public class CraftingUIManager : MonoBehaviour
         var loadout = CharacterLoadoutStore.GetLoadout(instanceId);
         string adjective = string.IsNullOrEmpty(loadout.adjectiveId) ? "none" : GameDatabase.Instance.GetEquipment(loadout.adjectiveId).equipmentName;
         string article = string.IsNullOrEmpty(loadout.articleId) ? "default" : GameDatabase.Instance.GetEquipment(loadout.articleId).equipmentName;
-        string skills = string.Join(", ",loadout.skillSlots.Select(s => GameDatabase.Instance.GetSkill(s.skillId).skillName +
-            (string.IsNullOrEmpty(s.equippedAdverbId) ? "" : " + " + GameDatabase.Instance.GetEquipment(s.equippedAdverbId).equipmentName)));
+        string skills = string.Join(", ",loadout.skillSlots.Select(s => GameDatabase.Instance.GetSkill(s.skillId).skillName));
         return Localization.Text("ui.individual.description",CharacterInstances.DisplayName(instanceId),string.IsNullOrEmpty(loadout.adjectiveId)?Localization.Text("ui.lower.none"):adjective,string.IsNullOrEmpty(loadout.articleId)?Localization.Text("ui.default"):article,skills);
     }
     public void OpenIndividualPicker(string characterId)

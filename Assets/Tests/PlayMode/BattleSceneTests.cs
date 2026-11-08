@@ -56,9 +56,10 @@ public class BattleSceneTests
         Call(battle, "SelectNoAdverb");
         battle.OpenSkillPanel();
         Assert.That(Field<GameObject>(battle, "skillPanel").activeSelf, Is.True);
+        int expected=DamageCalculator.CalculateDamage(battle.Context.Player.Character,battle.Context.Enemy.Character,GameDatabase.Instance.GetSkill("sein"),battle.Context.Player.Equipment);
         battle.UseSkill1();
         yield return WaitForTurn(battle);
-        Assert.That(battle.Context.Enemy.HP, Is.EqualTo(4));
+        Assert.That(battle.Context.Enemy.HP, Is.EqualTo(18-expected));
         Assert.That(battle.Context.Player.HP, Is.LessThan(23).And.GreaterThan(0));
         Assert.That(battle.Context.Round, Is.EqualTo(2));
         Assert.That(battle.Context.TurnState, Is.EqualTo(BattleTurnState.AwaitingPlayer));
@@ -81,6 +82,8 @@ public class BattleSceneTests
         var context = battle.Context;
         battle.UseSkill1();
         yield return WaitForTurn(battle);
+        // Affinity now follows the target corpus rather than gender. Finish with ordinary skills if needed.
+        while(context.Outcome==BattleOutcome.Ongoing){battle.UseSkill1();yield return WaitForTurn(battle);}
         Assert.That(context.Outcome, Is.EqualTo(BattleOutcome.PlayerWin));
         Assert.That(GameManager.IsWin, Is.True);
         Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Result"));

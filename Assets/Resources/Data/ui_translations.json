@@ -1774,6 +1774,41 @@
       "key": "title.settings.progress.required",
       "en": "Start or continue an adventure to change tutorial preferences or reset progress.",
       "ja": "チュートリアル設定や進行のリセットは、冒険を開始・再開してから行えます。"
+    },
+    {
+      "key": "ui.tut.choice.title",
+      "en": "Tutorial • {0}",
+      "ja": "チュートリアル • {0}"
+    },
+    {
+      "key": "ui.tut.replay.named",
+      "en": "Replay tutorial • {0}",
+      "ja": "チュートリアルを再受講 • {0}"
+    },
+    {
+      "key": "ui.skills.selected",
+      "en": "Equipped skills:\n{0}\nAdverbs are selected during battle.",
+      "ja": "装備している技：\n{0}\n副詞は戦闘中に選びます。"
+    },
+    {
+      "key": "ui.skills.choose",
+      "en": "Choose a verb skill",
+      "ja": "動詞の技を選択"
+    },
+    {
+      "key": "ui.skills.empty",
+      "en": "Choose a skill",
+      "ja": "技を選択"
+    },
+    {
+      "key": "ui.skills.remove",
+      "en": "Remove this skill",
+      "ja": "この技を外す"
+    },
+    {
+      "key": "ui.affinity.normal",
+      "en": "Normal effectiveness",
+      "ja": "通常の相性"
     }
   ]
 }

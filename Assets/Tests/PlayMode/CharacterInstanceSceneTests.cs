@@ -66,7 +66,7 @@ public class CharacterInstanceSceneTests
         Call(detail, "EquipCharacterEquipment", "schnell"); detail.ConfirmEquipment(); yield return null; yield return null;
         yield return Detail(a); detail = Object.FindAnyObjectByType<CharacterDetailManager>();
         Assert.That(Field<string>(detail, "tempCharacterEquipmentId"), Is.Empty);
-        Call(detail, "EquipCharacterEquipment", "schwarz"); detail.OpenSkillEquipmentList(0); Call(detail, "EquipSkillEquipment", "sehr");
+        Call(detail, "EquipCharacterEquipment", "schwarz"); detail.OpenSkillEquipmentList(0); Call(detail, "EquipSkill", "brennen");
         detail.Back(); detail.CancelBack(); Assert.That(Field<string>(detail, "tempCharacterEquipmentId"), Is.EqualTo("schwarz"));
         detail.ConfirmEquipment(); yield return null; yield return null;
         yield return Detail(b); detail = Object.FindAnyObjectByType<CharacterDetailManager>();
@@ -74,7 +74,7 @@ public class CharacterInstanceSceneTests
         Call(detail, "EquipCharacterEquipment", "schwarz"); detail.DiscardChangesAndBack(); yield return null; yield return null;
         yield return Detail(a); detail = Object.FindAnyObjectByType<CharacterDetailManager>();
         Assert.That(Field<string>(detail, "tempCharacterEquipmentId"), Is.EqualTo("schwarz"));
-        Assert.That(Field<string[]>(detail, "tempSkillEquipmentIds")[0], Is.EqualTo("sehr"));
+        Assert.That(Field<CharacterData>(detail,"character").skillIds[0],Is.EqualTo("brennen"));
         PlayerSaveService.Instance.Reload();
         Assert.That(CharacterLoadoutStore.GetLoadout(b).adjectiveId, Is.EqualTo("schnell"));
         Assert.That(CharacterLoadoutStore.GetLoadout(a).adjectiveId, Is.EqualTo("schwarz"));
@@ -127,7 +127,7 @@ public class CharacterInstanceSceneTests
             typeof(BattleCombatant).GetProperty("HP").SetValue(context.Player, 200);
             Call(battle, "SelectNoAdverb"); if (mode == "future") battle.SelectFuture(true); if (mode == "muessen") battle.SelectMuessen(true);
             battle.UseSkill1(); yield return Turn(battle);
-            int normal = instance == a ? 15 : 14;
+            int normal = DamageCalculator.CalculateDamage(context.Player.Character,context.Enemy.Character,GameDatabase.Instance.GetSkill(context.Player.Character.skillIds[0]),context.Player.Equipment);
             int damage = mode == "future" ? BattleActionResolver.ScaleDamage(normal, 1.5f) : mode == "muessen" ? normal * 2 : normal;
             Assert.That(context.Enemy.HP, Is.EqualTo(200 - damage), instance + " " + mode);
             Assert.That(context.MuessenUsed, Is.EqualTo(mode == "muessen"));

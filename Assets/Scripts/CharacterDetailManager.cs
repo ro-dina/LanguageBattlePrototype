@@ -483,220 +483,69 @@ public class CharacterDetailManager : MonoBehaviour
 
     private void SetupSkillEquipmentButtons()
     {
-        if (character == null || character.skillIds == null)
+        if(character?.skillIds==null)return;
+        for(int i=0;i<skillSlotButtons.Length;i++)
         {
-            return;
-        }
-
-        if (skillSlotButtons == null || skillSlotButtons.Length == 0)
-        {
-            Debug.LogError("Skill Slot Buttons are not assigned in CharacterDetailManager Inspector.");
-            return;
-        }
-
-        if (skillSlotButtonTexts == null || skillSlotButtonTexts.Length == 0)
-        {
-            Debug.LogError("Skill Slot Button Texts are not assigned in CharacterDetailManager Inspector.");
-            return;
-        }
-
-        for (int i = 0; i < skillSlotButtons.Length; i++)
-        {
-            if (skillSlotButtons[i] == null)
+            var button=skillSlotButtons[i];if(button==null)continue;
+            bool occupied=i<character.skillIds.Length;
+            button.gameObject.SetActive(occupied || CanEdit && i==character.skillIds.Length && i<CharacterLoadoutStore.MaxSkillSlots);
+            if(i<skillSlotButtonTexts.Length && skillSlotButtonTexts[i]!=null)
             {
-                Debug.LogError($"Skill Slot Button at index {i} is not assigned.");
-                continue;
+                if(occupied){skillSlotButtonTexts[i].text=GameDatabase.Instance.GetSkill(character.skillIds[i]).skillName;LocalizedText.Learning(skillSlotButtonTexts[i]);}
+                else LocalizedText.Set(skillSlotButtonTexts[i],"ui.skills.empty");
             }
-
-            bool hasSkill = i < character.skillIds.Length;
-
-            skillSlotButtons[i].gameObject.SetActive(hasSkill);
-
-            if (!hasSkill) continue;
-
-            if (i >= skillSlotButtonTexts.Length || skillSlotButtonTexts[i] == null)
-            {
-                Debug.LogError($"Skill Slot Button Text at index {i} is not assigned.");
-                continue;
-            }
-
-            SkillData skill = GameDatabase.Instance.GetSkill(character.skillIds[i]);
-            if (skill == null)
-            {
-                continue;
-            }
-
-            EquipmentData equipment = null;
-            if (tempSkillEquipmentIds != null && i < tempSkillEquipmentIds.Length)
-            {
-                equipment = GameDatabase.Instance.GetEquipment(tempSkillEquipmentIds[i]);
-            }
-
-            string prefix = equipment != null ? equipment.equipmentName + " " : "";
-            string noEffectSuffix = equipment != null && !DamageCalculator.AppliesToSkill(equipment) ? " (no effect)" : "";
-
-            skillSlotButtonTexts[i].text = prefix + skill.skillName + noEffectSuffix;
-
-            int index = i;
-            skillSlotButtons[i].onClick.RemoveAllListeners();
-            skillSlotButtons[i].onClick.AddListener(() => OpenSkillEquipmentList(index));
+            int index=i;button.onClick.RemoveAllListeners();button.onClick.AddListener(()=>OpenSkillEquipmentList(index));
         }
-
         UpdateSkillEquipmentText();
     }
 
+    // Keep this Inspector-bound method, now opening a verb-skill picker rather than legacy adverb equipment.
     public void OpenSkillEquipmentList(int skillIndex)
     {
-        if(!TutorialController.DetailAllows(TutorialInput.EquipmentOpen,"skill"))return;
-        if (!CanEdit || character.skillIds == null ||
-            skillIndex < 0 || skillIndex >= character.skillIds.Length ||
-            tempSkillEquipmentIds == null || skillIndex >= tempSkillEquipmentIds.Length ||
-            GameDatabase.Instance == null || equipmentButtonPrefab == null ||
-            skillEquipmentButtonParent == null || skillEquipmentPanel == null)
-        {
-            return;
-        }
-
-        selectedSkillIndex = skillIndex;
-
-        CloseCharacterEquipmentList();
-
-        if (skillEquipmentPanel == null) return;
-
-        skillEquipmentPanel.SetActive(true);
-        CreateSkillEquipmentButtons();
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentOpen,"skill") || !CanEdit || character.skillIds==null ||
+            skillIndex<0 || skillIndex>character.skillIds.Length || skillIndex>=CharacterLoadoutStore.MaxSkillSlots || skillEquipmentPanel==null)return;
+        selectedSkillIndex=skillIndex;CloseCharacterEquipmentList();skillEquipmentPanel.SetActive(true);CreateSkillEquipmentButtons();
     }
-
     private void CreateSkillEquipmentButtons()
     {
-        if (skillEquipmentButtonParent == null) return;
-
-        foreach (Transform child in skillEquipmentButtonParent)
-        {
-            child.gameObject.SetActive(false);
-            Destroy(child.gameObject);
-        }
-
-        CreateSkillEquipmentButton("None", "");
-
-        EquipmentData[] equipments = GameDatabase.Instance.GetAllEquipments();
-
-        foreach (EquipmentData equipment in equipments)
-        {
-            if (!ShouldShowInSkillEquipmentList(equipment))
-            {
-                continue;
-            }
-
-            string label = equipment.equipmentName;
-
-            if (!DamageCalculator.AppliesToSkill(equipment))
-            {
-                label += " (no effect)";
-            }
-
-            CreateSkillEquipmentButton(label, equipment.id);
-        }
+        foreach(Transform child in skillEquipmentButtonParent){child.gameObject.SetActive(false);Destroy(child.gameObject);}
+        var heading=new GameObject("SkillChoiceHeading",typeof(RectTransform),typeof(TextMeshProUGUI),typeof(LayoutElement));heading.transform.SetParent(skillEquipmentButtonParent,false);
+        heading.GetComponent<LayoutElement>().preferredHeight=72;var title=heading.GetComponent<TMP_Text>();title.font=skillSlotButtonTexts[0].font;title.fontSize=30;title.alignment=TextAlignmentOptions.MidlineLeft;title.raycastTarget=false;LocalizedText.Set(title,"ui.skills.choose");
+        if(selectedSkillIndex<character.skillIds.Length && character.skillIds.Length>1)CreateSkillChoice("",Localization.Text("ui.skills.remove"),false);
+        foreach(var skill in GameDatabase.Instance.GetAllSkills())
+            CreateSkillChoice(skill.id,skill.skillName,character.skillIds.Contains(skill.id) && (selectedSkillIndex>=character.skillIds.Length || character.skillIds[selectedSkillIndex]!=skill.id));
     }
-
-    private bool ShouldShowInSkillEquipmentList(EquipmentData equipment)
+    private void CreateSkillChoice(string id,string label,bool duplicate)
     {
-        if (equipment == null) return false;
-
-        return equipment.partOfSpeech == "adverb" ||
-               equipment.partOfSpeech == "adjective_adverb" ||
-               equipment.targetRole == "skill" ||
-               equipment.targetRole == "both";
+        var go=Instantiate(equipmentButtonPrefab,skillEquipmentButtonParent);go.name="SkillChoiceButton_"+(string.IsNullOrEmpty(id)?"Remove":id);go.SetActive(true);
+        var text=go.GetComponentInChildren<TMP_Text>();if(string.IsNullOrEmpty(id))LocalizedText.Set(text,"ui.skills.remove");else{text.text=label;LocalizedText.Learning(text);}
+        var button=go.GetComponent<Button>();button.interactable=!duplicate;button.onClick.AddListener(()=>EquipSkill(id));
     }
-
-    private void CreateSkillEquipmentButton(string label, string equipmentId)
+    private void EquipSkill(string skillId)
     {
-        GameObject buttonObj = Instantiate(equipmentButtonPrefab, skillEquipmentButtonParent);
-        buttonObj.name = $"SkillEquipmentButton_{label}";
-        buttonObj.SetActive(true);
-
-        TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
-        if (buttonText != null)
+        if(!TutorialController.DetailAllows(TutorialInput.EquipmentSelect,skillId) || !CanEdit || selectedSkillIndex<0 || selectedSkillIndex>character.skillIds.Length)return;
+        var ids=character.skillIds.ToList();
+        if(string.IsNullOrEmpty(skillId))
         {
-            if(string.IsNullOrEmpty(equipmentId))LocalizedText.Set(buttonText,"ui.none");
-            else if(label.EndsWith(" (no effect)"))LocalizedText.Set(buttonText,"ui.no.effect.named",label.Substring(0,label.Length-12));
-            else {buttonText.text=label;LocalizedText.Learning(buttonText);}
+            if(ids.Count<=1 || selectedSkillIndex>=ids.Count)return;
+            ids.RemoveAt(selectedSkillIndex);
+            // Keep metadata aligned with the remaining skills; only the explicitly removed slot disappears.
+            tempSkillEquipmentIds=tempSkillEquipmentIds.Where((_,i)=>i!=selectedSkillIndex).Concat(new[]{""}).Take(4).ToArray();
         }
-
-        Button button = buttonObj.GetComponent<Button>();
-        if (button != null)
+        else
         {
-            button.onClick.AddListener(() => EquipSkillEquipment(equipmentId));
+            if(!GameDatabase.Instance.ContainsSkill(skillId) || ids.Where((_,i)=>i!=selectedSkillIndex).Contains(skillId))return;
+            if(selectedSkillIndex==ids.Count){if(ids.Count>=CharacterLoadoutStore.MaxSkillSlots)return;ids.Add(skillId);}
+            else {if(ids[selectedSkillIndex]==skillId){CloseSkillEquipmentList();return;}ids[selectedSkillIndex]=skillId;}
         }
+        character.skillIds=ids.ToArray();hasUnsavedChanges=true;SetupSkillEquipmentButtons();CloseSkillEquipmentList();
     }
-
-    private void EquipSkillEquipment(string equipmentId)
-    {
-        if(!TutorialController.DetailAllows(TutorialInput.EquipmentSelect,equipmentId))return;
-        if (!CanEdit) return;
-        if (selectedSkillIndex < 0) return;
-
-        if (tempSkillEquipmentIds == null || tempSkillEquipmentIds.Length < 4)
-        {
-            tempSkillEquipmentIds = new string[4] { "", "", "", "" };
-        }
-
-        if (selectedSkillIndex >= tempSkillEquipmentIds.Length) return;
-
-        tempSkillEquipmentIds[selectedSkillIndex] = equipmentId;
-        hasUnsavedChanges = true;
-
-        SetupSkillEquipmentButtons();
-
-        if (skillEquipmentPanel != null)
-        {
-            skillEquipmentPanel.SetActive(false);
-        }
-    }
-
+    // Old UI events cannot alter a draft, consume items, or write legacy adverb fields.
+    private void EquipSkillEquipment(string equipmentId) { }
     private void UpdateSkillEquipmentText()
     {
-        if (skillEquipmentText == null)
-        {
-            Debug.LogError("Skill Equipment Text is not assigned in CharacterDetailManager Inspector.");
-            return;
-        }
-
-        if (character == null || character.skillIds == null)
-        {
-            skillEquipmentText.text = "Skill Equipments:\nNone";
-            return;
-        }
-
-        skillEquipmentText.text = "Skill Equipments:\n";
-
-        for (int i = 0; i < character.skillIds.Length; i++)
-        {
-            SkillData skill = GameDatabase.Instance.GetSkill(character.skillIds[i]);
-            if (skill == null)
-            {
-                continue;
-            }
-
-            EquipmentData equipment = null;
-            if (tempSkillEquipmentIds != null && i < tempSkillEquipmentIds.Length)
-            {
-                equipment = GameDatabase.Instance.GetEquipment(tempSkillEquipmentIds[i]);
-            }
-
-            string equipmentName = "None";
-            if (equipment != null)
-            {
-                equipmentName = equipment.equipmentName;
-
-                if (!DamageCalculator.AppliesToSkill(equipment))
-                {
-                    equipmentName += " (no effect)";
-                }
-            }
-
-            skillEquipmentText.text += $"{skill.skillName}: {equipmentName}\n";
-        }
+        if(skillEquipmentText==null)return;
+        LocalizedText.Set(skillEquipmentText,"ui.skills.selected",string.Join(" / ",(character?.skillIds ?? System.Array.Empty<string>()).Select(id=>GameDatabase.Instance.GetSkill(id).skillName)));
     }
 
     private void SetupSceneMode()

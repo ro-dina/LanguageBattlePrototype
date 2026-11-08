@@ -11,12 +11,14 @@
         {
           "type": "Highlight",
           "target": "firstEquippedSkill",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForSkillSelection",
           "target": "firstEquippedSkill",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForAttackResolution"
@@ -27,7 +29,8 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Keep using the skills you've learned until you defeat Technik."
+          "hint": "Keep using the skills you've learned until you defeat Technik.",
+          "hintKey": "ui.tutorial.free.hint"
         },
         {
           "type": "Complete"
@@ -45,7 +48,8 @@
         {
           "type": "WaitForAdverbSelection",
           "target": "firstAdverb",
-          "hint": "Select the highlighted adverb card."
+          "hint": "Select the highlighted adverb card.",
+          "hintKey": "tutorial.hint.0"
         },
         {
           "type": "Dialogue",
@@ -55,7 +59,8 @@
           "type": "WaitForSkillSelection",
           "target": "firstEquippedSkill",
           "requirement": "adverb",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForAttackResolution",
@@ -67,7 +72,8 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use the skills and features you've learned to win the battle."
+          "hint": "Use the skills and features you've learned to win the battle.",
+          "hintKey": "tutorial.hint.7"
         },
         {
           "type": "Complete"
@@ -85,17 +91,20 @@
         {
           "type": "WaitForEquipmentChange",
           "target": "openAdjective",
-          "hint": "Open Change Adjective before battle."
+          "hint": "Open Change Adjective before battle.",
+          "hintKey": "tutorial.hint.1"
         },
         {
           "type": "WaitForEquipmentChange",
           "target": "chooseAdjective",
-          "hint": "Choose schwarz; no material is consumed."
+          "hint": "Choose schwarz; no material is consumed.",
+          "hintKey": "tutorial.hint.2"
         },
         {
           "type": "WaitForEquipmentChange",
           "target": "confirmEquipment",
-          "hint": "Confirm this individual’s equipment and start battle."
+          "hint": "Confirm this individual’s equipment and start battle.",
+          "hintKey": "tutorial.hint.3"
         },
         {
           "type": "Dialogue",
@@ -105,7 +114,8 @@
           "type": "WaitForSkillSelection",
           "target": "firstEquippedSkill",
           "requirement": "adjective",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForAttackResolution",
@@ -117,7 +127,8 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use the skills and features you've learned to win the battle."
+          "hint": "Use the skills and features you've learned to win the battle.",
+          "hintKey": "tutorial.hint.7"
         },
         {
           "type": "Complete"
@@ -135,13 +146,15 @@
         {
           "type": "WaitForModalVerbSelection",
           "target": "muessen",
-          "hint": "Select müssen for this battle."
+          "hint": "Select müssen for this battle.",
+          "hintKey": "tutorial.hint.4"
         },
         {
           "type": "WaitForSkillSelection",
           "target": "firstEquippedSkill",
           "requirement": "muessen",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForAttackResolution",
@@ -153,7 +166,8 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use the skills and features you've learned to win the battle."
+          "hint": "Use the skills and features you've learned to win the battle.",
+          "hintKey": "tutorial.hint.7"
         },
         {
           "type": "Complete"
@@ -171,13 +185,15 @@
         {
           "type": "WaitForFutureSelection",
           "target": "futur1",
-          "hint": "Select Futur I to reserve an attack."
+          "hint": "Select Futur I to reserve an attack.",
+          "hintKey": "tutorial.hint.5"
         },
         {
           "type": "WaitForSkillSelection",
           "target": "firstEquippedSkill",
           "requirement": "future",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForAttackResolution",
@@ -189,7 +205,8 @@
         },
         {
           "type": "WaitForFutureResolution",
-          "hint": "Waiting for the existing next-turn reservation…"
+          "hint": "Waiting for the existing next-turn reservation…",
+          "hintKey": "tutorial.hint.6"
         },
         {
           "type": "Dialogue",
@@ -199,7 +216,8 @@
           "type": "WaitForSkillSelection",
           "target": "firstEquippedSkill",
           "requirement": "normal",
-          "hint": "Choose the highlighted verb skill."
+          "hint": "Choose the highlighted verb skill.",
+          "hintKey": "ui.tutorial.hint"
         },
         {
           "type": "WaitForAttackResolution",
@@ -211,7 +229,8 @@
         },
         {
           "type": "WaitForBattleVictory",
-          "hint": "Use the skills and features you've learned to win the battle."
+          "hint": "Use the skills and features you've learned to win the battle.",
+          "hintKey": "tutorial.hint.7"
         },
         {
           "type": "Complete"

@@ -38,8 +38,14 @@ public sealed class TutorialFocusUI:MonoBehaviour
         var r=(RectTransform)button.transform;r.anchorMin=r.anchorMax=r.pivot=Vector2.one;r.anchoredPosition=new Vector2(-32,-208);r.sizeDelta=new Vector2(320,72);
         LocalizedText.Set(button.GetComponentInChildren<TMP_Text>(),"tutorial.stop");
     }
-    public void Focus(RectTransform value,string text){target=value;hint.text=text;gameObject.SetActive(true);Reposition();}
-    public void Hint(string text){target=null;hint.text=text;foreach(var s in shades)s.gameObject.SetActive(false);foreach(var b in borders)b.gameObject.SetActive(false);gameObject.SetActive(!string.IsNullOrEmpty(text));}
+    public void Focus(RectTransform value,string text){target=value;LocalizedText.SetProvider(hint,()=>Localization.Present(text));gameObject.SetActive(true);Reposition();}
+    public void FocusLocalized(RectTransform value,string key){target=value;LocalizedText.Set(hint,key);gameObject.SetActive(true);Reposition();}
+    public void HintLocalized(string key)
+    {
+        Hint(null);
+        if(!string.IsNullOrEmpty(key)){LocalizedText.Set(hint,key);gameObject.SetActive(true);}
+    }
+    public void Hint(string text){target=null;LocalizedText.SetProvider(hint,()=>Localization.Present(text));foreach(var s in shades)s.gameObject.SetActive(false);foreach(var b in borders)b.gameObject.SetActive(false);gameObject.SetActive(!string.IsNullOrEmpty(text));}
     private void LateUpdate(){if(guide!=null)RefreshFeatures(guide);if(target!=null)Reposition();}
     private static void Place(RectTransform rect,Vector2 min,Vector2 max)
     {rect.gameObject.SetActive(true);rect.anchorMin=rect.anchorMax=Vector2.zero;rect.pivot=Vector2.zero;rect.anchoredPosition=min;rect.sizeDelta=Vector2.Max(Vector2.zero,max-min);}

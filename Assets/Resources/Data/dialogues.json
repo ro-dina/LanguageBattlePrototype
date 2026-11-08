@@ -8,7 +8,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "Here we will learn the basics of battle. First, let us choose a skill.",
       "nextDialogueId": "technik_verbs",
-      "eventOnComplete": ""
+      "eventOnComplete": "",
+      "localizationKey": "dialogue.technik_intro"
     },
     {
       "dialogueId": "technik_verbs",
@@ -18,7 +19,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "Skills correspond to verbs. Choose the highlighted skill to attack with {skill}.",
       "nextDialogueId": "",
-      "eventOnComplete": "technik_intro_finished"
+      "eventOnComplete": "technik_intro_finished",
+      "localizationKey": "dialogue.technik_verbs"
     },
     {
       "dialogueId": "technik_after_attack",
@@ -28,7 +30,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "That was a real attack. Selecting a verb skill deals damage and creates a sentence. Continue attacking until Technik is defeated.",
       "nextDialogueId": "",
-      "eventOnComplete": "technik_attack_explained"
+      "eventOnComplete": "technik_attack_explained",
+      "localizationKey": "dialogue.technik_after_attack"
     },
     {
       "dialogueId": "adverb_intro",
@@ -38,7 +41,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "Adverbs describe how an action is performed. Select the highlighted adverb card, then combine it with a verb skill.",
       "nextDialogueId": "",
-      "eventOnComplete": "adverb_intro_finished"
+      "eventOnComplete": "adverb_intro_finished",
+      "localizationKey": "dialogue.adverb_intro"
     },
     {
       "dialogueId": "adverb_selected",
@@ -48,7 +52,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "You selected {adverb}. Now choose {skill}. A skill alone is also valid in ordinary battles.",
       "nextDialogueId": "",
-      "eventOnComplete": "adverb_selected_finished"
+      "eventOnComplete": "adverb_selected_finished",
+      "localizationKey": "dialogue.adverb_selected"
     },
     {
       "dialogueId": "adverb_after",
@@ -58,7 +63,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "Your attack used {adverb} in this German sentence:\n{sentence}\nYou may now change or clear adverbs and keep using the features you've learned.",
       "nextDialogueId": "",
-      "eventOnComplete": "adverb_after_finished"
+      "eventOnComplete": "adverb_after_finished",
+      "localizationKey": "dialogue.adverb_after"
     },
     {
       "dialogueId": "adjektiv_intro",
@@ -68,7 +74,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "This lesson begins before battle. Open Change Adjective and select {adjective}. Registered adjectives are available in the current equipment screen without consuming materials.",
       "nextDialogueId": "",
-      "eventOnComplete": "adjektiv_intro_finished"
+      "eventOnComplete": "adjektiv_intro_finished",
+      "localizationKey": "dialogue.adjektiv_intro"
     },
     {
       "dialogueId": "adjektiv_ready",
@@ -78,7 +85,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "You confirmed {adjective} for this individual. Its ATK and DEF bonuses are now used by the normal battle system. Choose {skill} to attack.",
       "nextDialogueId": "",
-      "eventOnComplete": "adjektiv_ready_finished"
+      "eventOnComplete": "adjektiv_ready_finished",
+      "localizationKey": "dialogue.adjektiv_ready"
     },
     {
       "dialogueId": "adjektiv_after",
@@ -88,7 +96,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "That attack used your confirmed adjective equipment. Equipment belongs to this individual; another copy keeps its own loadout. Continue to victory.",
       "nextDialogueId": "",
-      "eventOnComplete": "adjektiv_after_finished"
+      "eventOnComplete": "adjektiv_after_finished",
+      "localizationKey": "dialogue.adjektiv_after"
     },
     {
       "dialogueId": "modalverb_intro",
@@ -98,7 +107,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "Select müssen, then a verb skill. This makes an immediate attack at twice the usual damage, once per battle. It cannot be combined with Futur I.",
       "nextDialogueId": "",
-      "eventOnComplete": "modalverb_intro_finished"
+      "eventOnComplete": "modalverb_intro_finished",
+      "localizationKey": "dialogue.modalverb_intro"
     },
     {
       "dialogueId": "modalverb_after",
@@ -108,7 +118,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "The müssen attack dealt {damage} damage.\n{sentence}\nMüssen is now used. Clearing your selection will not restore its use. Finish with ordinary skills.",
       "nextDialogueId": "",
-      "eventOnComplete": "modalverb_after_finished"
+      "eventOnComplete": "modalverb_after_finished",
+      "localizationKey": "dialogue.modalverb_after"
     },
     {
       "dialogueId": "zukunft_intro",
@@ -118,7 +129,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "Select Futur I and a verb skill to reserve an attack. It deals no damage now. At the start of your next turn it fires at 1.5 times the usual damage, before your ordinary action.",
       "nextDialogueId": "",
-      "eventOnComplete": "zukunft_intro_finished"
+      "eventOnComplete": "zukunft_intro_finished",
+      "localizationKey": "dialogue.zukunft_intro"
     },
     {
       "dialogueId": "zukunft_reserved",
@@ -128,7 +140,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "The attack is reserved; no damage has been dealt yet. One reservation is allowed. After the enemy turn, it will fire before your next input.",
       "nextDialogueId": "",
-      "eventOnComplete": "zukunft_reserved_finished"
+      "eventOnComplete": "zukunft_reserved_finished",
+      "localizationKey": "dialogue.zukunft_reserved"
     },
     {
       "dialogueId": "zukunft_fired",
@@ -138,7 +151,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "The frozen reservation fired for {damage} damage.\n{sentence}\nNow choose an ordinary skill in this same turn.",
       "nextDialogueId": "",
-      "eventOnComplete": "zukunft_fired_finished"
+      "eventOnComplete": "zukunft_fired_finished",
+      "localizationKey": "dialogue.zukunft_fired"
     },
     {
       "dialogueId": "zukunft_normal",
@@ -148,7 +162,8 @@
       "rightPortraitId": "stage_enemy",
       "text": "You used an ordinary skill after the reserved attack. The reservation was consumed once. You can now fight freely, using either Futur I or müssen when available.",
       "nextDialogueId": "",
-      "eventOnComplete": "zukunft_normal_finished"
+      "eventOnComplete": "zukunft_normal_finished",
+      "localizationKey": "dialogue.zukunft_normal"
     }
   ]
 }

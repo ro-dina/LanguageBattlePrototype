@@ -122,10 +122,10 @@ public sealed class TutorialController:MonoBehaviour
                 if(!DialogueUI.Play(Step.dialogueId,_=>{waitingDialogue=false;Advance();},()=>{if(!exiting)Abort("Dialogue interrupted.");},out string error))Abort(error);
                 return;
             }
-            if(CurrentStep==TutorialStepType.WaitForBattleVictory){RestoreButtons();view.Hint(Step.hint);battle.RefreshTutorialInput();return;}
+            if(CurrentStep==TutorialStepType.WaitForBattleVictory){RestoreButtons();view.HintLocalized(Step.hintKey);battle.RefreshTutorialInput();return;}
             if(CurrentStep==TutorialStepType.Complete){ReadyForCommit=true;Release();return;}
             if(CurrentStep==TutorialStepType.WaitForAttackResolution || CurrentStep==TutorialStepType.WaitForFutureResolution)
-            {view.Hint(Step.hint);RefreshButtons();return;}
+            {view.HintLocalized(Step.hintKey);RefreshButtons();return;}
             if(CurrentStep==TutorialStepType.WaitForEquipmentChange)
                 FocusedButton=Step.target=="openAdjective"?detail.AdjectiveButton:Step.target=="chooseAdjective"?detail.EquipmentButton(stage.battleModifiers.tutorialAdjectiveId):detail.BattleButton;
             else if(CurrentStep==TutorialStepType.WaitForAdverbSelection)FocusedButton=battle.FirstAdverbButton;
@@ -134,7 +134,7 @@ public sealed class TutorialController:MonoBehaviour
             else if(CurrentStep==TutorialStepType.Highlight || CurrentStep==TutorialStepType.WaitForSkillSelection)
             {battle.ShowTutorialSkills();FocusedButton=battle.SkillButton(SkillId);}
             if(FocusedButton==null || !RequiredFeatureAvailable()){Abort("Required tutorial control unavailable or not introduced in this stage.");return;}
-            Canvas.ForceUpdateCanvases();view.Focus((RectTransform)FocusedButton.transform,Step.hint);RefreshButtons();
+            Canvas.ForceUpdateCanvases();view.FocusLocalized((RectTransform)FocusedButton.transform,Step.hintKey);RefreshButtons();
             if(UnityEngine.EventSystems.EventSystem.current!=null)UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(FocusedButton.gameObject);
             if(CurrentStep==TutorialStepType.Highlight)StartCoroutine(HighlightFrame());
         }

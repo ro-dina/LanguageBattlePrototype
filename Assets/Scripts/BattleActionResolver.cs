@@ -34,13 +34,14 @@ public sealed class BattleActionResult
     public bool IsPendingAttack { get; }
     public BattleSentence Sentence { get; }
     public string FailureReason { get; }
+    public BattleAffinity Affinity { get; }
     internal BattleContext Owner { get; }
     internal bool Applied { get; set; }
     internal BattleActionResult(BattleContext owner, BattleAction action, int damage, string error = null,
-        bool reservation = false, int reservedDamage = 0, bool pending = false, BattleSentence sentence = null)
+        bool reservation = false, int reservedDamage = 0, bool pending = false, BattleSentence sentence = null, BattleAffinity affinity = BattleAffinity.Normal)
     {
         Owner = owner; Action = action; Damage = damage; FailureReason = error; CanUse = error == null;
-        IsReservation = reservation; ReservedDamage = reservedDamage; IsPendingAttack = pending; Sentence = sentence;
+        IsReservation = reservation; ReservedDamage = reservedDamage; IsPendingAttack = pending; Sentence = sentence; Affinity = affinity;
     }
 }
 
@@ -49,9 +50,10 @@ public sealed class PendingBattleAttack
     public BattleAction Action { get; }
     public int Damage { get; }
     public int DueRound { get; }
+    public BattleAffinity Affinity { get; }
     public BattleSentence Sentence { get; }
     internal PendingBattleAttack(BattleActionResult result, int dueRound)
-    { Action = result.Action; Damage = result.ReservedDamage; DueRound = dueRound; Sentence = result.Sentence; }
+    { Action = result.Action; Damage = result.ReservedDamage; DueRound = dueRound; Sentence = result.Sentence; Affinity = result.Affinity; }
 }
 
 public sealed class BattleCombatant
@@ -94,7 +96,7 @@ public sealed class BattleContext
             PendingAttack == null || Round < PendingAttack.DueRound)
             return new BattleActionResult(this, null, 0, "No pending attack is due.");
         return new BattleActionResult(this, PendingAttack.Action, PendingAttack.Damage,
-            pending: true, sentence: PendingAttack.Sentence);
+            pending: true, sentence: PendingAttack.Sentence, affinity: PendingAttack.Affinity);
     }
 
     // Apply after presentation reaches the hit, exactly once. Results cannot cross battles.
@@ -159,8 +161,9 @@ public static class BattleActionResolver
             return new BattleActionResult(context, action, 0, "These modifiers require German battle data.");
 
         // Existing accuracy/cost/effect fields retain their compatibility policy.
+        var affinity = CollocationAffinity.Resolve(defender.Character,action.Skill);
         int damage = DamageCalculator.CalculateDamage(attacker.Character, defender.Character, action.Skill,
-            attacker.Equipment, action.SkillEquipment, defender.Equipment);
+            attacker.Equipment, action.SkillEquipment, defender.Equipment,affinity);
         var sentence = SentenceGenerator.Generate(new SentenceContext {
             Subject = attacker.Character, Target = defender.Character, Skill = action.Skill,
             CharacterEquipment = attacker.Equipment, SkillEquipment = action.SkillEquipment,
@@ -168,9 +171,9 @@ public static class BattleActionResolver
         });
         if (action.Tense == BattleTense.Future)
             return new BattleActionResult(context, action, 0, reservation: true,
-                reservedDamage: ScaleDamage(damage, 1.5f), sentence: sentence);
+                reservedDamage: ScaleDamage(damage, 1.5f), sentence: sentence, affinity: affinity);
         if (action.Modal == BattleModal.Muessen) damage = ScaleDamage(damage, 2f);
-        return new BattleActionResult(context, action, damage, sentence: sentence);
+        return new BattleActionResult(context, action, damage, sentence: sentence, affinity: affinity);
     }
 }
 

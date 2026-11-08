@@ -5,35 +5,41 @@ public class BattleRulesTests
 {
     [SetUp] public void Setup() => GameDatabase.EnsureAvailable();
     [TearDown] public void Cleanup() { if (GameDatabase.Instance != null) Object.DestroyImmediate(GameDatabase.Instance.gameObject); }
-    private CharacterData Character(string id) => JsonUtility.FromJson<CharacterData>(JsonUtility.ToJson(GameDatabase.Instance.GetCharacter(id)));
+    private CharacterData Character(string id)
+    {
+        var data=JsonUtility.FromJson<CharacterData>(JsonUtility.ToJson(GameDatabase.Instance.GetCharacter(id)));
+        data.id="neutral-damage-test-"+id; // This formula fixture has no corpus entries.
+        return data;
+    }
     private SkillData Skill(string id) => GameDatabase.Instance.GetSkill(id);
     private EquipmentData Equipment(string id) => GameDatabase.Instance.GetEquipment(id);
 
     [Test]
-    public void LegacyDamageAndTurnOrderRemainUnchanged()
+    public void NeutralDamageAndTurnOrderRetainBaseFormula()
     {
         var context = new BattleContext(Character("nacht"), Character("feuer"));
         var player = context.Resolve(new BattleAction(BattleSide.Player, Skill("sein")));
         Assert.That(player.CanUse && player.Hit, Is.True);
-        Assert.That(player.Damage, Is.EqualTo(14));
+        Assert.That(player.Damage, Is.EqualTo(9));
         Assert.That(context.Enemy.HP, Is.EqualTo(18), "Presentation does not apply damage early.");
         Assert.That(context.Apply(player), Is.True);
-        Assert.That(context.Enemy.HP, Is.EqualTo(4));
+        Assert.That(context.Enemy.HP, Is.EqualTo(9));
         Assert.That(context.Apply(player), Is.False, "A hit cannot apply twice.");
         var enemy = context.Resolve(new BattleAction(BattleSide.Enemy, Skill("brennen")));
-        Assert.That(enemy.Damage, Is.EqualTo(4));
+        Assert.That(enemy.Damage, Is.EqualTo(5));
         context.Apply(enemy);
-        Assert.That(context.Player.HP, Is.EqualTo(19));
+        Assert.That(context.Player.HP, Is.EqualTo(18));
         Assert.That(context.Round, Is.EqualTo(2));
         Assert.That(context.TurnState, Is.EqualTo(BattleTurnState.AwaitingPlayer));
     }
 
     [Test]
-    public void AdjectiveAndAdverbBonusesRetainLegacyDamage()
+    public void AdjectiveAndAdverbBonusesRetainBaseFormula()
     {
-        var context = new BattleContext(Character("nacht"), Character("feuer"), Equipment("schwarz"));
+        var enemy=Character("feuer");enemy.hp=13;
+        var context = new BattleContext(Character("nacht"), enemy, Equipment("schwarz"));
         var hit = context.Resolve(new BattleAction(BattleSide.Player, Skill("sein"), Equipment("sehr")));
-        Assert.That(hit.Damage, Is.EqualTo(20));
+        Assert.That(hit.Damage, Is.EqualTo(13));
         context.Apply(hit);
         Assert.That(context.Outcome, Is.EqualTo(BattleOutcome.PlayerWin));
         Assert.That(context.TurnState, Is.EqualTo(BattleTurnState.Finished));
@@ -62,7 +68,7 @@ public class BattleRulesTests
         var result = new BattleContext(Character("nacht"), Character("feuer"))
             .Resolve(new BattleAction(BattleSide.Player, skill));
         Assert.That(result.CanUse && result.Hit, Is.True);
-        Assert.That(result.Damage, Is.EqualTo(14));
+        Assert.That(result.Damage, Is.EqualTo(9));
     }
 
     [TestCase(9, 2, true, true)]

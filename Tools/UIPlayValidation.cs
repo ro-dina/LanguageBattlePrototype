@@ -115,7 +115,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         var hits = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointer, hits);
         Check(hits.Count > 0 && hits[0].gameObject.GetComponentInParent<Button>() == button,
-            SceneManager.GetActiveScene().name + " raycast reaches " + name);
+            SceneManager.GetActiveScene().name + " raycast reaches " + name + (hits.Count>0 && hits[0].gameObject.GetComponentInParent<Button>()!=button ? " (top="+hits[0].gameObject.name+", guide="+TutorialController.Active?.CurrentStep+", language="+UserSettings.Language+")" : ""));
         ExecuteEvents.Execute(button.gameObject, pointer, ExecuteEvents.pointerClickHandler);
     }
     private static int ActiveChildren(Transform parent) => parent.Cast<Transform>().Count(t => t.gameObject.activeSelf);
@@ -130,6 +130,8 @@ public sealed class UIPlayValidation : MonoBehaviour
 
     private IEnumerator Validate()
     {
+        if(Environment.GetCommandLineArgs().Contains("-languageBattleUIPhase121Only")){yield return ValidatePhase121Views();yield break;}
+
         RewardGrantService.Grant(new[] {new InventoryEntry("word_nacht",26),new InventoryEntry("word_wasser",37),new InventoryEntry("word_pistole",42)},out _);
         CharacterInstances.Create("hund"); CharacterInstances.Create("hund");
         var discoveredFire = CharacterInstances.Create("feuer"); CharacterInstances.Remove(discoveredFire.instanceId);
@@ -268,7 +270,7 @@ public sealed class UIPlayValidation : MonoBehaviour
         detail.OpenSkillEquipmentList(0); detail.OpenSkillEquipmentList(0); yield return null;
         Check(Field<Transform>(detail, "skillEquipmentButtonParent").GetComponent<VerticalLayoutGroup>() != null, "Skill equipment uses a vertical layout");
         yield return RenderSizes("CharacterDetail-skills");
-        Field<Transform>(detail, "skillEquipmentButtonParent").GetComponentsInChildren<Button>()[0].onClick.Invoke();
+        Click(Field<Transform>(detail, "skillEquipmentButtonParent").GetComponentsInChildren<Button>()[0].name);
         Check(!Field<GameObject>(detail, "skillEquipmentPanel").activeSelf, "Choosing skill equipment closes its panel");
         Click("BattleButton"); yield return null; yield return null;
         Check(SceneManager.GetActiveScene().name == "CharacterCollection", "Confirm from collection returns to collection without starting battle");
@@ -305,10 +307,12 @@ public sealed class UIPlayValidation : MonoBehaviour
         Check(Find<BattleManager>() == null || !Field<bool>(Find<BattleManager>(), "isProcessing"), "Battle turn completes without getting stuck");
         yield return Load("Battle");
         var futureBattle = Find<BattleManager>(); var futureContext = futureBattle.Context;
+        int reservedHP=BattleActionResolver.ScaleDamage(DamageCalculator.CalculateDamage(futureContext.Player.Character,futureContext.Enemy.Character,GameDatabase.Instance.GetSkill(futureContext.Player.Character.skillIds[0])),1.5f);
+        typeof(BattleCombatant).GetProperty("HP").SetValue(futureContext.Enemy,reservedHP);
         Click("NoAdverbButton"); Click("FutureButton"); Click("Fight"); yield return null; yield return null; Click("SkillButton1");
         deadline = Time.realtimeSinceStartup + 20;
         while (futureContext.PendingAttack == null && futureContext.Outcome == BattleOutcome.Ongoing && Time.realtimeSinceStartup < deadline) yield return null;
-        Check(futureContext.PendingAttack != null && futureContext.Enemy.HP == futureContext.Enemy.Character.hp,
+        Check(futureContext.PendingAttack != null && futureContext.Enemy.HP == reservedHP,
             "Future reservation causes zero immediate enemy damage");
         Time.timeScale = 0;
         yield return RenderSizes("Battle-reserved");
@@ -506,6 +510,40 @@ public sealed class UIPlayValidation : MonoBehaviour
     }
 
 
+    // Synthetic relations verify rendering/integration only; no corpus scores are invented in master data.
+    private IEnumerator ValidatePhase121Views()
+    {
+        foreach(string language in new[]{"ja","en"})
+        {
+            var settings=UserSettings.Current;settings.uiLanguage=language;Check(UserSettings.TryUpdate(settings,out _),"Phase121 display language "+language);
+            yield return Load("StageSelect");yield return RenderSizes(language+"-StageButtons");TutorialChoiceUI.Request("stage_1",true);yield return null;
+            Check(ButtonNamed("TutorialChoiceClose").GetComponentInChildren<TMP_Text>().text==Localization.Text("ui.close"),"Tutorial close caption is localized immediately");yield return RenderSizes(language+"-TutorialChoiceExplicitKeys");Click("TutorialChoiceClose");
+            TutorialChoiceUI.Request("stage_1",true);yield return null;Click("TutorialOption0");yield return null;yield return null;Click("StartBattleButton");yield return null;yield return null;
+            Check(ButtonNamed("DialogueNext").GetComponentInChildren<TMP_Text>().text==Localization.Text("ui.next"),"Dialogue next caption is localized immediately");yield return LessonDialogue(language+"-DialogueExplicitKeys");Click("TutorialStopButton");
+            yield return Load("GermanyHome");StageSession.Clear();GameManager.SelectedCharacterInstanceId=CharacterInstances.GetByCharacterId("nacht").First().instanceId;
+            yield return Load("CharacterDetail");var detail=Find<CharacterDetailManager>();
+            detail.OpenAdjectiveEquipmentList();yield return RenderSizes(language+"-AdjectivePicker");Click(detail.EquipmentButton("schwarz").name);
+            detail.OpenSkillEquipmentList(0);yield return RenderSizes(language+"-VerbPicker");Click("SkillChoiceButton_brennen");
+            yield return RenderSizes(language+"-SkillDraft");Check(Field<CharacterData>(detail,"character").skillIds[0]=="brennen","Pointer changes a verb skill without assigning an adverb");
+            detail.Back();yield return null;Click("DiscardButton");yield return null;yield return null;
+            foreach(var affinity in new[]{BattleAffinity.Effective,BattleAffinity.Normal,BattleAffinity.Weak})
+            {
+                GameManager.EnemyCharacterId="feuer";yield return Load("Battle");var battle=Find<BattleManager>();
+                typeof(BattleCombatant).GetProperty("HP").SetValue(battle.Context.Enemy,500);typeof(BattleCombatant).GetProperty("HP").SetValue(battle.Context.Player,500);
+                string[] lemmas=affinity==BattleAffinity.Effective?new[]{"sein","haben","werden","laufen","brennen"}:new[]{"haben","werden","laufen","brennen",affinity==BattleAffinity.Weak?"sein":"angreifen"};
+                battle.Context.Enemy.Character.verbCollocations=lemmas.Select((lemma,index)=>new VerbCollocation{lemma=lemma,partOfSpeech="verb",score=5-index}).ToArray();
+                int expected=DamageCalculator.CalculateDamage(battle.Context.Player.Character,battle.Context.Enemy.Character,GameDatabase.Instance.GetSkill("sein"),battle.Context.Player.Equipment);
+                Click("NoAdverbButton");Click("Fight");yield return null;Click("SkillButton1");yield return null;
+                Check(Field<TMP_Text>(battle,"battleLogText").text.Contains(CollocationAffinity.Label(affinity)),"Synthetic "+affinity+" uses localized affinity text");
+                Time.timeScale=0;yield return RenderSizes(language+"-SyntheticAffinity-"+affinity);Time.timeScale=8;
+                float end=Time.realtimeSinceStartup+15;while(!battle.CanChoose && Time.realtimeSinceStartup<end)yield return null;
+                Check(battle.Context.Enemy.HP==500-expected,"Synthetic "+affinity+" applies the logged damage once");Time.timeScale=1;
+            }
+            yield return Load("Battle");var ordinary=Find<BattleManager>();Click(ordinary.FirstAdverbButton.name);Check(ordinary.Selection.Get(BattleElementKind.Adverb)!=null,"Pointer selects a battle adverb");
+            yield return RenderSizes(language+"-BattleAdverb");Click("NoAdverbButton");Check(ordinary.Selection.Get(BattleElementKind.Adverb)==null,"Pointer clears battle adverb");
+        }
+    }
+
     private IEnumerator LessonDialogue(string label)
     {
         Check(DialogueUI.IsOpen,label+" dialogue opens");yield return RenderSizes(label);
@@ -567,11 +605,11 @@ public sealed class UIPlayValidation : MonoBehaviour
                 yield return LessonDialogue(label+"-AttackExplained");float ready=Time.realtimeSinceStartup+10;while(!battle.CanChoose && Time.realtimeSinceStartup<ready)yield return null;
                 CheckPracticePolicy(battle,number,label);
                 yield return RenderSizes(label+"-FreePractice");long coins=CurrencyService.Balance;
-                battle.OpenSkillPanel();yield return null;yield return RenderSizes(label+"-FreePractice-Skills");Click(battle.SkillButton(TutorialController.Active.SkillId).name);
+                ChoosePracticeAdverb(battle);battle.OpenSkillPanel();yield return null;yield return RenderSizes(label+"-FreePractice-Skills");Click(battle.SkillButton(BestPracticeSkill(battle)).name);
                 float turnEnd=Time.realtimeSinceStartup+15;while(SceneManager.GetActiveScene().name=="Battle" && !battle.CanChoose && Time.realtimeSinceStartup<turnEnd)yield return null;
                 if(SceneManager.GetActiveScene().name=="Battle"){CheckPracticePolicy(battle,number,label);yield return RenderSizes(label+"-FreePractice-NextTurn");}
                 float deadline=Time.realtimeSinceStartup+40;
-                while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline){var b=Find<BattleManager>();if(b.CanChoose)b.UseSkill1();yield return null;}
+                while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<deadline){var b=Find<BattleManager>();if(b.CanChoose){ChoosePracticeAdverb(b);b.OpenSkillPanel();yield return null;Click(b.SkillButton(BestPracticeSkill(b)).name);}yield return null;}
                 yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="Result" && TutorialPreferences.Get(StageCatalog.Get("stage_"+number).tutorialId).completed && CurrencyService.Balance==coins+400,label+" actual victory completes tutorial with normal first reward");
                 yield return RenderSizes(label+"-Result");
             }
@@ -579,6 +617,14 @@ public sealed class UIPlayValidation : MonoBehaviour
     }
 
 
+
+    private void ChoosePracticeAdverb(BattleManager b)
+    {
+        if(!b.FeatureAvailable(TutorialFeature.Adverb))return;
+        var cards=Field<List<EquipmentData>>(b,"currentAdverbCards");
+        if(cards.Count>0)Click(Field<Button[]>(b,"adverbCardButtons")[cards.FindIndex(c=>c.powerBonus==cards.Max(v=>v.powerBonus))].name);
+    }
+    private string BestPracticeSkill(BattleManager b)=>b.Context.Player.Character.skillIds.Where(id=>b.AllowsInput(TutorialInput.Skill,id)).OrderByDescending(id=>GameDatabase.Instance.GetSkill(id).power).First();
 
     private void CheckPracticePolicy(BattleManager b,int stage,string label)
     {
@@ -660,7 +706,7 @@ public sealed class UIPlayValidation : MonoBehaviour
             battle.OpenSkillPanel();yield return null;yield return RenderSizes(language+"-Technik-FreePractice-Skills");Click(battle.SkillButton(TutorialController.Active.SkillId).name);
             ready=Time.realtimeSinceStartup+15;while(SceneManager.GetActiveScene().name=="Battle" && !battle.CanChoose && Time.realtimeSinceStartup<ready)yield return null;
             if(SceneManager.GetActiveScene().name=="Battle"){CheckPracticePolicy(battle,1,language+" Technik next turn");yield return RenderSizes(language+"-Technik-FreePractice-NextTurn");}
-            float victoryEnd=Time.realtimeSinceStartup+30;while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<victoryEnd){var b=Find<BattleManager>();if(b.CanChoose)b.UseSkill1();yield return null;}
+            float victoryEnd=Time.realtimeSinceStartup+30;while(SceneManager.GetActiveScene().name=="Battle" && Time.realtimeSinceStartup<victoryEnd){var b=Find<BattleManager>();if(b.CanChoose){ChoosePracticeAdverb(b);b.OpenSkillPanel();yield return null;Click(b.SkillButton(BestPracticeSkill(b)).name);}yield return null;}
             yield return null;yield return null;Check(SceneManager.GetActiveScene().name=="Result" && TutorialController.Active==null && GameObject.Find("TutorialFeatureNotice")==null && CurrencyService.Balance==practiceCoins+100,language+" Technik practice victory releases locks and grants repeat reward once");yield return RenderSizes(language+"-Technik-PracticeVictory");
             yield return Load("GermanyHome");
         }
@@ -748,6 +794,13 @@ public sealed class UIPlayValidation : MonoBehaviour
     private void InspectGeometry(string label, Vector2Int size, Camera camera)
     {
         string context = $"{label} {size.x}x{size.y}";
+        foreach(var row in Object.FindObjectsByType<StageRowUI>())
+        {
+            var stage=StageCatalog.Get(row.name.Substring("StageRow_".Length));bool unlocked=StageProgress.IsUnlocked(stage.stageId);
+            Check(Field<Button>(row,"challenge").GetComponentInChildren<TMP_Text>().text==Localization.Text(unlocked?(StageProgress.IsCleared(stage.stageId)?"ui.retry":"ui.challenge"):"ui.locked"),context+" stage challenge uses explicit language key");
+            if(!string.IsNullOrEmpty(stage.tutorialId))Check(Field<Button>(row,"review").GetComponentInChildren<TMP_Text>().text==Localization.Text("ui.tutorial"),context+" tutorial entry uses explicit language key");
+        }
+        var settingsLauncher=GameObject.Find("SettingsLauncher");if(settingsLauncher!=null)Check(settingsLauncher.GetComponentInChildren<TMP_Text>().text.Contains(Localization.Text("ui.settings")),context+" settings launcher uses display language");
         var detailView = Find<CharacterDetailManager>();
         if (detailView != null)
         {
@@ -796,6 +849,18 @@ public sealed class UIPlayValidation : MonoBehaviour
             foreach(var other in Object.FindObjectsByType<Button>().Where(b=>b!=target && b.GetComponentInParent<TutorialFocusUI>()==null))
                 Check(!other.IsInteractable(),context+" tutorial disables other gameplay control "+other.name);
             var hint=Field<TMP_Text>(Find<TutorialFocusUI>(),"hint");Check(!hint.isTextOverflowing,context+" tutorial hint fits");
+        }
+        if(tutorialView!=null && !tutorialView.Failed && !tutorialView.ReadyForCommit && !DialogueUI.IsOpen && Find<TutorialFocusUI>()!=null)
+        {
+            var definition=Field<TutorialDefinition>(tutorialView,"definition");int cursor=Field<int>(tutorialView,"cursor");
+            string key=definition.steps[cursor].hintKey;
+            if(!string.IsNullOrEmpty(key))Check(Field<TMP_Text>(Find<TutorialFocusUI>(),"hint").text==Localization.Text(key),context+" tutorial hint uses its explicit language key");
+        }
+        if(detailView!=null)
+        {
+            var summary=Field<TMP_Text>(detailView,"skillEquipmentText");Check(!summary.isTextOverflowing,context+" skill summary fits");
+            var parent=Field<Transform>(detailView,"skillEquipmentButtonParent");
+            if(parent.gameObject.activeInHierarchy){Check(parent.GetComponentsInChildren<Button>().All(b=>b.name.StartsWith("SkillChoiceButton_")),context+" chooser offers skills rather than adverb equipment");Check(parent.GetComponentsInChildren<TMP_Text>().All(t=>!t.isTextOverflowing),context+" skill chooser labels fit");}
         }
         var notice=GameObject.Find("TutorialFeatureNotice");
         bool noticeExpected=tutorialView!=null && tutorialView.RestrictsFeatures && tutorialView.StageNumber<5 && !DialogueUI.IsOpen && Find<TutorialFocusUI>()!=null;

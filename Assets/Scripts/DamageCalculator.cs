@@ -8,7 +8,8 @@ public static class DamageCalculator
         SkillData skill,
         EquipmentData attackerCharacterEquipment = null,
         EquipmentData skillEquipment = null,
-        EquipmentData defenderCharacterEquipment = null)
+        EquipmentData defenderCharacterEquipment = null,
+        BattleAffinity? affinity = null)
     {
         int attackerAttack = attacker.attack + GetCharacterAttackBonus(attackerCharacterEquipment);
         int defenderDefense = defender.defense + GetCharacterDefenseBonus(defenderCharacterEquipment);
@@ -21,8 +22,8 @@ public static class DamageCalculator
             baseDamage = 1;
         }
 
-        float genderMultiplier = GetGenderMultiplier(attacker.grammaticalGender, defender.grammaticalGender);
-        int finalDamage = Mathf.RoundToInt(baseDamage * genderMultiplier);
+        float multiplier = CollocationAffinity.Multiplier(affinity ?? CollocationAffinity.Resolve(defender,skill));
+        int finalDamage = Mathf.RoundToInt(baseDamage * multiplier);
 
         if (finalDamage < 1)
         {
@@ -30,11 +31,6 @@ public static class DamageCalculator
         }
 
         return finalDamage;
-    }
-
-    public static float GetGenderMultiplierForLog(string attackerGender, string defenderGender)
-    {
-        return GetGenderMultiplier(attackerGender, defenderGender);
     }
 
     public static int GetCharacterAttackBonus(EquipmentData equipment)
@@ -79,16 +75,4 @@ public static class DamageCalculator
         return equipment.targetRole == "skill" || equipment.targetRole == "both";
     }
 
-    private static float GetGenderMultiplier(string attackerGender, string defenderGender)
-    {
-        if (attackerGender == "masculine" && defenderGender == "feminine") return 1.5f;
-        if (attackerGender == "feminine" && defenderGender == "neuter") return 1.5f;
-        if (attackerGender == "neuter" && defenderGender == "masculine") return 1.5f;
-
-        if (attackerGender == "feminine" && defenderGender == "masculine") return 0.75f;
-        if (attackerGender == "neuter" && defenderGender == "feminine") return 0.75f;
-        if (attackerGender == "masculine" && defenderGender == "neuter") return 0.75f;
-
-        return 1.0f;
-    }
 }

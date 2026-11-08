@@ -58,13 +58,9 @@ public static class GameManager
         SelectedCharacterEquipmentId = equipmentId;
     }
 
-    public static void SetSkillEquipment(int skillIndex, string equipmentId)
-    {
-        var draft = CharacterLoadoutStore.GetLoadout(SelectedCharacterInstanceId);
-        if (draft == null || skillIndex < 0 || skillIndex >= draft.skillSlots.Length) return;
-        draft.skillSlots[skillIndex].equippedAdverbId = equipmentId;
-        CharacterLoadoutStore.Commit(draft);
-    }
+    // Retained for old Inspector/API bindings. Adverbs are chosen only during battle now.
+    public static void SetSkillEquipment(int skillIndex, string equipmentId) { }
+
 
 }
 
@@ -277,34 +273,8 @@ public class BattleManager : MonoBehaviour
 
     private EquipmentData[] LoadCharacterSkillEquipments(CharacterData character)
     {
-        int skillCount = character != null && character.skillIds != null
-            ? character.skillIds.Length
-            : 0;
-        EquipmentData[] result = new EquipmentData[skillCount];
-
-        if (character == null || character.skillSlots == null)
-        {
-            return result;
-        }
-
-        for (int i = 0; i < skillCount; i++)
-        {
-            string skillId = character.skillIds[i];
-
-            for (int j = 0; j < character.skillSlots.Length; j++)
-            {
-                CharacterSkillSlotData slot = character.skillSlots[j];
-                if (slot == null || slot.skillId != skillId)
-                {
-                    continue;
-                }
-
-                result[i] = GameDatabase.Instance.GetEquipment(slot.equippedAdverbId);
-                break;
-            }
-        }
-
-        return result;
+        // Never read legacy equippedAdverbId, including on enemy master data.
+        return new EquipmentData[character?.skillIds?.Length ?? 0];
     }
 
     private void SetupSkillButtons()
@@ -481,7 +451,7 @@ public class BattleManager : MonoBehaviour
             string status = result.IsReservation ? $"Reserved: {result.ReservedDamage} damage next turn (0 now)" :
                 result.IsPendingAttack ? $"Reserved attack: {result.Damage} damage!" : $"{result.Damage} damage!";
             LocalizedText.SetProvider(battleLogText,()=>sentence.Text + "\n→ " + sentence.Target + "\n" + Localization.Present(status) +
-                (result.Action.Modal == BattleModal.Muessen ? " (müssen ×2)" : ""));
+                (result.Action.Modal == BattleModal.Muessen ? " (müssen ×2)" : "") + "\n" + CollocationAffinity.Display(result.Affinity));
         }
         // Sentence and fallback words were captured with damage at reservation time.
         yield return AttackAudioPlayback.Play(audioSource, sentence);
@@ -673,9 +643,9 @@ public class BattleManager : MonoBehaviour
             Subject = enemyCharacter, Target = playerCharacter, Skill = skill, SkillEquipment = skillEquipment
         });
         string skillEffect = GetSkillEquipmentEffectText(skillEquipment);
-        string effectivenessText = GetEffectivenessText(enemyCharacter, playerCharacter);
+
         if (battleLogText != null)
-            LocalizedText.SetProvider(battleLogText,()=>Localization.Text("ui.battle.enemy.action",sentence.EquippedVerb,Localization.Present(skillEffect),sentence.Text,result.Damage,Localization.Present(effectivenessText)));
+            LocalizedText.SetProvider(battleLogText,()=>Localization.Text("ui.battle.enemy.action",sentence.EquippedVerb,Localization.Present(skillEffect),sentence.Text,result.Damage,CollocationAffinity.Display(result.Affinity)));
         StartCoroutine(ShowPlayerDamage(result.Damage));
     }
 
@@ -757,26 +727,6 @@ public class BattleManager : MonoBehaviour
         }
 
         target.localPosition = originalPosition;
-    }
-
-    private string GetEffectivenessText(CharacterData attacker, CharacterData defender)
-    {
-        float multiplier = DamageCalculator.GetGenderMultiplierForLog(
-            attacker.grammaticalGender,
-            defender.grammaticalGender
-        );
-
-        if (multiplier > 1.0f)
-        {
-            return "<color=#ff5555>Effective!</color>";
-        }
-
-        if (multiplier < 1.0f)
-        {
-            return "<color=#888888>Not effective...</color>";
-        }
-
-        return "";
     }
 
     private void PlaySoundEffect(string effectName)
@@ -895,22 +845,6 @@ public class BattleManager : MonoBehaviour
             foreach (string adverbId in character.collocationAdverbIds)
             {
                 AddCollocationAdverb(adverbId, validAdverbsById, addedIds, result);
-            }
-        }
-
-        if (result.Count > 0)
-        {
-            return result;
-        }
-
-        if (equippedSkillAdverbs != null)
-        {
-            foreach (EquipmentData adverb in equippedSkillAdverbs)
-            {
-                if (adverb != null)
-                {
-                    AddCollocationAdverb(adverb.id, validAdverbsById, addedIds, result);
-                }
             }
         }
 

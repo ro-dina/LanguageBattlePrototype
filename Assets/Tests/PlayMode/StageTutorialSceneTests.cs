@@ -50,7 +50,17 @@ public class StageTutorialSceneTests
         {
             if(DialogueUI.IsOpen){yield return AdvanceDialogue();continue;}
             var battle=Object.FindAnyObjectByType<BattleManager>();
-            if(battle!=null && battle.CanChoose && battle.AllowsInput(TutorialInput.Skill,battle.Context.Player.Character.skillIds[0]))battle.UseSkill1();
+            if(battle!=null && battle.CanChoose)
+            {
+                // Use the features learned in this stage; the old first-skill-only strategy depended on gender advantage.
+                if(battle.FeatureAvailable(TutorialFeature.Adverb))
+                {
+                    var cards=Field<System.Collections.Generic.List<EquipmentData>>(battle,"currentAdverbCards");
+                    if(cards.Count>0)Field<Button[]>(battle,"adverbCardButtons")[cards.FindIndex(c=>c.powerBonus==cards.Max(v=>v.powerBonus))].onClick.Invoke();
+                }
+                string skill=battle.Context.Player.Character.skillIds.Where(id=>battle.AllowsInput(TutorialInput.Skill,id)).OrderByDescending(id=>GameDatabase.Instance.GetSkill(id).power).FirstOrDefault();
+                if(skill!=null)battle.SkillButton(skill).onClick.Invoke();
+            }
             yield return null;
         }
         Assert.That(SceneManager.GetActiveScene().name,Is.EqualTo("Result"));yield return null;yield return null;

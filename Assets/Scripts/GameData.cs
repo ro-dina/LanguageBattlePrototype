@@ -19,8 +19,11 @@ public class CharacterData
 
     public string[] skillIds;
 
+    // Optional scored verb relations. Kept separate from equipped skills and save data.
+    public VerbCollocation[] verbCollocations;
+
     // Optional explicit adverb collocations for battle card generation.
-    // When omitted, the battle uses the character's equipped skill adverbs,
+    // When omitted, the battle uses registered compatible battle adverbs,
     // then falls back to compatible adverbs in the database.
     public string[] collocationAdverbIds;
 

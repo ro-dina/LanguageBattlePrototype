@@ -14,6 +14,8 @@ public class BattleModifierTests
     {
         var player = Character("nacht"); player.hp = playerHP;
         var enemy = Character("feuer"); enemy.hp = enemyHP;
+        // Preserve this modifier fixture's 1.5x affinity through scored verb data, rather than grammatical gender.
+        enemy.verbCollocations=new[]{new VerbCollocation{lemma="sein",partOfSpeech="verb",score=2},new VerbCollocation{lemma="haben",partOfSpeech="verb",score=1}};
         return new BattleContext(player, enemy, GameDatabase.Instance.GetEquipment("schwarz"));
     }
     private BattleAction Action(BattleTense tense = BattleTense.Present, BattleModal modal = BattleModal.None) =>

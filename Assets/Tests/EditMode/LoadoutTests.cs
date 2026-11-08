@@ -72,7 +72,7 @@ public class LoadoutTests
     }
 
     [Test]
-    public void CommittedSkillOrderAndAdverbsReachBattleSnapshot()
+    public void CommittedSkillOrderReachesBattleButLegacyAdverbsRemainSaveOnly()
     {
         var draft = CharacterLoadoutStore.GetLoadout(Instance("nacht"));
         draft.adjectiveId = "schwarz";
@@ -80,7 +80,8 @@ public class LoadoutTests
         Assert.That(CharacterLoadoutStore.Commit(draft), Is.True);
         var battle = CharacterLoadoutStore.GetCharacterForBattle(Instance("nacht"));
         Assert.That(battle.skillIds, Is.EqualTo(new[] { "brennen" }));
-        Assert.That(battle.skillSlots[0].equippedAdverbId, Is.EqualTo("sehr"));
+        Assert.That(battle.skillSlots[0].equippedAdverbId, Is.Empty);
+        Assert.That(CharacterLoadoutStore.GetLoadout(Instance("nacht")).skillSlots[0].equippedAdverbId,Is.EqualTo("sehr"));
         Assert.That(battle.equippedAdjectiveId, Is.EqualTo("schwarz"));
         Assert.That(GameDatabase.Instance.GetCharacter("nacht").skillIds.Length, Is.EqualTo(3));
     }

@@ -21,4 +21,9 @@ for line in json.loads((root / 'Assets/Resources/Data/dialogues.json').read_text
     entry = next(e for e in entries if e['key'] == key)
     expected = line['text'].replace('{skill}', '{0}').replace('{enemy}', '{1}').replace('{adverb}', '{2}').replace('{adjective}', '{3}').replace('{damage}', '{4}').replace('{sentence}', '{5}')
     assert entry['en'] == expected, f'Dialogue source changed without updating translations: {key}'
+for tutorial in json.loads((root / 'Assets/Resources/Data/tutorials.json').read_text())['tutorials']:
+    for step in tutorial['steps']:
+        if step.get('hint'):
+            assert step.get('hintKey') in keys, f'Missing hint key: {tutorial["tutorialId"]}'
+            assert next(e['en'] for e in entries if e['key'] == step['hintKey']) == step['hint'], f'Hint source mismatch: {tutorial["tutorialId"]}'
 print(f'PASS: {len(entries)} Japanese/English entries; keys, parameters, runtime references and dialogue sources validated.')

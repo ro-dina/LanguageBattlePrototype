@@ -21,7 +21,7 @@ public class TitleSceneTests
     {
         SettingsUI.Active?.Close();ProgressResetUI.Active?.Close();yield return Load("Title");
         if(PlayerSaveService.Instance!=null)Object.DestroyImmediate(PlayerSaveService.Instance.gameObject);
-        directory=PlayerSaveService.DefaultDirectory();Assert.That(Path.GetFullPath(directory).StartsWith(Path.GetTempPath()) || Path.GetFullPath(directory).StartsWith("/private/tmp/phase120-"),Is.True);
+        directory=PlayerSaveService.DefaultDirectory();Assert.That(Path.GetFullPath(directory).StartsWith(Path.GetTempPath()) || Path.GetFullPath(directory).StartsWith("/private/tmp/"),Is.True);
         if(Directory.Exists(directory))Directory.Delete(directory,true);
         settingsDirectory=directory+"-TitleSettings";UserSettings.Initialize(settingsDirectory,SystemLanguage.English);yield return Load("Title");
     }

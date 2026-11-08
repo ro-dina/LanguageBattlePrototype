@@ -112,6 +112,7 @@ public static class CharacterLoadoutStore
         result.equippedArticleId = loadout.articleId;
         result.equippedCaseMarkerId = loadout.articleId;
         result.skillSlots = Clone(loadout).skillSlots;
+        foreach (var slot in result.skillSlots) slot.equippedAdverbId = ""; // Legacy save metadata is retained only in the store.
         result.skillIds = Array.ConvertAll(result.skillSlots, slot => slot.skillId);
         return result;
     }

@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 public enum TutorialStepType { Dialogue, Highlight, WaitForSkillSelection, WaitForAdverbSelection, WaitForEquipmentChange, WaitForModalVerbSelection, WaitForFutureSelection, WaitForAttackResolution, WaitForBattleVictory, Complete, WaitForFutureResolution }
-[Serializable] public sealed class TutorialStep { public string type; public TutorialStepType Kind=>Enum.TryParse(type,out TutorialStepType value)?value:(TutorialStepType)(-1); public string dialogueId; public string target; public string hint; public string requirement; }
+[Serializable] public sealed class TutorialStep { public string type; public TutorialStepType Kind=>Enum.TryParse(type,out TutorialStepType value)?value:(TutorialStepType)(-1); public string dialogueId; public string target; public string hint; public string hintKey; public string requirement; }
 [Serializable] public sealed class TutorialDefinition { public string tutorialId; public bool isImplemented; public TutorialStep[] steps; }
 [Serializable] public sealed class TutorialDatabase { public TutorialDefinition[] tutorials; }
 public static class TutorialCatalog
